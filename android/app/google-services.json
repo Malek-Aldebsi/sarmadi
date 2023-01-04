@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "360206178275",
+    "project_id": "sarmadi-ai",
+    "storage_bucket": "sarmadi-ai.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360206178275:android:a978a5678344538840f2d6",
+        "android_client_info": {
+          "package_name": "com.example.sarmadi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "360206178275-45pr8egccgodst1kcs3r25p8pi759ag7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sarmadi",
+            "certificate_hash": "b56d554260d9bfb75274c82ae2367601f0e6fd07"
+          }
+        },
+        {
+          "client_id": "360206178275-cp8oqjh93a1omnuplo0h6asj3n2vaka5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg4dLiDGKb4uKimJDBhuEL84D8irZM8sk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "360206178275-cp8oqjh93a1omnuplo0h6asj3n2vaka5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "360206178275-euht05ojmr3oupd3cd5g0mb4ef1lhaih.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.sarmadi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

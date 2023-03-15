@@ -1,104 +1,44 @@
-// import 'dart:convert';
-//
-// import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-
-// void main() {
-//   runApp(
-//     MultiProvider(
-//       providers: [
-//         ChangeNotifierProvider(create: (_) => Stock()),
-//         ChangeNotifierProvider(create: (_) => Receipt()),
-//         // ChangeNotifierProvider(create: (_) => Insight()),
-//       ],
-//       child: BIAS(),
-//     ),
-//   );
-// }
+import 'package:flutter/material.dart';
 
 // Provider.of<Receipt>(context, listen: false)
 // .createReceipt()
 //     .then((value) {
-// Provider.of<Stock>(context, listen: false)
-//     .getStocks();
-// Navigator.pop(context);
 // });
-//
-//
-// Map receipt = Provider.of<Receipt>(context, listen: true).receipt;
-//
 
-// class Stock with ChangeNotifier {
-//   List _stocks = [];
+//MultiProvider(
+//       providers: [
+//         ChangeNotifierProvider(create: (_) => Quiz()),
+//       ],
+//       child: const Sarmadi(),
+//     ),
+
+// class Quiz with ChangeNotifier {
+//   List _questions = [];
+//   // {
+//   //       'id': '84a5bd9b-1490-4781-a757-da3c042d415a',
+//   //       'body':
+//   //           r'هل يمكن تحليل المقدار التالي بتجميع الحدود؟ $a\left(r-t\right)+m\left(t-r\right)$',
+//   //       'correct_answer': 'نعم',
+//   //       'image':
+//   //           'https://nyc3.digitaloceanspaces.com/sarmadi-spaces/media/aaaab.jpg?AWSAccessKeyId=DO00Z64A7EGABL2QZEEA&Signature=ltgmiQJ5ZDVuPVU7JwyAHxcGN4o%3D&Expires=1673029193',
+//   //       'choices': [
+//   //         {'id': '107952b2-fb10-460b-8a2f-0754802dbd21', 'body': 'نعم'},
+//   //         {'id': '8e0d020d-7e7d-44b8-be17-7e29b141b6bb', 'body': 'لا'},
+//   //       ]
+//   //     },
+//   final Map _answers = {};
+//   //     },
 //
-//   List get stocks => _stocks;
+//   List get questions => _questions;
+//   Map get answers => _answers;
 //
-//   void addStock(Map<String, dynamic> stockDetails) {
-//     stockDetails['id'] = _stocks.last['id'] + 1;
-//     if (stockDetails['reshipping_days'] == '')
-//       stockDetails.remove('reshipping_days');
-//     http
-//         .post(
-//             Uri.parse('https://bias-o42x8.ondigitalocean.app/apis/add_stock/'),
-//             headers: <String, String>{
-//               'Content-Type': 'application/json; charset=UTF-8'
-//             },
-//             body: jsonEncode(stockDetails))
-//         .then((value) {
-//       if (value.statusCode == 200) {
-//         _stocks.add(stockDetails);
-//         notifyListeners();
-//       }
-//     });
+//   void addQuestions(List questions) {
+//     _questions = questions;
+//     notifyListeners();
 //   }
 //
-//   void getStocks() {
-//     http.get(
-//       Uri.parse('https://bias-o42x8.ondigitalocean.app/apis/get_stocks/'),
-//       headers: <String, String>{
-//         'Content-Type': 'application/json; charset=UTF-8'
-//       },
-//     ).then((value) {
-//       if (value.statusCode == 200) {
-//         _stocks = jsonDecode(value.body);
-//         notifyListeners();
-//       }
-//     });
-//   }
-//
-//   void updateStock(
-//       Map<String, dynamic> stockDetails, bool allDetails, int fakeId) {
-//     http
-//         .post(
-//             Uri.parse(
-//                 'https://bias-o42x8.ondigitalocean.app/apis/update_stock/'),
-//             headers: <String, String>{
-//               'Content-Type': 'application/json; charset=UTF-8'
-//             },
-//             body: jsonEncode(stockDetails))
-//         .then((value) {
-//       if (value.statusCode == 200) {
-//         if (allDetails) {
-//           _stocks[fakeId] = stockDetails;
-//         } else {
-//           _stocks[fakeId]['available_quantity'] =
-//               stockDetails['available_quantity'];
-//         }
-//
-//         notifyListeners();
-//       }
-//     });
-//   }
-//
-//   void deleteStock(int id, int fakeId) {
-//     http.get(
-//       Uri.parse('https://bias-o42x8.ondigitalocean.app/apis/delete_stock/$id'),
-//       headers: <String, String>{
-//         'Content-Type': 'application/json; charset=UTF-8'
-//       },
-//     ).then((value) {
-//       _stocks.removeAt(fakeId);
-//       notifyListeners();
-//     });
+//   void addAnswer(String questionID, Map answer) {
+//     _answers[questionID] = answer;
+//     notifyListeners();
 //   }
 // }

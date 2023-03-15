@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'question.dart';
 import 'quiz_setting.dart';
 import 'welcome.dart';
-import '../components/custom_checkbox.dart';
 import '../components/custom_container.dart';
 import '../components/custom_pop_up.dart';
 import '../components/custom_slider.dart';
@@ -25,9 +22,10 @@ class AdvanceQuizSetting extends StatefulWidget {
   State<AdvanceQuizSetting> createState() => _AdvanceQuizSettingState();
 }
 
-class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
-  bool skillsLoaded = false;
-  bool lessonsLoaded = false;
+class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
+    with TickerProviderStateMixin {
+  bool headlinesLoaded = false;
+  bool modulesLoaded = false;
 
   String? selectedSubjectName;
   String? selectedSubjectID;
@@ -37,23 +35,20 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
   TextEditingController hours = TextEditingController(text: '00');
   TextEditingController minutes = TextEditingController(text: '05');
   TextEditingController seconds = TextEditingController(text: '00');
-  bool withTime = false;
+  bool withTime = true;
 
-  int searchMethod = 0;
+  List headlineSet = [];
+  Set selectedHeadlines = {};
 
-  TextEditingController search = TextEditingController();
+  List moduleSet = [];
 
-  List skillSet = [];
-  Set selectedSkills = {};
+  int quizLevel = 0; // 0 easy, 1 hard, 2 default
 
-  List lessonSet = [];
-  Set selectedLessons = {};
-
-  void getSkills() async {
-    String? key0 = await getSession('sessionKey0');
+  void getHeadlines() async {
+    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = await getSession('sessionValue');
-    post('skill_set/', {
+    String? value = '123'; //await getSession('sessionValue');
+    post('headline_set/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
@@ -63,17 +58,18 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
       result == 0
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
-              skillSet = result;
-              skillsLoaded = true;
+              headlineSet = result;
+              print(headlineSet);
+              headlinesLoaded = true;
             });
     });
   }
 
-  void getLessons() async {
-    String? key0 = await getSession('sessionKey0');
+  void getModules() async {
+    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = await getSession('sessionValue');
-    post('lesson_set/', {
+    String? value = '123'; //await getSession('sessionValue');
+    post('module_set/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
@@ -83,54 +79,44 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
       result == 0
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
-              lessonSet = result;
-              lessonsLoaded = true;
+              moduleSet = result;
+              print(moduleSet);
+              modulesLoaded = true;
             });
     });
   }
 
-  void getSkillQuiz() async {
-    String? key0 = await getSession('sessionKey0');
-    String? key1 = await getSession('sessionKey1');
-    String? value = await getSession('sessionValue');
-    post('skills_quiz/', {
-      if (key0 != null) 'email': key0,
-      if (key1 != null) 'phone': key1,
-      'password': value,
-      'skills': selectedSkills.toList(),
-      'question_num': questionNum,
-    }).then((value) {
-      dynamic result = decode(value);
-      result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
-          : {
-              setState(() {
-                print(result);
-              }),
-              Navigator.pushNamed(context, Question.route)
-            };
+  void buildQuiz() async {
+    //TODO another one for study
+    setState(() {
+      headlinesLoaded = false;
+      modulesLoaded = false;
     });
-  }
 
-  void getLessonQuiz() async {
-    String? key0 = await getSession('sessionKey0');
+    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = await getSession('sessionValue');
-    post('lessons_quiz/', {
+    String? value = '123'; //await getSession('sessionValue');
+    post('build_quiz/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
-      'lessons': selectedLessons.toList(),
+      'headlines': selectedHeadlines.toList(),
       'question_num': questionNum,
+      'duration': 5000,
+      'quiz_level': quizLevel,
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? Navigator.pushNamed(context, Dashboard.route)
           : {
-              setState(() {
-                print(result);
-              }),
-              Navigator.pushNamed(context, Question.route)
+              Navigator.pushNamed(context, Question.route, arguments: {
+                'questions': result,
+                'duration': int.parse(hours.text == '' ? '00' : hours.text) *
+                        3600 +
+                    int.parse(minutes.text == '' ? '05' : minutes.text) * 60 +
+                    int.parse(seconds.text == '' ? '00' : seconds.text),
+                'subjectID': selectedSubjectID,
+              })
             };
     });
   }
@@ -144,14 +130,53 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
           selectedSubjectName = arguments['subjectName'];
           selectedSubjectID = arguments['subjectID'];
         });
-        getSkills();
-        getLessons();
+        getHeadlines();
+        getModules();
       } catch (e) {
         Navigator.pushNamed(context, QuizSetting.route);
       }
     });
 
     super.initState();
+
+    forwardAnimationController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 250),
+        upperBound: 1,
+        lowerBound: 0);
+    forwardAnimationCurve = CurvedAnimation(
+        parent: forwardAnimationController!, curve: Curves.linear);
+
+    backwardAnimationController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 250),
+        upperBound: 1,
+        lowerBound: 0);
+    backwardAnimationCurve = CurvedAnimation(
+        parent: backwardAnimationController!, curve: Curves.linear);
+
+    forwardAnimationController!.forward();
+    forwardAnimationCurve!.addListener(() => setState(() {
+          forwardAnimationValue = forwardAnimationCurve!.value;
+        }));
+  }
+
+  bool barVisibility = false;
+
+  AnimationController? forwardAnimationController;
+  CurvedAnimation? forwardAnimationCurve;
+  dynamic forwardAnimationValue = 1;
+
+  AnimationController? backwardAnimationController;
+  CurvedAnimation? backwardAnimationCurve;
+  dynamic backwardAnimationValue = 0;
+
+  bool moduleStatus(Map module) {
+    bool status = true;
+    for (Map lesson in module['lessons']) {
+      status = status && selectedHeadlines.containsAll(lesson['h1s']);
+    }
+    return status;
   }
 
   @override
@@ -159,807 +184,1375 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting> {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return lessonsLoaded && skillsLoaded
+    return modulesLoaded && headlinesLoaded
         ? Scaffold(
-            body: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("images/single_question_background.png"),
-                fit: BoxFit.cover,
+            body: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("images/single_question_background.png"),
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+              child: Stack(
                 children: [
-                  Container(
-                      height: double.infinity,
-                      width: width * 0.06,
-                      decoration: BoxDecoration(
-                          border:
-                              Border(left: BorderSide(color: kGray, width: 1))),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Image(
-                            image: const AssetImage('images/logo.png'),
-                            width: width * 0.05,
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                        context, Dashboard.route);
-                                  }, //home dashboard
-                                  icon: Icon(
-                                    Icons.home_outlined,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(width: width * 0.05),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding:
+                                  EdgeInsets.symmetric(vertical: height / 25),
+                              child: Text(
+                                selectedSubjectName ?? '',
+                                style: textStyle.copyWith(
+                                  color: kWhite,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: width * 0.018,
                                 ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {}, //userprofile
-                                  icon: Icon(
-                                    Icons.person_outline_rounded,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                        context, QuizSetting.route);
-                                  }, //home dashboard
-                                  icon: Icon(
-                                    Icons.school_rounded,
-                                    size: width * 0.02,
-                                    color: kPurple,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {}, //analysis
-                                  icon: Icon(
-                                    Icons.pie_chart_outline_rounded,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {}, //community
-                                  icon: Icon(
-                                    Icons.forum_outlined,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {}, //leaderboard
-                                  icon: Icon(
-                                    Icons.leaderboard_outlined,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    EdgeInsets.symmetric(vertical: height / 40),
-                                child: IconButton(
-                                  onPressed: () {}, //settings
-                                  icon: Icon(
-                                    Icons.settings_outlined,
-                                    size: width * 0.02,
-                                    color: kWhite,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding:
-                                EdgeInsets.symmetric(vertical: height / 40),
-                            child: IconButton(
-                              onPressed: () {
-                                popUp(context, width * 0.3,
-                                    'هل حقاً تريد تسجيل الخروج', [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Button(
-                                        onTap: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        width: width * 0.13,
-                                        verticalPadding: 8,
-                                        horizontalPadding: 0,
-                                        borderRadius: 8,
-                                        buttonColor: kBlack,
-                                        border: 0,
-                                        child: Center(
-                                          child: Text(
-                                            'لا',
-                                            style: textStyle,
-                                          ),
-                                        ),
-                                      ),
-                                      Button(
-                                        onTap: () {
-                                          delSession('sessionKey0');
-                                          delSession('sessionKey1');
-                                          delSession('sessionValue').then(
-                                              (value) => Navigator.pushNamed(
-                                                  context, Welcome.route));
-                                        },
-                                        width: width * 0.13,
-                                        verticalPadding: 8,
-                                        horizontalPadding: 0,
-                                        borderRadius: 8,
-                                        buttonColor: kOffWhite,
-                                        border: 0,
-                                        child: Center(
-                                          child: Text(
-                                            'نعم',
-                                            style: textStyle.copyWith(
-                                                color: kBlack),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ]);
-                              }, //home dashboard
-                              icon: Icon(
-                                Icons.logout_rounded,
-                                size: width * 0.02,
-                                color: kWhite,
                               ),
                             ),
-                          ),
-                        ],
-                      )),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: width * 0.03),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(bottom: height / 32),
-                          child: Text(
-                            selectedSubjectName ?? '',
-                            style: textStyle.copyWith(
-                              color: kWhite,
-                              fontWeight: FontWeight.w600,
-                              fontSize: width / 45,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: height / 64),
-                          child: Row(
-                            children: [
-                              Button(
-                                onTap: () {
-                                  setState(() {
-                                    searchMethod = 0;
-                                  });
-                                },
-                                width: width / 10,
-                                verticalPadding: 8,
-                                horizontalPadding: 0,
-                                borderRadius: 0,
-                                borderColor:
-                                    searchMethod == 0 ? kPurple : kOffWhite,
-                                border: 1,
-                                child: Center(
-                                  child: Text(
-                                    'الدروس',
-                                    style: textStyle.copyWith(
-                                      color: searchMethod == 0
-                                          ? kPurple
-                                          : kOffWhite,
-                                      fontSize: width / 85,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Button(
-                                onTap: () {
-                                  setState(() {
-                                    searchMethod = 1;
-                                  });
-                                },
-                                width: width / 10,
-                                verticalPadding: 8,
-                                horizontalPadding: 0,
-                                borderRadius: 20,
-                                borderColor:
-                                    searchMethod == 1 ? kPurple : kOffWhite,
-                                border: 1,
-                                child: Center(
-                                  child: Text('المهارات',
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'الفصل الأول',
                                       style: textStyle.copyWith(
-                                        color: searchMethod == 1
-                                            ? kPurple
-                                            : kOffWhite,
-                                        fontSize: width / 85,
-                                      )),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          height: height * 0.73,
-                          width: width / 5,
-                          child: ListView(
-                            children: [
-                              if (searchMethod == 1)
-                                CustomTextField(
-                                  innerText: null,
-                                  hintText: 'ابحث...',
-                                  fontSize: width / 90,
-                                  width: width / 6,
-                                  controller: search,
-                                  prefixIcon: Icon(
-                                    Icons.search_rounded,
-                                    size: width * 0.02,
-                                    color: kOffWhite,
-                                  ),
-                                  isDense: true,
-                                  onChanged: (text) {},
-                                  readOnly: false,
-                                  obscure: false,
-                                  suffixIcon: null,
-                                  keyboardType: null,
-                                  color: kGray,
-                                  verticalPadding: height * 0.02,
-                                  horizontalPadding: width / 42.5,
-                                  border: inputBorder(),
-                                  focusedBorder: focusedBorder(),
-                                ),
-                              if (searchMethod == 1)
-                                Padding(
-                                  padding:
-                                      EdgeInsets.only(bottom: height * 0.01),
-                                  child: Divider(
-                                    thickness: 1,
-                                    color: kGray,
-                                  ),
-                                ),
-                              if (searchMethod == 1)
-                                for (Map skill in skillSet)
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: height / 128),
-                                    child: Button(
-                                      onTap: null,
+                                        color: kWhite,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width * 0.012,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: height * 0.35,
                                       width: width * 0.2,
+                                      child: ListView(
+                                        children: [
+                                          for (Map module in moduleSet)
+                                            if (module['semester'] == 1)
+                                              Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: height / 128,
+                                                ),
+                                                child: Button(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      bool status =
+                                                          moduleStatus(module);
+                                                      for (Map lesson in module[
+                                                          'lessons']) {
+                                                        status
+                                                            ? selectedHeadlines
+                                                                .removeAll(
+                                                                    lesson[
+                                                                        'h1s'])
+                                                            : selectedHeadlines
+                                                                .addAll(lesson[
+                                                                    'h1s']);
+                                                      }
+                                                    });
+                                                  },
+                                                  width: width * 0.2,
+                                                  verticalPadding: width / 150,
+                                                  horizontalPadding: width / 75,
+                                                  borderRadius: width * 0.006,
+                                                  border: 0,
+                                                  buttonColor:
+                                                      moduleStatus(module)
+                                                          ? kDarkPurple
+                                                          : kLightGray,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        module['name'],
+                                                        style:
+                                                            textStyle.copyWith(
+                                                                color: kWhite,
+                                                                fontSize:
+                                                                    width *
+                                                                        0.009,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500),
+                                                      ),
+                                                      Wrap(
+                                                        children: [
+                                                          for (Map lesson
+                                                              in module[
+                                                                  'lessons'])
+                                                            Padding(
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                      width /
+                                                                          350),
+                                                              child: Button(
+                                                                  onTap: () {
+                                                                    setState(
+                                                                      () {
+                                                                        if (moduleStatus(
+                                                                            module)) {
+                                                                          selectedHeadlines
+                                                                              .removeAll(lesson['h1s']);
+                                                                        } else {
+                                                                          selectedHeadlines.containsAll(lesson['h1s'])
+                                                                              ? selectedHeadlines.removeAll(lesson['h1s'])
+                                                                              : selectedHeadlines.addAll(lesson['h1s']);
+                                                                        }
+                                                                      },
+                                                                    );
+                                                                  },
+                                                                  verticalPadding:
+                                                                      width /
+                                                                          250,
+                                                                  horizontalPadding:
+                                                                      width /
+                                                                          250,
+                                                                  borderRadius:
+                                                                      width *
+                                                                          0.005,
+                                                                  border: 0,
+                                                                  buttonColor: selectedHeadlines
+                                                                          .containsAll(
+                                                                              lesson['h1s'])
+                                                                      ? kPurple
+                                                                      : kGray,
+                                                                  child: Text(
+                                                                    lesson[
+                                                                        'name'],
+                                                                    style: textStyle
+                                                                        .copyWith(
+                                                                      color: selectedHeadlines
+                                                                              .containsAll(lesson['h1s'])
+                                                                          ? kWhite
+                                                                          : kOffWhite,
+                                                                      fontSize:
+                                                                          width *
+                                                                              0.007,
+                                                                    ),
+                                                                  )),
+                                                            )
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: height * 0.01,
+                                    ),
+                                    Text(
+                                      'الفصل الثاني',
+                                      style: textStyle.copyWith(
+                                        color: kWhite,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width * 0.012,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: height * 0.35,
+                                      width: width * 0.2,
+                                      child: ListView(
+                                        children: [
+                                          for (Map module in moduleSet)
+                                            if (module['semester'] == 2)
+                                              Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: height / 128,
+                                                ),
+                                                child: Button(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      bool status =
+                                                          moduleStatus(module);
+                                                      for (Map lesson in module[
+                                                          'lessons']) {
+                                                        status
+                                                            ? selectedHeadlines
+                                                                .removeAll(
+                                                                    lesson[
+                                                                        'h1s'])
+                                                            : selectedHeadlines
+                                                                .addAll(lesson[
+                                                                    'h1s']);
+                                                      }
+                                                    });
+                                                  },
+                                                  width: width * 0.2,
+                                                  verticalPadding: width / 150,
+                                                  horizontalPadding: width / 75,
+                                                  borderRadius: width * 0.006,
+                                                  border: 0,
+                                                  buttonColor:
+                                                      moduleStatus(module)
+                                                          ? kDarkPurple
+                                                          : kLightGray,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        module['name'],
+                                                        style:
+                                                            textStyle.copyWith(
+                                                                color: kWhite,
+                                                                fontSize:
+                                                                    width *
+                                                                        0.009,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500),
+                                                      ),
+                                                      Wrap(
+                                                        children: [
+                                                          for (Map lesson
+                                                              in module[
+                                                                  'lessons'])
+                                                            Padding(
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                      width /
+                                                                          350),
+                                                              child: Button(
+                                                                  onTap: () {
+                                                                    setState(
+                                                                      () {
+                                                                        if (moduleStatus(
+                                                                            module)) {
+                                                                          selectedHeadlines
+                                                                              .removeAll(lesson['h1s']);
+                                                                        } else {
+                                                                          selectedHeadlines.containsAll(lesson['h1s'])
+                                                                              ? selectedHeadlines.removeAll(lesson['h1s'])
+                                                                              : selectedHeadlines.addAll(lesson['h1s']);
+                                                                        }
+                                                                      },
+                                                                    );
+                                                                  },
+                                                                  verticalPadding:
+                                                                      width /
+                                                                          250,
+                                                                  horizontalPadding:
+                                                                      width /
+                                                                          250,
+                                                                  borderRadius:
+                                                                      width *
+                                                                          0.005,
+                                                                  border: 0,
+                                                                  buttonColor: selectedHeadlines
+                                                                          .containsAll(
+                                                                              lesson['h1s'])
+                                                                      ? kPurple
+                                                                      : kGray,
+                                                                  child: Text(
+                                                                    lesson[
+                                                                        'name'],
+                                                                    style: textStyle
+                                                                        .copyWith(
+                                                                      color: selectedHeadlines
+                                                                              .containsAll(lesson['h1s'])
+                                                                          ? kWhite
+                                                                          : kOffWhite,
+                                                                      fontSize:
+                                                                          width *
+                                                                              0.007,
+                                                                    ),
+                                                                  )),
+                                                            )
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                SizedBox(width: width * 0.05),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'المهارات',
+                                          style: textStyle.copyWith(
+                                            color: kWhite,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: width * 0.012,
+                                          ),
+                                        ),
+                                        SizedBox(width: width * 0.035),
+                                        Icon(
+                                          Icons.search_rounded,
+                                          size: width * 0.016,
+                                          color: kOffWhite,
+                                        ),
+                                      ],
+                                    ),
+                                    Button(
+                                      onTap: null,
+                                      verticalPadding: width / 150,
+                                      horizontalPadding: width / 100,
+                                      borderRadius: width * 0.005,
+                                      border: 0,
+                                      buttonColor: kLightGray,
+                                      height: height * 0.5,
+                                      width: width * 0.2,
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.vertical,
+                                        child: Wrap(
+                                          runSpacing: width / 250,
+                                          spacing: width / 250,
+                                          children: [
+                                            for (Map headline in headlineSet)
+                                              Button(
+                                                  onTap: () {
+                                                    setState(
+                                                      () {
+                                                        selectedHeadlines
+                                                                .contains(
+                                                                    headline[
+                                                                        'id'])
+                                                            ? selectedHeadlines
+                                                                .remove(
+                                                                    (headline[
+                                                                        'id']))
+                                                            : selectedHeadlines
+                                                                .add((headline[
+                                                                    'id']));
+                                                      },
+                                                    );
+                                                  },
+                                                  verticalPadding: width / 250,
+                                                  horizontalPadding:
+                                                      width / 100,
+                                                  borderRadius: width * 0.005,
+                                                  border: 0,
+                                                  buttonColor: selectedHeadlines
+                                                          .contains(
+                                                              headline['id'])
+                                                      ? kPurple
+                                                      : kGray,
+                                                  child: Text(
+                                                    headline['name'],
+                                                    style: textStyle.copyWith(
+                                                      color: selectedHeadlines
+                                                              .contains(
+                                                                  headline[
+                                                                      'id'])
+                                                          ? kWhite
+                                                          : kOffWhite,
+                                                      fontSize: width * 0.007,
+                                                    ),
+                                                  ))
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(width: width * 0.05),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'عدد الأسئلة',
+                                      style: textStyle.copyWith(
+                                        color: kWhite,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width * 0.012,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: width * 0.3,
+                                      child: Center(
+                                        child: SliderTheme(
+                                          data:
+                                              SliderTheme.of(context).copyWith(
+                                            activeTrackColor: kPurple,
+                                            inactiveTrackColor: kGray,
+                                            trackHeight: height * 0.021,
+                                            trackShape:
+                                                const RoundedTrackShape(),
+                                            thumbShape: CustomSliderThumbRect(
+                                                max: 60,
+                                                min: 0,
+                                                thumbRadius: 1,
+                                                thumbHeight: height * 0.04),
+                                            overlayColor:
+                                                kPurple.withOpacity(0.3),
+                                            activeTickMarkColor:
+                                                Colors.transparent,
+                                            inactiveTickMarkColor:
+                                                Colors.transparent,
+                                          ),
+                                          child: Slider(
+                                              min: 0,
+                                              max: 60,
+                                              value: questionNum >
+                                                      selectedHeadlines.length
+                                                  ? questionNum.toDouble()
+                                                  : selectedHeadlines.length
+                                                      .toDouble(),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  questionNum = value.floor();
+                                                });
+                                              }),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: height / 32),
+                                    Text(
+                                      'وقت الإمتحان',
+                                      style: textStyle.copyWith(
+                                        color: kWhite,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width * 0.012,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: height * 0.01,
+                                    ),
+                                    Button(
+                                      onTap: null,
+                                      width: width * 0.3,
+                                      height: height * 0.1,
                                       verticalPadding: 0,
                                       horizontalPadding: 0,
-                                      borderRadius: 10,
+                                      borderRadius: width * 0.005,
                                       border: 0,
-                                      buttonColor:
-                                          skill['status'] ? kPurple : kGray,
-                                      child: Padding(
-                                        padding: EdgeInsets.all(width / 75),
-                                        child: SizedBox(
-                                          width: width * 0.18,
-                                          child: Row(children: [
-                                            CustomCheckBox(
-                                              width: width / 1.5,
-                                              checked: skill['status'],
-                                              onTap: () {
+                                      buttonColor: kLightGray,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                color: kGray,
+                                                borderRadius: BorderRadius.only(
+                                                    topRight: Radius.circular(
+                                                        width * 0.005),
+                                                    bottomRight:
+                                                        Radius.circular(
+                                                            width * 0.005))),
+                                            height: height * 0.1,
+                                            child: MaterialButton(
+                                              color: withTime ? kPurple : kGray,
+                                              onPressed: () {
                                                 setState(
                                                   () {
-                                                    skill['status']
-                                                        ? {
-                                                            skill['status'] =
-                                                                !skill[
-                                                                    'status'],
-                                                            selectedSkills
-                                                                .remove((skill[
-                                                                    'id']))
-                                                          }
-                                                        : {
-                                                            skill['status'] =
-                                                                !skill[
-                                                                    'status'],
-                                                            selectedSkills.add(
-                                                                (skill['id']))
-                                                          };
+                                                    withTime = !withTime;
                                                   },
                                                 );
                                               },
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                    topRight: Radius.circular(
+                                                        width * 0.005),
+                                                    bottomRight:
+                                                        Radius.circular(
+                                                            width * 0.005)),
+                                              ),
+                                              padding:
+                                                  EdgeInsets.all(height * 0.03),
+                                              minWidth: width * 0.075,
+                                              child: Text(
+                                                'تفعيل\nالمؤقت',
+                                                style: textStyle.copyWith(
+                                                    color: withTime
+                                                        ? kWhite
+                                                        : kOffWhite,
+                                                    fontSize: width * 0.009,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
                                             ),
-                                            SizedBox(width: width / 80),
-                                            Text(
-                                              skill['name'],
-                                              style: textStyle.copyWith(
-                                                  color: skill['status']
-                                                      ? kBlack
-                                                      : kOffWhite,
-                                                  fontSize: width / 90,
-                                                  fontWeight: FontWeight.w700),
+                                          ),
+                                          CustomTextField(
+                                            innerText: null,
+                                            hintText: '00',
+                                            fontSize: width * 0.015,
+                                            width: width * 0.05,
+                                            controller: seconds,
+                                            textAlign: TextAlign.center,
+                                            onChanged: (text) {
+                                              if (!RegExp(r'^[0-9:]+$')
+                                                  .hasMatch(text)) {
+                                                seconds.text = '';
+                                              }
+                                              if (int.parse(text) > 60) {
+                                                seconds.text = '60';
+                                              } else if (text.length > 2) {
+                                                seconds.text = '00';
+                                              }
+                                            },
+                                            verticalPadding: width * 0.004,
+                                            horizontalPadding: width * 0.008,
+                                            readOnly: false,
+                                            obscure: false,
+                                            suffixIcon: null,
+                                            keyboardType: TextInputType.number,
+                                            color: kGray,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
                                             ),
-                                          ]),
-                                        ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: const BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            ':',
+                                            style: textStyle.copyWith(
+                                              fontSize: width * 0.035,
+                                              color: kWhite,
+                                            ),
+                                          ),
+                                          CustomTextField(
+                                            innerText: null,
+                                            hintText: '05',
+                                            fontSize: width * 0.015,
+                                            width: width * 0.05,
+                                            controller: minutes,
+                                            textAlign: TextAlign.center,
+                                            onChanged: (text) {
+                                              if (!RegExp(r'^[0-9:]+$')
+                                                  .hasMatch(text)) {
+                                                minutes.text = '';
+                                              }
+                                              if (int.parse(text) > 60) {
+                                                minutes.text = '60';
+                                              } else if (text.length > 2) {
+                                                minutes.text = '00';
+                                              }
+                                            },
+                                            verticalPadding: width * 0.004,
+                                            horizontalPadding: width * 0.008,
+                                            readOnly: false,
+                                            obscure: false,
+                                            suffixIcon: null,
+                                            keyboardType: TextInputType.number,
+                                            color: kGray,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: const BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: const BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            ':',
+                                            style: textStyle.copyWith(
+                                              fontSize: width * 0.035,
+                                              color: kWhite,
+                                            ),
+                                          ),
+                                          CustomTextField(
+                                            innerText: null,
+                                            hintText: '00',
+                                            fontSize: width * 0.015,
+                                            width: width * 0.05,
+                                            controller: hours,
+                                            textAlign: TextAlign.center,
+                                            onChanged: (text) {
+                                              if (!RegExp(r'^[0-9:]+$')
+                                                  .hasMatch(text)) {
+                                                hours.text = '';
+                                              }
+                                              if (int.parse(text) > 5) {
+                                                hours.text = '05';
+                                              } else if (text.length > 2) {
+                                                hours.text = '00';
+                                              }
+                                            },
+                                            verticalPadding: width * 0.004,
+                                            horizontalPadding: width * 0.008,
+                                            readOnly: false,
+                                            obscure: false,
+                                            suffixIcon: null,
+                                            keyboardType: TextInputType.number,
+                                            color: kGray,
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: const BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(
+                                                      width * 0.005)),
+                                              borderSide: const BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                              if (searchMethod == 0)
-                                for (Map module in lessonSet)
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: height / 128),
-                                    child: Button(
-                                      onTap: null,
-                                      width: width * 0.2,
-                                      verticalPadding: 0,
-                                      horizontalPadding: 0,
-                                      borderRadius: 10,
-                                      border: 0,
-                                      buttonColor:
-                                          module['status'] ? kPurple : kGray,
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: width / 150,
-                                            horizontal: width / 75),
-                                        child: SizedBox(
-                                          width: width * 0.18,
-                                          child: Column(
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: width / 200),
-                                                child: Row(children: [
-                                                  CustomCheckBox(
-                                                    width: width / 1.5,
-                                                    checked: module['status'],
-                                                    onTap: () {
-                                                      setState(() {
-                                                        module['status'] =
-                                                            !module['status'];
-                                                        for (Map lesson
-                                                            in module[
-                                                                'lessons']) {
-                                                          module['status']
-                                                              ? {
-                                                                  lesson['status'] =
-                                                                      module[
-                                                                          'status'],
-                                                                  selectedLessons
-                                                                      .add(lesson[
-                                                                          'id'])
-                                                                }
-                                                              : {
-                                                                  lesson['status'] =
-                                                                      module[
-                                                                          'status'],
-                                                                  selectedLessons
-                                                                      .remove(lesson[
-                                                                          'id'])
-                                                                };
-                                                        }
-                                                      });
-                                                    },
-                                                  ),
-                                                  SizedBox(width: width / 80),
-                                                  Text(
-                                                    module['name'],
-                                                    style: textStyle.copyWith(
-                                                        color: module['status']
-                                                            ? kBlack
-                                                            : kOffWhite,
-                                                        fontSize: width / 90,
-                                                        fontWeight:
-                                                            FontWeight.w700),
-                                                  ),
-                                                ]),
+                                    SizedBox(height: height / 32),
+                                    Text(
+                                      'صعوبة الإمتحان',
+                                      style: textStyle.copyWith(
+                                        color: kWhite,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: width * 0.012,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: height * 0.01,
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                          color: kLightGray,
+                                          borderRadius:
+                                              BorderRadius.circular(10)),
+                                      child: Row(
+                                        children: [
+                                          Button(
+                                            onTap: () {
+                                              setState(() {
+                                                quizLevel = 0;
+                                              });
+                                            },
+                                            width: width * 0.1,
+                                            verticalPadding: height * 0.01,
+                                            horizontalPadding: 0,
+                                            borderRadius: width * 0.006,
+                                            buttonColor: quizLevel == 0
+                                                ? kPurple
+                                                : kLightGray,
+                                            border: 0,
+                                            child: Center(
+                                              child: Text(
+                                                'سهل',
+                                                style: textStyle.copyWith(
+                                                    color: quizLevel == 0
+                                                        ? kWhite
+                                                        : kOffWhite,
+                                                    fontSize: width * 0.009,
+                                                    fontWeight:
+                                                        FontWeight.w500),
                                               ),
-                                              Container(
-                                                margin: EdgeInsets.fromLTRB(
-                                                    0, 0, width / 40, 0),
-                                                child: Column(
-                                                  children: [
-                                                    for (Map lesson
-                                                        in module['lessons'])
-                                                      Padding(
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                vertical:
-                                                                    width /
-                                                                        450),
-                                                        child: Row(children: [
-                                                          CustomCheckBox(
-                                                            width: width / 3,
-                                                            checked: lesson[
-                                                                'status'],
-                                                            onTap: () {
-                                                              setState(
-                                                                () {
-                                                                  bool
-                                                                      isAllChecked() {
-                                                                    bool
-                                                                        isAllChecked =
-                                                                        true;
-                                                                    for (Map lesson
-                                                                        in module[
-                                                                            'lessons']) {
-                                                                      isAllChecked =
-                                                                          isAllChecked &&
-                                                                              lesson['status'];
-                                                                    }
-                                                                    return isAllChecked;
-                                                                  }
-
-                                                                  if (isAllChecked()) {
-                                                                    lesson['status']
-                                                                        ? {
-                                                                            lesson['status'] =
-                                                                                !lesson['status'],
-                                                                            selectedLessons.remove(lesson['id'])
-                                                                          }
-                                                                        : {
-                                                                            lesson['status'] =
-                                                                                !lesson['status'],
-                                                                            selectedLessons.add(lesson['id'])
-                                                                          };
-                                                                    module['status'] =
-                                                                        !module[
-                                                                            'status'];
-                                                                  } else {
-                                                                    lesson['status']
-                                                                        ? {
-                                                                            lesson['status'] =
-                                                                                !lesson['status'],
-                                                                            selectedLessons.remove(lesson['id'])
-                                                                          }
-                                                                        : {
-                                                                            lesson['status'] =
-                                                                                !lesson['status'],
-                                                                            selectedLessons.add(lesson['id'])
-                                                                          };
-                                                                    if (isAllChecked()) {
-                                                                      module['status'] =
-                                                                          !module[
-                                                                              'status'];
-                                                                    }
-                                                                  }
-                                                                },
-                                                              );
-                                                            },
-                                                          ),
-                                                          SizedBox(
-                                                              width:
-                                                                  width / 80),
-                                                          Text(
-                                                            lesson['name'],
-                                                            style: textStyle.copyWith(
-                                                                color: module[
-                                                                        'status']
-                                                                    ? kBlack
-                                                                    : kOffWhite,
-                                                                fontSize:
-                                                                    width / 130,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700),
-                                                          ),
-                                                        ]),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
-                                            ],
+                                            ),
+                                          ),
+                                          Button(
+                                            onTap: () {
+                                              setState(() {
+                                                quizLevel = 1;
+                                              });
+                                            },
+                                            width: width * 0.1,
+                                            verticalPadding: height * 0.01,
+                                            horizontalPadding: 0,
+                                            borderRadius: width * 0.006,
+                                            buttonColor: quizLevel == 1
+                                                ? kPurple
+                                                : kLightGray,
+                                            border: 0,
+                                            child: Center(
+                                              child: Text(
+                                                'صعب',
+                                                style: textStyle.copyWith(
+                                                    color: quizLevel == 1
+                                                        ? kWhite
+                                                        : kOffWhite,
+                                                    fontSize: width * 0.009,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                            ),
+                                          ),
+                                          Button(
+                                            onTap: () {
+                                              setState(() {
+                                                quizLevel = 2;
+                                              });
+                                            },
+                                            width: width * 0.1,
+                                            verticalPadding: height * 0.01,
+                                            horizontalPadding: 0,
+                                            borderRadius: width * 0.006,
+                                            buttonColor: quizLevel == 2
+                                                ? kPurple
+                                                : kLightGray,
+                                            border: 0,
+                                            child: Center(
+                                              child: Text(
+                                                'تلقائي',
+                                                style: textStyle.copyWith(
+                                                    color: quizLevel == 2
+                                                        ? kWhite
+                                                        : kOffWhite,
+                                                    fontSize: width * 0.009,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(height: height / 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Button(
+                                          onTap: () {
+                                            if (selectedHeadlines.isNotEmpty) {
+                                              buildQuiz();
+                                            }
+                                          },
+                                          width: width * 0.13,
+                                          verticalPadding: 8,
+                                          horizontalPadding: 0,
+                                          borderRadius: width * 0.005,
+                                          buttonColor: kPurple,
+                                          border: 0,
+                                          child: Center(
+                                            child: Text(
+                                              'ادرس',
+                                              style: textStyle.copyWith(
+                                                  fontSize: width * 0.009,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
                                           ),
                                         ),
+                                        SizedBox(width: width * 0.04),
+                                        Button(
+                                          onTap: () {
+                                            if (selectedHeadlines.isNotEmpty) {
+                                              buildQuiz();
+                                            }
+                                          },
+                                          width: width * 0.13,
+                                          verticalPadding: 8,
+                                          horizontalPadding: 0,
+                                          borderRadius: width * 0.005,
+                                          buttonColor: kPurple,
+                                          border: 0,
+                                          child: Center(
+                                            child: Text(
+                                              'امتحن',
+                                              style: textStyle.copyWith(
+                                                  fontSize: width * 0.009,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ],
+                            )
+                          ]),
+                      const SizedBox(),
+                    ],
+                  ),
+                  MouseRegion(
+                    onHover: (isHover) {
+                      setState(() {
+                        forwardAnimationController!.reverse();
+                        forwardAnimationCurve!.addListener(() => setState(() {
+                              forwardAnimationValue =
+                                  forwardAnimationCurve!.value;
+                            }));
+
+                        backwardAnimationController!.forward();
+                        backwardAnimationCurve!.addListener(() => setState(() {
+                              backwardAnimationValue =
+                                  backwardAnimationCurve!.value;
+                            }));
+                      });
+                    },
+                    onExit: (e) {
+                      setState(() {
+                        forwardAnimationController!.forward();
+                        forwardAnimationCurve!.addListener(() => setState(() {
+                              forwardAnimationValue =
+                                  forwardAnimationCurve!.value;
+                            }));
+
+                        backwardAnimationController!.reverse();
+                        backwardAnimationCurve!.addListener(() => setState(() {
+                              backwardAnimationValue =
+                                  backwardAnimationCurve!.value;
+                            }));
+                      });
+                    },
+                    child: Container(
+                        height: height,
+                        width: width *
+                            (0.06 * forwardAnimationValue +
+                                0.2 * backwardAnimationValue),
+                        decoration: BoxDecoration(
+                            color: kLightBlack.withOpacity(0.95),
+                            border: Border(
+                                left: BorderSide(color: kLightGray, width: 2))),
+                        child: ListView(
+                          children: [
+                            SizedBox(
+                              height: height * 0.06,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'الصفحة الرئيسية',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.home_rounded,
+                                        size: width * 0.02,
+                                        color: kWhite,
                                       ),
                                     ),
-                                  )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  VerticalDivider(
-                    color: kGray,
-                    indent: height * 0.3,
-                    endIndent: 0,
-                    thickness: 1,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: width * 0.1),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'عدد الأسئلة',
-                          style: textStyle.copyWith(
-                            color: kWhite,
-                            fontWeight: FontWeight.w500,
-                            fontSize: width * 0.016,
-                          ),
-                        ),
-                        SizedBox(
-                          width: width * 0.31,
-                          child: slider(
-                            15,
-                            40,
-                            1,
-                            1,
-                            questionNum,
-                            (double value) {
-                              setState(() {
-                                questionNum = value == 0 ? 1 : value.floor();
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          height: height * 0.07,
-                        ),
-                        Text(
-                          'وقت الإمتحان',
-                          style: textStyle.copyWith(
-                            color: kWhite,
-                            fontWeight: FontWeight.w500,
-                            fontSize: width * 0.016,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            CustomTextField(
-                              innerText: null,
-                              hintText: '00',
-                              fontSize: width * 0.02,
-                              width: width * 0.07,
-                              controller: seconds,
-                              textAlign: TextAlign.center,
-                              onChanged: (text) {
-                                if (!RegExp(r'^[0-9:]+$').hasMatch(text)) {
-                                  seconds.text = '';
-                                }
-                                if (text.length > 2) {
-                                  seconds.text =
-                                      min(int.parse(text), 60).toString();
-                                }
-                              },
-                              maxLength: 2,
-                              verticalPadding: width * 0.01,
-                              horizontalPadding: width * 0.01,
-                              readOnly: false,
-                              obscure: false,
-                              suffixIcon: null,
-                              keyboardType: TextInputType.number,
-                              color: kGray,
-                              border: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
-                                ),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.015,
-                                  horizontal: width * 0.02),
-                              child: Text(
-                                ':',
-                                style: textStyle.copyWith(
-                                  fontSize: width * 0.04,
-                                  color: kPurple,
-                                ),
-                              ),
-                            ),
-                            CustomTextField(
-                              innerText: null,
-                              hintText: '05',
-                              fontSize: width * 0.02,
-                              width: width * 0.07,
-                              controller: minutes,
-                              textAlign: TextAlign.center,
-                              onChanged: (text) {
-                                if (!RegExp(r'^[0-9:]+$').hasMatch(text)) {
-                                  minutes.text = '';
-                                }
-                                if (text.length > 1) {
-                                  minutes.text =
-                                      min(int.parse(text), 60).toString();
-                                }
-                              },
-                              maxLength: 2,
-                              verticalPadding: width * 0.01,
-                              horizontalPadding: width * 0.01,
-                              readOnly: false,
-                              obscure: false,
-                              suffixIcon: null,
-                              keyboardType: TextInputType.number,
-                              color: kGray,
-                              border: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
-                                ),
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'معلوماتي',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.account_circle_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.015,
-                                  horizontal: width * 0.02),
-                              child: Text(
-                                ':',
-                                style: textStyle.copyWith(
-                                  fontSize: width * 0.04,
-                                  color: kPurple,
+                                vertical: height * 0.02,
+                              ),
+                              child: Divider(
+                                thickness: 1,
+                                indent: width * 0.005,
+                                endIndent: width * 0.005,
+                                color: kLightGray,
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'يلا نساعدك بالدراسة',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.school_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
                                 ),
                               ),
                             ),
-                            CustomTextField(
-                              innerText: null,
-                              hintText: '00',
-                              fontSize: width * 0.02,
-                              width: width * 0.07,
-                              controller: hours,
-                              textAlign: TextAlign.center,
-                              onChanged: (text) {
-                                if (!RegExp(r'^[0-9:]+$').hasMatch(text)) {
-                                  hours.text = '';
-                                }
-                                if (text.length > 1) {
-                                  hours.text =
-                                      min(int.parse(text), 5).toString();
-                                }
-                              },
-                              maxLength: 2,
-                              verticalPadding: width * 0.01,
-                              horizontalPadding: width * 0.01,
-                              readOnly: false,
-                              obscure: false,
-                              suffixIcon: null,
-                              keyboardType: TextInputType.number,
-                              color: kGray,
-                              border: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'امتحانات وأسئلة',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.fact_check_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
                                 ),
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(5)),
-                                borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 1,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'نتائج وتحليلات',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.analytics_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'مجتمع مدارس',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.groups,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'قائمة المتصدرين',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.emoji_events_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: height * 0.02,
+                              ),
+                              child: Divider(
+                                thickness: 1,
+                                indent: width * 0.005,
+                                endIndent: width * 0.005,
+                                color: kLightGray,
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'الإعدادات',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.settings_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: height * 0.01,
+                                  horizontal: width * 0.01),
+                              child: Button(
+                                onTap: () {
+                                  Navigator.pushNamed(context, Dashboard.route);
+                                },
+                                width: width *
+                                    (0.032 * forwardAnimationValue +
+                                        0.16 * backwardAnimationValue),
+                                verticalPadding: width * 0.006,
+                                horizontalPadding: width * 0.006,
+                                borderRadius: 8,
+                                buttonColor: kBlack.withOpacity(0.5),
+                                border: 0,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    if (backwardAnimationValue == 1)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            right: width *
+                                                0.02 *
+                                                backwardAnimationValue),
+                                        child: Text(
+                                          'تواصل معنا',
+                                          style: textStyle.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: width *
+                                                  (0.01 *
+                                                      backwardAnimationValue),
+                                              color: kWhite),
+                                        ),
+                                      ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          left: width *
+                                              0.02 *
+                                              backwardAnimationValue),
+                                      child: Icon(
+                                        Icons.phone_outlined,
+                                        size: width * 0.02,
+                                        color: kWhite,
+                                      ),
+                                    ),
+                                    if (backwardAnimationValue != 1) SizedBox(),
+                                  ],
                                 ),
                               ),
                             ),
                           ],
-                        ),
-                        Button(
-                          onTap: null,
-                          width: width * 0.2,
-                          verticalPadding: 0,
-                          horizontalPadding: 0,
-                          borderRadius: 10,
-                          border: 0,
-                          child: SizedBox(
-                            width: width * 0.18,
-                            child: Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Row(children: [
-                                CustomCheckBox(
-                                  width: width / 1.5,
-                                  checked: withTime,
-                                  onTap: () {
-                                    setState(
-                                      () {
-                                        withTime = !withTime;
-                                      },
-                                    );
-                                  },
-                                ),
-                                SizedBox(width: width / 80),
-                                Text(
-                                  'بدون وقت',
-                                  style: textStyle.copyWith(
-                                      color: withTime ? kPurple : kOffWhite,
-                                      fontSize: width / 90,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ]),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: height * 0.07,
-                        ),
-                        Button(
-                          onTap: () {
-                            if (selectedLessons.isNotEmpty ||
-                                selectedSkills.isNotEmpty) {
-                              searchMethod == 0
-                                  ? getLessonQuiz()
-                                  : getSkillQuiz();
-                            }
-                          },
-                          width: width * 0.31,
-                          verticalPadding: 8,
-                          horizontalPadding: 0,
-                          borderRadius: 8,
-                          buttonColor: kPurple,
-                          border: 0,
-                          child: Center(
-                            child: Text(
-                              'أنشئ',
-                              style: textStyle.copyWith(
-                                fontSize: width / 85,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                        )),
                   ),
                 ],
               ),
             ),
           ))
         : Scaffold(
-            backgroundColor: kGray,
+            backgroundColor: kLightGray,
             body: Center(
                 child: CircularProgressIndicator(
                     color: kPurple, strokeWidth: width * 0.05)));

@@ -48,7 +48,7 @@ class CustomDropDownMenu extends StatelessWidget {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                dropdownColor: kGray,
+                dropdownColor: kLightGray,
                 menuMaxHeight: fontSize! * 14,
                 style: textStyle.copyWith(fontSize: fontSize),
                 hint: Text(

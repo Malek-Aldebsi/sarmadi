@@ -21,7 +21,7 @@ class CustomCheckBox extends StatelessWidget {
         decoration: BoxDecoration(
             border: Border.all(color: checked ? kBlack : kOffWhite),
             shape: BoxShape.circle,
-            color: checked ? kPurple : kGray),
+            color: checked ? kPurple : kLightGray),
         child: Padding(
           padding: EdgeInsets.all(width / 500),
           child: Icon(

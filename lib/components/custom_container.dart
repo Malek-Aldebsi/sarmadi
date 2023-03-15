@@ -6,7 +6,8 @@ class Button extends StatelessWidget {
   final Color? buttonColor;
   final Widget child;
   final Function? onTap;
-  final double width;
+  final double? width;
+  final double? height;
   final double borderRadius;
   final double verticalPadding;
   final double horizontalPadding;
@@ -15,7 +16,8 @@ class Button extends StatelessWidget {
       {super.key,
       required this.child,
       this.onTap,
-      required this.width,
+      this.width,
+      this.height,
       required this.borderRadius,
       required this.border,
       required this.verticalPadding,
@@ -33,6 +35,7 @@ class Button extends StatelessWidget {
           : null,
       child: Container(
         width: width,
+        height: height ?? null,
         decoration: BoxDecoration(
             color: buttonColor ?? Colors.transparent,
             border: border == 0
@@ -44,9 +47,27 @@ class Button extends StatelessWidget {
                           width: 1,
                         ),
                       )
-                    : Border.all(width: 1, color: borderColor!),
-            borderRadius:
-                border == 1 ? null : BorderRadius.circular(borderRadius)),
+                    : border == 3
+                        ? Border(
+                            bottom: BorderSide(
+                              color: borderColor!,
+                              width: 1,
+                            ),
+                            top: BorderSide(
+                              color: borderColor!,
+                              width: 1,
+                            ),
+                            right: BorderSide(
+                              color: borderColor!,
+                              width: 1,
+                            ),
+                          )
+                        : Border.all(width: 1, color: borderColor!),
+            borderRadius: border == 1
+                ? null
+                : border == 3
+                    ? null
+                    : BorderRadius.circular(borderRadius)),
         child: Padding(
           padding: EdgeInsets.symmetric(
               vertical: verticalPadding, horizontal: horizontalPadding),

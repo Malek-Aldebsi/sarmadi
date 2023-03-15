@@ -188,7 +188,7 @@ class _LogInState extends State<LogIn> {
                         verticalPadding: 0,
                         horizontalPadding: 0,
                         borderRadius: 8,
-                        buttonColor: kGray,
+                        buttonColor: kLightGray,
                         border: 0,
                         child: Padding(
                           padding: EdgeInsets.all(width * 0.0025),
@@ -205,7 +205,7 @@ class _LogInState extends State<LogIn> {
                         verticalPadding: 0,
                         horizontalPadding: 0,
                         borderRadius: 8,
-                        buttonColor: kGray,
+                        buttonColor: kLightGray,
                         border: 0,
                         child: Padding(
                           padding: EdgeInsets.all(width * 0.0025),
@@ -226,14 +226,14 @@ class _LogInState extends State<LogIn> {
                         height: height * 0.1,
                         child: VerticalDivider(
                           thickness: 1,
-                          color: kGray,
+                          color: kLightGray,
                         ),
                       ),
                       Text(
                         'أو',
                         textDirection: TextDirection.rtl,
                         style: textStyle.copyWith(
-                          color: kGray,
+                          color: kLightGray,
                           fontWeight: FontWeight.w800,
                           fontSize: width / 90,
                         ),
@@ -242,7 +242,7 @@ class _LogInState extends State<LogIn> {
                         height: height * 0.1,
                         child: VerticalDivider(
                           thickness: 1,
-                          color: kGray,
+                          color: kLightGray,
                         ),
                       ),
                     ],
@@ -353,7 +353,7 @@ class _LogInState extends State<LogIn> {
                           keyboardType: loginMethod == 0
                               ? TextInputType.emailAddress
                               : TextInputType.phone,
-                          color: kGray,
+                          color: kLightGray,
                           verticalPadding: width / 170,
                           horizontalPadding: width / 42.5,
                           border: roundedInputBorder(),
@@ -386,7 +386,7 @@ class _LogInState extends State<LogIn> {
                             },
                           ),
                           keyboardType: null,
-                          color: kGray,
+                          color: kLightGray,
                           verticalPadding: width / 170,
                           horizontalPadding: width / 42.5,
                           border: roundedInputBorder(),

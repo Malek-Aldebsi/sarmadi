@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-String baseURL = 'http://127.0.0.1:8000/';
+String baseURL = 'http://127.0.0.1:8000';
 
 Future get(String endPoint) async {
   return await http.get(

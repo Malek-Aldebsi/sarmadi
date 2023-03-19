@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:intl/intl.dart' show NumberFormat;
-import '../const.dart';
+
+import '../const/colors.dart';
+
+// TODO:
 
 class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
-  /// Create a slider track that draws two rectangles with rounded outer edges.
   const RoundedTrackShape();
 
   @override
@@ -33,15 +35,11 @@ class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
     assert(enableAnimation != null);
     assert(textDirection != null);
     assert(thumbCenter != null);
-    // If the slider [SliderThemeData.trackHeight] is less than or equal to 0,
-    // then it makes no difference whether the track is painted or not,
-    // therefore the painting  can be a no-op.
+
     if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
       return;
     }
 
-    // Assign the track segment paints, which are leading: active and
-    // trailing: inactive.
     final ColorTween activeTrackColorTween = ColorTween(
         begin: sliderTheme.disabledActiveTrackColor,
         end: sliderTheme.activeTrackColor);
@@ -72,7 +70,7 @@ class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
       isEnabled: isEnabled,
       isDiscrete: isDiscrete,
     );
-    final Radius trackRadius = Radius.circular(trackRect.height / 8);
+    final Radius trackRadius = Radius.circular(trackRect.height * 0.1);
     final Radius activeTrackRadius =
         Radius.circular((trackRect.height + additionalActiveTrackHeight) / 8);
 
@@ -154,12 +152,12 @@ class CustomSliderThumbRect extends SliderComponentShape {
 
     final rRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
-          center: center, width: thumbHeight * 1.2, height: thumbHeight * .6),
+          center: center, width: thumbHeight * 1.2, height: thumbHeight * 0.6),
       Radius.circular(thumbRadius * .4),
     );
 
     final paint = Paint()
-      ..color = sliderTheme.activeTrackColor! //Thumb Background Color
+      ..color = sliderTheme.thumbColor! //Thumb Background Color
       ..style = PaintingStyle.fill;
 
     TextSpan span = TextSpan(

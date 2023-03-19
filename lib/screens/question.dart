@@ -7,13 +7,15 @@ import '../components/custom_divider.dart';
 import '../components/custom_pop_up.dart';
 import '../components/custom_text_field.dart';
 import '../components/string_with_latex.dart';
-import '../const.dart';
-import 'package:flutter_dash/flutter_dash.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
+import '../const/borders.dart';
+import '../const/colors.dart';
+import '../const/fonts.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
 import 'advance_quiz_setting.dart';
 import 'dart:core';
+import 'package:flutter/services.dart';
 
 class Question extends StatefulWidget {
   static const String route = '/Question/';
@@ -141,34 +143,36 @@ class _QuestionState extends State<Question> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               InkWell(
-                                onTap: () {
-                                  popUp(
-                                      context, width / 4, 'معلومات عن السؤال', [
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'هذا السؤال على نمط اسئلة ${questions[questionIndex - 1]['writer']}',
-                                        style: textStyle.copyWith(
-                                            color: kOffPurple),
-                                      ),
-                                    ),
-                                  ]);
-                                },
+                                // onTap: () {
+                                //   popUp(
+                                //     context,
+                                //     width * 0.2,
+                                //     height * 0.25,
+                                //
+                                //     Padding(
+                                //       padding: const EdgeInsets.all(8.0),
+                                //       child: Text(
+                                //         questions[questionIndex - 1]
+                                //                     ['writer'] ==
+                                //                 'نمط اسئلة الكتاب'
+                                //             ? 'هذا السؤال على نمط اسئلة الكتاب'
+                                //             : 'هذا السؤال من اسئلة الاستاذ ${questions[questionIndex - 1]['writer']}',
+                                //         style: textStyle.copyWith(
+                                //             color: kLightPurple),
+                                //       ),
+                                //     ),
+                                //   );
+                                // },
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.lightbulb_outline_rounded,
                                       size: width / 50,
-                                      color: kBlack,
+                                      color: kDarkBlack,
                                     ),
-                                    Text(
-                                      'معلومات السؤال',
-                                      style: textStyle.copyWith(
-                                        color: kBlack,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: width / 100,
-                                      ),
-                                    ),
+                                    Text('معلومات السؤال',
+                                        style: textStyle(
+                                            2, width, height, kDarkBlack)),
                                   ],
                                 ),
                               ),
@@ -179,16 +183,11 @@ class _QuestionState extends State<Question> {
                                     Icon(
                                       Icons.bookmark_add_outlined,
                                       size: width / 50,
-                                      color: kBlack,
+                                      color: kDarkBlack,
                                     ),
-                                    Text(
-                                      'حفظ السؤال',
-                                      style: textStyle.copyWith(
-                                        color: kBlack,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: width / 100,
-                                      ),
-                                    ),
+                                    Text('حفظ السؤال',
+                                        style: textStyle(
+                                            2, width, height, kDarkBlack)),
                                   ],
                                 ),
                               ),
@@ -196,38 +195,23 @@ class _QuestionState extends State<Question> {
                                 thickness: 0.5,
                                 indent: 10,
                                 endIndent: 10,
-                                color: kBlack,
+                                color: kDarkBlack,
                               ),
                               Column(
                                 children: [
-                                  Text(
-                                    'السؤال',
-                                    style: textStyle.copyWith(
-                                      color: kBlack,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: width / 100,
-                                    ),
-                                  ),
-                                  Text(
-                                    '$questionIndex/${questions.length}',
-                                    style: textStyle.copyWith(
-                                      color: kBlack,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: width / 80,
-                                    ),
-                                  ),
+                                  Text('السؤال',
+                                      style: textStyle(
+                                          2, width, height, kDarkBlack)),
+                                  Text('$questionIndex/${questions.length}',
+                                      style: textStyle(
+                                          2, width, height, kDarkBlack)),
                                 ],
                               ),
                               Column(
                                 children: [
-                                  Text(
-                                    'الوقت',
-                                    style: textStyle.copyWith(
-                                      color: kBlack,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: width / 100,
-                                    ),
-                                  ),
+                                  Text('الوقت',
+                                      style: textStyle(
+                                          2, width, height, kDarkBlack)),
                                   StreamBuilder<int>(
                                     stream: quizTimer!.rawTime,
                                     initialData: quizTimer!.rawTime.value,
@@ -236,36 +220,30 @@ class _QuestionState extends State<Question> {
                                           StopWatchTimer.getDisplayTime(
                                               snap.data!,
                                               milliSecond: false);
-                                      return Text(
-                                        displayTime,
-                                        style: textStyle.copyWith(
-                                          color: kBlack,
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: width / 80,
-                                        ),
-                                      );
+                                      return Text(displayTime,
+                                          style: textStyle(
+                                              2, width, height, kDarkBlack));
                                     },
                                   ),
                                 ],
                               ),
                               Column(
                                 children: [
-                                  Text(
-                                    'رمز السؤال',
-                                    style: textStyle.copyWith(
-                                      color: kBlack,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: width / 100,
-                                    ),
-                                  ),
-                                  Text(
-                                    questions[questionIndex - 1]['id']
-                                        .substring(0, 8),
-                                    style: textStyle.copyWith(
-                                      color: kBlack,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: width / 80,
-                                    ),
+                                  Text('رمز السؤال',
+                                      style: textStyle(
+                                          2, width, height, kDarkBlack)),
+                                  InkWell(
+                                    onTap: () async {
+                                      await Clipboard.setData(ClipboardData(
+                                          text: questions[questionIndex - 1]
+                                              ['id']));
+                                      // copied successfully
+                                    },
+                                    child: Text(
+                                        questions[questionIndex - 1]['id']
+                                            .substring(0, 8),
+                                        style: textStyle(
+                                            2, width, height, kDarkBlack)),
                                   ),
                                 ],
                               ),
@@ -273,150 +251,140 @@ class _QuestionState extends State<Question> {
                                 thickness: 0.5,
                                 indent: 10,
                                 endIndent: 10,
-                                color: kBlack,
+                                color: kDarkBlack,
                               ),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
                                 children: [
                                   InkWell(
-                                    onTap: () {
-                                      popUp(context, width / 2, 'بلاغ', [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            'ملاحظاتك',
-                                            style: textStyle.copyWith(
-                                                color: kOffPurple),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: CustomTextField(
-                                            innerText: null,
-                                            hintText: '',
-                                            fontSize: 15,
-                                            width: double.infinity,
-                                            controller: TextEditingController(),
-                                            onChanged: (text) {},
-                                            readOnly: false,
-                                            obscure: false,
-                                            suffixIcon: null,
-                                            keyboardType: null,
-                                            color: kWhite,
-                                            fontColor: kBlack,
-                                            border: const OutlineInputBorder(),
-                                            focusedBorder:
-                                                const OutlineInputBorder(),
-                                            verticalPadding: 7.5,
-                                            horizontalPadding: 30,
-                                          ),
-                                        ),
-                                        Button(
-                                          onTap: () {
-                                            () {};
-                                            Navigator.of(context).pop();
-                                          },
-                                          width: double.infinity,
-                                          verticalPadding: 8,
-                                          horizontalPadding: 0,
-                                          borderRadius: 8,
-                                          buttonColor: kBlack,
-                                          border: 0,
-                                          child: Center(
-                                            child: Text(
-                                              'تأكيد',
-                                              style: textStyle,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding:
-                                              const EdgeInsets.only(top: 16.0),
-                                          child: Text(
-                                            'تنويه',
-                                            style: textStyle.copyWith(
-                                                color: kOffPurple),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            'يرجى كتابة كافة ملاحظاتك عن السؤال وسيقوم الفريق المختص بالتأكد من الأمر بأقرب وقت',
-                                            style: textStyle.copyWith(
-                                                color: kOffPurple),
-                                          ),
-                                        ),
-                                      ]);
-                                    },
+                                    // onTap: () {
+                                    //   popUp(context, width / 2, 'بلاغ', [
+                                    //     Padding(
+                                    //       padding: const EdgeInsets.all(8.0),
+                                    //       child: Text(
+                                    //         'ملاحظاتك',
+                                    //         style: textStyle.copyWith(
+                                    //             color: kLightPurple),
+                                    //       ),
+                                    //     ),
+                                    //     Padding(
+                                    //       padding: const EdgeInsets.symmetric(
+                                    //           vertical: 8.0),
+                                    //       child: CustomTextField(
+                                    //         innerText: null,
+                                    //         hintText: '',
+                                    //         fontSize: 15,
+                                    //         width: double.infinity,
+                                    //         controller: TextEditingController(),
+                                    //         onChanged: (text) {},
+                                    //         readOnly: false,
+                                    //         obscure: false,
+                                    //         suffixIcon: null,
+                                    //         keyboardType: null,
+                                    //         color: kWhite,
+                                    //         fontColor: kDarkBlack,
+                                    //         border: const OutlineInputBorder(),
+                                    //         focusedBorder:
+                                    //             const OutlineInputBorder(),
+                                    //         verticalPadding: 7.5,
+                                    //         horizontalPadding: 30,
+                                    //       ),
+                                    //     ),
+                                    //     Button(
+                                    //       onTap: () {
+                                    //         () {};
+                                    //         Navigator.of(context).pop();
+                                    //       },
+                                    //       width: double.infinity,
+                                    //       verticalPadding: 8,
+                                    //       horizontalPadding: 0,
+                                    //       borderRadius: 8,
+                                    //       buttonColor: kDarkBlack,
+                                    //       border: null,
+                                    //       child: Center(
+                                    //         child: Text(
+                                    //           'تأكيد',
+                                    //           style: textStyle,
+                                    //         ),
+                                    //       ),
+                                    //     ),
+                                    //     Container(
+                                    //       padding:
+                                    //           const EdgeInsets.only(top: 16.0),
+                                    //       child: Text(
+                                    //         'تنويه',
+                                    //         style: textStyle.copyWith(
+                                    //             color: kLightPurple),
+                                    //       ),
+                                    //     ),
+                                    //     Padding(
+                                    //       padding: const EdgeInsets.all(8.0),
+                                    //       child: Text(
+                                    //         'يرجى كتابة كافة ملاحظاتك عن السؤال وسيقوم الفريق المختص بالتأكد من الأمر بأقرب وقت',
+                                    //         style: textStyle.copyWith(
+                                    //             color: kLightPurple),
+                                    //       ),
+                                    //     ),
+                                    //   ]);
+                                    // },
                                     child: Column(
                                       children: [
                                         Icon(
                                           Icons.warning_amber_rounded,
                                           size: width / 50,
-                                          color: kBlack,
+                                          color: kDarkBlack,
                                         ),
                                         Text(
                                           'بلاغ',
-                                          style: textStyle.copyWith(
-                                            color: kBlack,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: width / 100,
-                                          ),
+                                          style: textStyle(
+                                              2, width, height, kDarkBlack),
                                         ),
                                       ],
                                     ),
                                   ),
                                   InkWell(
-                                    onTap: () {
-                                      popUp(context, width / 4, 'مساعدة', [
-                                        Text(
-                                          questions[questionIndex - 1]
-                                                  ['hint'] ??
-                                              'لا توجد اي معلومة اضافية لهذا السؤال',
-                                          style: textStyle.copyWith(
-                                              color: kOffPurple),
-                                        ),
-                                      ]);
-                                    },
+                                    // onTap: () {
+                                    //   popUp(context, width / 4, 'مساعدة', [
+                                    //     Text(
+                                    //       questions[questionIndex - 1]
+                                    //               ['hint'] ??
+                                    //           'لا توجد اي معلومة اضافية لهذا السؤال',
+                                    //       style: textStyle.copyWith(
+                                    //           color: kLightPurple),
+                                    //     ),
+                                    //   ]);
+                                    // },
                                     child: Column(
                                       children: [
                                         Icon(
                                           Icons.help_outline_rounded,
                                           size: width / 50,
-                                          color: kBlack,
+                                          color: kDarkBlack,
                                         ),
-                                        Text(
-                                          'مساعدة',
-                                          style: textStyle.copyWith(
-                                            color: kBlack,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: width / 100,
-                                          ),
-                                        ),
+                                        Text('مساعدة',
+                                            style: textStyle(
+                                                2, width, height, kDarkBlack)),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
                               InkWell(
-                                onTap: () {},
+                                onTap: () {
+                                  //TODO: add pop up are you sure?
+                                  endQuiz();
+                                },
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.exit_to_app_outlined,
                                       size: width / 50,
-                                      color: kBlack,
+                                      color: kDarkBlack,
                                     ),
-                                    Text(
-                                      'إنهاء الإمتحان',
-                                      style: textStyle.copyWith(
-                                        color: kBlack,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: width / 100,
-                                      ),
-                                    ),
+                                    Text('إنهاء الإمتحان',
+                                        style: textStyle(
+                                            2, width, height, kDarkBlack)),
                                   ],
                                 ),
                               ),
@@ -436,7 +404,9 @@ class _QuestionState extends State<Question> {
                                   width: width * 0.84,
                                   child: stringWithLatex(
                                       questions[questionIndex - 1]['body'],
-                                      width * 0.016,
+                                      3,
+                                      width,
+                                      height,
                                       kWhite),
                                 ),
                               ),
@@ -456,7 +426,7 @@ class _QuestionState extends State<Question> {
                                         Padding(
                                           padding: EdgeInsets.only(
                                               bottom: height / 64),
-                                          child: Button(
+                                          child: CustomContainer(
                                               onTap: () {
                                                 setState(() {
                                                   answers[questions[questionIndex - 1]
@@ -482,20 +452,22 @@ class _QuestionState extends State<Question> {
                                                       ? width * 0.84
                                                       : width * 0.4,
                                               borderRadius: 8,
-                                              border: 0,
+                                              border: null,
                                               buttonColor: answers[questions[
                                                               questionIndex - 1]
                                                           ['id']]!['id'] ==
                                                       questions[questionIndex -
                                                           1]['choices'][i]['id']
                                                   ? kPurple
-                                                  : kLightGray,
+                                                  : kDarkGray,
                                               child: SizedBox(
                                                 width: width * 0.3,
                                                 child: stringWithLatex(
                                                     questions[questionIndex - 1]
                                                         ['choices'][i]['body'],
-                                                    width * 0.016,
+                                                    3,
+                                                    width,
+                                                    height,
                                                     kWhite),
                                               )),
                                         ),
@@ -507,7 +479,7 @@ class _QuestionState extends State<Question> {
                                               questions[questionIndex - 1]
                                                   ['id']]!['body'],
                                           hintText: 'اكتب الجواب النهائي',
-                                          fontSize: width * 0.016,
+                                          fontOption: 3,
                                           width: questions[questionIndex - 1]
                                                       ['image'] ==
                                                   null
@@ -529,11 +501,13 @@ class _QuestionState extends State<Question> {
                                           obscure: false,
                                           suffixIcon: null,
                                           keyboardType: null,
-                                          color: kLightGray,
+                                          color: kDarkGray,
                                           verticalPadding: width * 0.01,
                                           horizontalPadding: width * 0.02,
-                                          border: inputBorder(),
-                                          focusedBorder: focusedBorder(),
+                                          border: outlineInputBorder(
+                                              width * 0.005, kTransparent),
+                                          focusedBorder: outlineInputBorder(
+                                              width * 0.005, kPurple),
                                         )
                                     ],
                                   ),
@@ -544,13 +518,20 @@ class _QuestionState extends State<Question> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Dash(
-                                            direction: Axis.vertical,
-                                            dashThickness: 0.2,
-                                            length: height / 2,
-                                            dashLength: height * 0.01,
-                                            dashColor:
-                                                kPurple.withOpacity(0.2)),
+                                        CustomDivider(
+                                          dashHeight: 2,
+                                          dashWidth: width * 0.005,
+                                          dashColor: kPurple.withOpacity(0.2),
+                                          direction: Axis.vertical,
+                                          fillRate: 1,
+                                        ),
+                                        // Dash(
+                                        //     direction: Axis.vertical,
+                                        //     dashThickness: 0.2,
+                                        //     length: height / 2,
+                                        //     dashLength: height * 0.01,
+                                        //     dashColor:
+                                        //         kDarkPurple.withOpacity(0.2)),
                                       ],
                                     ),
                                     SizedBox(width: width * 0.02),
@@ -573,7 +554,7 @@ class _QuestionState extends State<Question> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 if (questionIndex != 1)
-                                  Button(
+                                  CustomContainer(
                                     onTap: () {
                                       setState(() {
                                         stopwatch.stop();
@@ -589,23 +570,17 @@ class _QuestionState extends State<Question> {
                                     verticalPadding: width * 0.005,
                                     horizontalPadding: 0,
                                     borderRadius: 8,
-                                    border: 4,
-                                    borderColor: kPurple,
-                                    buttonColor: kBlack,
+                                    border: fullBorder(kPurple),
+                                    buttonColor: kDarkBlack,
                                     child: Center(
-                                      child: Text(
-                                        'السابق',
-                                        style: textStyle.copyWith(
-                                          color: kPurple,
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: width * 0.016,
-                                        ),
-                                      ),
+                                      child: Text('السابق',
+                                          style: textStyle(
+                                              2, width, height, kPurple)),
                                     ),
                                   ),
                                 if (questionIndex != 1)
                                   SizedBox(width: width * 0.02),
-                                Button(
+                                CustomContainer(
                                   onTap: () {
                                     questionIndex != questions.length
                                         ? setState(() {
@@ -623,19 +598,15 @@ class _QuestionState extends State<Question> {
                                   verticalPadding: width * 0.005,
                                   horizontalPadding: 0,
                                   borderRadius: 8,
-                                  border: 0,
+                                  border: null,
                                   buttonColor: kPurple,
                                   child: Center(
                                     child: Text(
-                                      questionIndex != questions.length
-                                          ? 'التالي'
-                                          : 'انهاء الإمتحان',
-                                      style: textStyle.copyWith(
-                                        color: kBlack,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.016,
-                                      ),
-                                    ),
+                                        questionIndex != questions.length
+                                            ? 'التالي'
+                                            : 'انهاء الإمتحان',
+                                        style: textStyle(
+                                            2, width, height, kDarkBlack)),
                                   ),
                                 ),
                               ],
@@ -662,24 +633,20 @@ class _QuestionState extends State<Question> {
                   Visibility(
                     visible: showResult,
                     child: Center(
-                      child: Button(
+                      child: CustomContainer(
                         onTap: null,
                         width: width * 0.5,
                         height: height * 0.77,
                         verticalPadding: height * 0.02,
                         horizontalPadding: width * 0.02,
                         borderRadius: width * 0.01,
-                        border: 4,
-                        borderColor: kBlack,
+                        border: fullBorder(kDarkBlack),
                         buttonColor: kLightBlack,
                         child: Column(
                           children: [
                             Text(
                               'أحسنت ، لقد أنهيت امتحانك !',
-                              style: textStyle.copyWith(
-                                  fontSize: width * 0.017,
-                                  fontWeight: FontWeight.w600,
-                                  color: kOffPurple),
+                              style: textStyle(2, width, height, kLightPurple),
                             ),
                             SizedBox(
                               height: height * 0.65,
@@ -695,57 +662,53 @@ class _QuestionState extends State<Question> {
                                     children: [
                                       Text(
                                         'العلامة : $quizResult',
-                                        style: textStyle.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: width * 0.012,
-                                            color: kOffPurple),
+                                        style: textStyle(
+                                            2, width, height, kLightPurple),
                                       ),
                                       SizedBox(
                                         width: width * 0.28,
                                         child: CustomDivider(
                                           dashHeight: 1,
-                                          dashWith: width * 0.005,
-                                          dashColor: kGray,
+                                          dashWidth: width * 0.005,
+                                          dashColor: kDarkGray,
                                           direction: Axis.horizontal,
                                           fillRate: 0.6,
                                         ),
                                       ),
                                       Text(
                                         'مهامك اكتملت بنسبة :',
-                                        style: textStyle.copyWith(
-                                            fontSize: width * 0.01,
-                                            color: kOffPurple),
+                                        style: textStyle(
+                                            2, width, height, kLightPurple),
                                       ),
                                       Row(
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.022,
                                             width: width * 0.24,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kOffBlack,
+                                            border: null,
+                                            buttonColor: kDarkBlack,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.022,
                                                     width: width * 0.07,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kSkin,
                                                     child: const SizedBox()),
                                                 SizedBox(width: width * 0.005),
                                                 Text(
                                                   '25%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.007,
-                                                      color: kBlack),
-                                                ),
+                                                  style: textStyle(2, width,
+                                                      height, kLightBlack),
+                                                )
                                               ],
                                             ),
                                           ),
@@ -754,23 +717,22 @@ class _QuestionState extends State<Question> {
                                           ),
                                           Text(
                                             'أظهر المزيد',
-                                            style: textStyle.copyWith(
-                                                fontSize: width * 0.007,
-                                                color: kOffPurple),
+                                            style: textStyle(
+                                                2, width, height, kLightPurple),
                                           ),
                                         ],
                                       ),
                                       const SizedBox(),
                                       const SizedBox(),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.31,
                                         height: height * 0.1,
                                         verticalPadding: height * 0.01,
                                         horizontalPadding: width * 0.01,
                                         borderRadius: width * 0.008,
-                                        border: 0,
-                                        buttonColor: kGray,
+                                        border: null,
+                                        buttonColor: kDarkGray,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceEvenly,
@@ -781,36 +743,31 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'الوقت المستهلك للحل :',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.01,
-                                                      color: kOffPurple),
+                                                  style: textStyle(2, width,
+                                                      height, kLightPurple),
                                                 ),
                                                 Text(
                                                   '$quizDuration',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.01,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
                                             const SizedBox(),
-                                            Button(
+                                            CustomContainer(
                                                 onTap: null,
                                                 width: width * 0.05,
                                                 height: height * 0.06,
                                                 verticalPadding: 0,
                                                 horizontalPadding: 0,
                                                 borderRadius: width * 0.008,
-                                                border: 0,
-                                                buttonColor: kOffPurple,
+                                                border: null,
+                                                buttonColor: kLightPurple,
                                                 child: Center(
                                                   child: Text(
                                                     'الوقت',
-                                                    style: textStyle.copyWith(
-                                                        fontSize: width * 0.01,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: kLightBlack),
+                                                    style: textStyle(2, width,
+                                                        height, kLightBlack),
                                                   ),
                                                 )),
                                             const SizedBox(),
@@ -820,15 +777,13 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'الوقت المثالي للحل :',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.01,
-                                                      color: kOffPurple),
+                                                  style: textStyle(2, width,
+                                                      height, kLightPurple),
                                                 ),
                                                 Text(
                                                   '$ideal_duration',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.01,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -839,44 +794,43 @@ class _QuestionState extends State<Question> {
                                       const SizedBox(),
                                       Text(
                                         'معدل التحصيل لكل مهارات الامتحان',
-                                        style: textStyle.copyWith(
-                                            fontSize: width * 0.01,
-                                            color: kOffPurple),
+                                        style: textStyle(
+                                            2, width, height, kLightPurple),
                                       ),
                                       Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.05,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kGray,
+                                            border: null,
+                                            buttonColor: kDarkGray,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.05,
                                                     width: width * 0.07,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kPurple,
                                                     child: const SizedBox()),
                                               ],
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: width * 0.01,
                                             borderRadius: 0,
-                                            border: 0,
+                                            border: null,
                                             buttonColor: Colors.transparent,
                                             child: Row(
                                               mainAxisAlignment:
@@ -885,15 +839,13 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'مشتقتا الضرب والقسمة والمشتقات العليا',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '20%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -903,37 +855,37 @@ class _QuestionState extends State<Question> {
                                       Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.05,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kGray,
+                                            border: null,
+                                            buttonColor: kDarkGray,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.05,
                                                     width: width * 0.13,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kPurple,
                                                     child: const SizedBox()),
                                               ],
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: width * 0.01,
                                             borderRadius: 0,
-                                            border: 0,
+                                            border: null,
                                             buttonColor: Colors.transparent,
                                             child: Row(
                                               mainAxisAlignment:
@@ -942,15 +894,13 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'الاشتقاق الضمني',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '50%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -960,37 +910,37 @@ class _QuestionState extends State<Question> {
                                       Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.05,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kGray,
+                                            border: null,
+                                            buttonColor: kDarkGray,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.05,
                                                     width: width * 0.26,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kPurple,
                                                     child: const SizedBox()),
                                               ],
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: width * 0.01,
                                             borderRadius: 0,
-                                            border: 0,
+                                            border: null,
                                             buttonColor: Colors.transparent,
                                             child: Row(
                                               mainAxisAlignment:
@@ -999,15 +949,13 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'قاعدة السلسلة',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '100%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -1017,37 +965,37 @@ class _QuestionState extends State<Question> {
                                       Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.05,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kGray,
+                                            border: null,
+                                            buttonColor: kDarkGray,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.05,
                                                     width: width * 0.18,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kPurple,
                                                     child: const SizedBox()),
                                               ],
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: width * 0.01,
                                             borderRadius: 0,
-                                            border: 0,
+                                            border: null,
                                             buttonColor: Colors.transparent,
                                             child: Row(
                                               mainAxisAlignment:
@@ -1056,15 +1004,13 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'الاشتقاق',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '65%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -1074,37 +1020,37 @@ class _QuestionState extends State<Question> {
                                       Stack(
                                         alignment: Alignment.center,
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             height: height * 0.05,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
-                                            border: 0,
-                                            buttonColor: kGray,
+                                            border: null,
+                                            buttonColor: kDarkGray,
                                             child: Row(
                                               children: [
-                                                Button(
+                                                CustomContainer(
                                                     onTap: null,
                                                     height: height * 0.05,
                                                     width: width * 0.12,
                                                     verticalPadding: 0,
                                                     horizontalPadding: 0,
                                                     borderRadius: width * 0.005,
-                                                    border: 0,
+                                                    border: null,
                                                     buttonColor: kPurple,
                                                     child: const SizedBox()),
                                               ],
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: null,
                                             width: width * 0.26,
                                             verticalPadding: 0,
                                             horizontalPadding: width * 0.01,
                                             borderRadius: 0,
-                                            border: 0,
+                                            border: null,
                                             buttonColor: Colors.transparent,
                                             child: Row(
                                               mainAxisAlignment:
@@ -1113,16 +1059,12 @@ class _QuestionState extends State<Question> {
                                               children: [
                                                 Text(
                                                   'مراجعة الوحدة الأولى',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
+                                                  style: textStyle(
+                                                      2, width, height, kWhite),
                                                 ),
-                                                Text(
-                                                  '40%',
-                                                  style: textStyle.copyWith(
-                                                      fontSize: width * 0.008,
-                                                      color: kWhite),
-                                                )
+                                                Text('40%',
+                                                    style: textStyle(2, width,
+                                                        height, kWhite))
                                               ],
                                             ),
                                           )
@@ -1132,8 +1074,8 @@ class _QuestionState extends State<Question> {
                                   ),
                                   CustomDivider(
                                     dashHeight: 1,
-                                    dashWith: width * 0.005,
-                                    dashColor: kGray,
+                                    dashWidth: width * 0.005,
+                                    dashColor: kDarkGray,
                                     direction: Axis.vertical,
                                     fillRate: 0.6,
                                   ),
@@ -1142,104 +1084,89 @@ class _QuestionState extends State<Question> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const SizedBox(),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: 0,
                                         borderRadius: width * 0.005,
-                                        border: 0,
-                                        buttonColor: kOffPurple,
+                                        border: null,
+                                        buttonColor: kLightPurple,
                                         child: Center(
                                           child: Text(
                                             'ملخص وتحليل الامتحان',
-                                            style: textStyle.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: width * 0.01,
-                                                color: kLightBlack),
+                                            style: textStyle(
+                                                2, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: 0,
                                         borderRadius: width * 0.005,
-                                        border: 0,
-                                        buttonColor: kOffPurple,
+                                        border: null,
+                                        buttonColor: kLightPurple,
                                         child: Center(
                                           child: Text(
                                             'تقرير تقدم المادة',
-                                            style: textStyle.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: width * 0.01,
-                                                color: kLightBlack),
+                                            style: textStyle(
+                                                2, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: 0,
                                         borderRadius: width * 0.005,
-                                        border: 0,
-                                        buttonColor: kOffPurple,
+                                        border: null,
+                                        buttonColor: kLightPurple,
                                         child: Center(
                                           child: Text(
                                             'ملخص وتحليل الامتحان',
-                                            style: textStyle.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: width * 0.01,
-                                                color: kLightBlack),
+                                            style: textStyle(
+                                                2, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: 0,
                                         borderRadius: width * 0.005,
-                                        border: 0,
-                                        buttonColor: kOffPurple,
+                                        border: null,
+                                        buttonColor: kLightPurple,
                                         child: Center(
-                                          child: Text(
-                                            'اعادة الامتحان',
-                                            style: textStyle.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: width * 0.01,
-                                                color: kLightBlack),
-                                          ),
+                                          child: Text('اعادة الامتحان',
+                                              style: textStyle(2, width, height,
+                                                  kDarkBlack)),
                                         ),
                                       ),
                                       const SizedBox(),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: width * 0.015,
                                         borderRadius: width * 0.005,
-                                        border: 4,
-                                        borderColor: kOffPurple,
+                                        border: fullBorder(kLightPurple),
                                         buttonColor: kLightBlack,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              'قائمة المتصدرين',
-                                              style: textStyle.copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: width * 0.01,
-                                                  color: kOffPurple),
-                                            ),
+                                            Text('قائمة المتصدرين',
+                                                style: textStyle(2, width,
+                                                    height, kLightPurple)),
                                             Icon(
                                               Icons.emoji_events_outlined,
                                               size: width * 0.02,
@@ -1248,27 +1175,22 @@ class _QuestionState extends State<Question> {
                                           ],
                                         ),
                                       ),
-                                      Button(
+                                      CustomContainer(
                                         onTap: null,
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
                                         horizontalPadding: width * 0.015,
                                         borderRadius: width * 0.005,
-                                        border: 4,
-                                        borderColor: kOffPurple,
+                                        border: fullBorder(kLightPurple),
                                         buttonColor: kLightBlack,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              'مجتمع مدارس',
-                                              style: textStyle.copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: width * 0.01,
-                                                  color: kOffPurple),
-                                            ),
+                                            Text('مجتمع مدارس',
+                                                style: textStyle(2, width,
+                                                    height, kLightPurple)),
                                             Icon(
                                               Icons.groups,
                                               size: width * 0.02,

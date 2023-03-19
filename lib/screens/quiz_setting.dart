@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../const/borders.dart';
+import '../const/colors.dart';
+import '../const/fonts.dart';
+import 'advance_quiz_setting.dart';
 import 'welcome.dart';
 import '../components/custom_container.dart';
-import '../const.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
-import 'advance_quiz_setting.dart';
 import 'dashboard.dart';
 
 class QuizSetting extends StatefulWidget {
@@ -102,7 +104,7 @@ class _QuizSettingState extends State<QuizSetting>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SizedBox(width: width * 0.05),
+                      SizedBox(width: width * 0.1),
                       Padding(
                         padding: EdgeInsets.only(right: width * 0.05),
                         child: Column(
@@ -113,11 +115,7 @@ class _QuizSettingState extends State<QuizSetting>
                               padding: EdgeInsets.only(bottom: height / 128),
                               child: Text(
                                 'كتيب المواد',
-                                style: textStyle.copyWith(
-                                  color: kWhite,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: width / 45,
-                                ),
+                                style: textStyle(1, width, height, kWhite),
                               ),
                             ),
                             SizedBox(
@@ -139,7 +137,7 @@ class _QuizSettingState extends State<QuizSetting>
                                             Padding(
                                               padding: EdgeInsets.only(
                                                   left: width * 0.02),
-                                              child: Button(
+                                              child: CustomContainer(
                                                 onTap: () {
                                                   setState(() {
                                                     selectedSubjectID ==
@@ -166,13 +164,13 @@ class _QuizSettingState extends State<QuizSetting>
                                                 verticalPadding: 0,
                                                 horizontalPadding: 0,
                                                 borderRadius: width * 0.005,
-                                                border: 0,
+                                                border: null,
                                                 buttonColor:
                                                     selectedSubjectID ==
                                                             subjects[i + j]
                                                                 ['id']
                                                         ? kPurple
-                                                        : kLightGray,
+                                                        : kDarkGray,
                                                 child: Stack(
                                                   alignment:
                                                       Alignment.bottomLeft,
@@ -193,17 +191,15 @@ class _QuizSettingState extends State<QuizSetting>
                                                             .centerRight,
                                                         child: Text(
                                                           '${subjects[i + j]['name']}',
-                                                          style: textStyle.copyWith(
-                                                              fontSize:
-                                                                  width / 80,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              color: selectedSubjectID ==
+                                                          style: textStyle(
+                                                              2,
+                                                              width,
+                                                              height,
+                                                              selectedSubjectID ==
                                                                       subjects[i +
                                                                               j]
                                                                           ['id']
-                                                                  ? kBlack
+                                                                  ? kDarkBlack
                                                                   : kWhite),
                                                         ),
                                                       ),
@@ -220,7 +216,7 @@ class _QuizSettingState extends State<QuizSetting>
                               ),
                             ),
                             SizedBox(height: height / 32),
-                            Button(
+                            CustomContainer(
                               onTap: () {
                                 if (selectedSubjectName != null) {
                                   Navigator.pushNamed(
@@ -234,16 +230,14 @@ class _QuizSettingState extends State<QuizSetting>
                               width: width * 0.15,
                               verticalPadding: height * 0.01,
                               horizontalPadding: width / 70,
-                              borderRadius: 8,
-                              border: 0,
+                              borderRadius: width * 0.005,
+                              border: null,
                               buttonColor: kPurple,
                               child: Center(
                                 child: Text(
                                   'المتابعة',
-                                  style: textStyle.copyWith(
-                                      fontSize: width / 60,
-                                      fontWeight: FontWeight.w900,
-                                      color: kBlack),
+                                  style:
+                                      textStyle(2, width, height, kDarkBlack),
                                 ),
                               ),
                             ),
@@ -283,36 +277,37 @@ class _QuizSettingState extends State<QuizSetting>
                             }));
                       });
                     },
-                    child: Container(
-                        height: height,
+                    child: CustomContainer(
+                        onTap: null,
                         width: width *
                             (0.06 * forwardAnimationValue +
                                 0.2 * backwardAnimationValue),
-                        decoration: BoxDecoration(
-                            color: kLightBlack.withOpacity(0.95),
-                            border: Border(
-                                left: BorderSide(color: kLightGray, width: 2))),
+                        height: height,
+                        verticalPadding: 0,
+                        horizontalPadding: 0,
+                        buttonColor: kLightBlack.withOpacity(0.95),
+                        border: singleLeftBorder(kDarkGray),
+                        borderRadius: null,
                         child: ListView(
                           children: [
-                            SizedBox(
-                              height: height * 0.06,
-                            ),
+                            SizedBox(height: height * 0.08),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -321,23 +316,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'الصفحة الرئيسية',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('الصفحة الرئيسية',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.home_rounded,
@@ -345,91 +335,139 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
-                                width: width *
-                                    (0.032 * forwardAnimationValue +
-                                        0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (backwardAnimationValue == 1)
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.01,
+                                    vertical: height * 0.01),
+                                child: CustomContainer(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, QuizSetting.route);
+                                  },
+                                  width: width *
+                                      (0.032 * forwardAnimationValue +
+                                          0.16 * backwardAnimationValue),
+                                  height: null,
+                                  verticalPadding: width * 0.01,
+                                  horizontalPadding: null,
+                                  buttonColor: kDarkBlack,
+                                  border: null,
+                                  borderRadius: width * 0.005,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      if (backwardAnimationValue == 1)
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: width *
+                                                  0.015 *
+                                                  backwardAnimationValue),
+                                          child: Text('معلوماتي',
+                                              style: textStyle(
+                                                  3, width, height, kWhite)),
+                                        ),
+                                      if (backwardAnimationValue != 1)
+                                        const SizedBox(),
                                       Padding(
                                         padding: EdgeInsets.only(
-                                            right: width *
-                                                0.02 *
+                                            left: width *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'معلوماتي',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
+                                        child: Icon(
+                                          Icons.account_circle_outlined,
+                                          size: width * 0.02,
+                                          color: kWhite,
                                         ),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: width *
-                                              0.02 *
-                                              backwardAnimationValue),
-                                      child: Icon(
-                                        Icons.account_circle_outlined,
-                                        size: width * 0.02,
-                                        color: kWhite,
-                                      ),
-                                    ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                      if (backwardAnimationValue != 1)
+                                        const SizedBox(),
+                                    ],
+                                  ),
+                                )),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: height * 0.02,
-                              ),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: height * 0.02),
                               child: Divider(
                                 thickness: 1,
                                 indent: width * 0.005,
                                 endIndent: width * 0.005,
-                                color: kLightGray,
+                                color: kDarkGray,
                               ),
                             ),
                             Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.01,
+                                    vertical: height * 0.01),
+                                child: CustomContainer(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, Dashboard.route);
+                                  },
+                                  width: width *
+                                      (0.032 * forwardAnimationValue +
+                                          0.16 * backwardAnimationValue),
+                                  height: null,
+                                  verticalPadding: width * 0.01,
+                                  horizontalPadding: null,
+                                  buttonColor: kDarkBlack,
+                                  border: null,
+                                  borderRadius: width * 0.005,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      if (backwardAnimationValue == 1)
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: width *
+                                                  0.015 *
+                                                  backwardAnimationValue),
+                                          child: Text('يلا نساعدك بالدراسة',
+                                              style: textStyle(
+                                                  3, width, height, kWhite)),
+                                        ),
+                                      if (backwardAnimationValue != 1)
+                                        const SizedBox(),
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            left: width *
+                                                0.015 *
+                                                backwardAnimationValue),
+                                        child: Icon(
+                                          Icons.school_outlined,
+                                          size: width * 0.02,
+                                          color: kWhite,
+                                        ),
+                                      ),
+                                      if (backwardAnimationValue != 1)
+                                        const SizedBox(),
+                                    ],
+                                  ),
+                                )),
+                            Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -438,76 +476,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'يلا نساعدك بالدراسة',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('امتحانات وأسئلة',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
-                                              backwardAnimationValue),
-                                      child: Icon(
-                                        Icons.school_outlined,
-                                        size: width * 0.02,
-                                        color: kWhite,
-                                      ),
-                                    ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
-                                width: width *
-                                    (0.032 * forwardAnimationValue +
-                                        0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (backwardAnimationValue == 1)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                            right: width *
-                                                0.02 *
-                                                backwardAnimationValue),
-                                        child: Text(
-                                          'امتحانات وأسئلة',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
-                                      ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.fact_check_outlined,
@@ -515,27 +495,29 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -544,23 +526,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'نتائج وتحليلات',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('نتائج وتحليلات',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.analytics_outlined,
@@ -568,27 +545,29 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -597,23 +576,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'مجتمع مدارس',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('مجتمع مدارس',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.groups,
@@ -621,27 +595,29 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -650,23 +626,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'قائمة المتصدرين',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('قائمة المتصدرين',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.emoji_events_outlined,
@@ -674,38 +645,39 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: height * 0.02,
-                              ),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: height * 0.02),
                               child: Divider(
                                 thickness: 1,
                                 indent: width * 0.005,
                                 endIndent: width * 0.005,
-                                color: kLightGray,
+                                color: kDarkGray,
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -714,23 +686,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'الإعدادات',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('الإعدادات',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.settings_outlined,
@@ -738,27 +705,29 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -767,23 +736,18 @@ class _QuizSettingState extends State<QuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'تواصل معنا',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('تواصل معنا',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.phone_outlined,
@@ -791,7 +755,8 @@ class _QuizSettingState extends State<QuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1)
+                                      const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -804,7 +769,7 @@ class _QuizSettingState extends State<QuizSetting>
             ),
           ))
         : Scaffold(
-            backgroundColor: kLightGray,
+            backgroundColor: kDarkGray,
             body: Center(
                 child: CircularProgressIndicator(
                     color: kPurple, strokeWidth: width * 0.05)));

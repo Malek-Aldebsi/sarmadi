@@ -1,36 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:sarmadi/const.dart';
 
-popUp(context, width, title, child) {
+popUp(
+    context, width, height, child, backgroundColor, borderColor, borderRadius) {
   showDialog(
       context: context,
       builder: (context) {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
-            backgroundColor: kGray,
+            backgroundColor: backgroundColor,
             shape: RoundedRectangleBorder(
-              side: BorderSide(color: kBlack),
+              side: BorderSide(color: borderColor),
               borderRadius: BorderRadius.all(
                 Radius.circular(
-                  20.0,
+                  borderRadius,
                 ),
               ),
             ),
-            title: Text(
-              title,
-              style: TextStyle(fontSize: 24.0, color: kOffPurple),
-            ),
-            content: SizedBox(
-              width: width,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: child,
-                ),
-              ),
-            ),
+            content: SizedBox(width: width, height: height, child: child),
           ),
         );
       });

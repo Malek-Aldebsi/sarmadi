@@ -22,13 +22,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
-  carousel_slider:
-    dependency: "direct main"
-    description:
-      name: carousel_slider
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.2.1"
   characters:
     dependency: transitive
     description:
@@ -51,7 +44,7 @@ packages:
     source: hosted
     version: "1.16.0"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       url: "https://pub.dartlang.org"
@@ -64,13 +57,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.5"
-  dotted_border:
-    dependency: "direct main"
-    description:
-      name: dotted_border
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.0+3"
   facebook_auth_desktop:
     dependency: transitive
     description:
@@ -99,13 +85,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "6.1.4"
-  file_picker:
-    dependency: "direct main"
-    description:
-      name: file_picker
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "5.2.4"
   firebase_auth:
     dependency: "direct main"
     description:
@@ -153,34 +132,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_dash:
-    dependency: "direct main"
-    description:
-      name: flutter_dash
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.0"
-  flutter_dropzone:
-    dependency: "direct main"
-    description:
-      name: flutter_dropzone
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.5"
-  flutter_dropzone_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_dropzone_platform_interface
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.5"
-  flutter_dropzone_web:
-    dependency: transitive
-    description:
-      name: flutter_dropzone_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.8"
   flutter_facebook_auth:
     dependency: "direct main"
     description:
@@ -209,11 +160,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
-  flutter_localizations:
-    dependency: transitive
-    description: flutter
-    source: sdk
-    version: "0.0.0"
   flutter_math_fork:
     dependency: "direct main"
     description:
@@ -221,13 +167,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.6.3+1"
-  flutter_plugin_android_lifecycle:
-    dependency: transitive
-    description:
-      name: flutter_plugin_android_lifecycle
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.7"
   flutter_secure_storage:
     dependency: transitive
     description:
@@ -287,13 +226,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  google_fonts:
-    dependency: "direct main"
-    description:
-      name: google_fonts
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.1"
   google_sign_in:
     dependency: "direct main"
     description:
@@ -329,13 +261,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.10.2"
-  holding_gesture:
-    dependency: transitive
-    description:
-      name: holding_gesture
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.1.0"
   http:
     dependency: "direct main"
     description:
@@ -350,15 +275,8 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.2"
-  image_picker_web:
-    dependency: "direct main"
-    description:
-      name: image_picker_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.0+1"
   intl:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: intl
       url: "https://pub.dartlang.org"
@@ -392,20 +310,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.5"
-  math_expressions:
-    dependency: transitive
-    description:
-      name: math_expressions
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.3.1"
-  math_keyboard:
-    dependency: "direct main"
-    description:
-      name: math_keyboard
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.1.7"
   meta:
     dependency: transitive
     description:
@@ -441,27 +345,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.1"
-  path_provider:
-    dependency: transitive
-    description:
-      name: path_provider
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.11"
-  path_provider_android:
-    dependency: transitive
-    description:
-      name: path_provider_android
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.22"
-  path_provider_ios:
-    dependency: transitive
-    description:
-      name: path_provider_ios
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.11"
   path_provider_linux:
     dependency: transitive
     description:
@@ -469,13 +352,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.7"
-  path_provider_macos:
-    dependency: transitive
-    description:
-      name: path_provider_macos
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.6"
   path_provider_platform_interface:
     dependency: transitive
     description:
@@ -519,7 +395,7 @@ packages:
     source: hosted
     version: "4.2.4"
   provider:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: provider
       url: "https://pub.dartlang.org"
@@ -641,21 +517,21 @@ packages:
       name: syncfusion_flutter_charts
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "20.4.41"
+    version: "20.4.54"
   syncfusion_flutter_core:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_core
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "20.4.41"
+    version: "20.4.54"
   syncfusion_flutter_sliders:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_sliders
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "20.4.41"
+    version: "20.4.54"
   term_glyph:
     dependency: transitive
     description:

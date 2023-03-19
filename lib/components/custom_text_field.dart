@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import '../const.dart';
+
+import '../const/colors.dart';
+import '../const/fonts.dart';
+
+// TODO: check
 
 class CustomTextField extends StatefulWidget {
   final String? innerText;
   final String? hintText;
-  final double? fontSize;
+  final double? fontOption;
   final double? width;
   final TextEditingController? controller;
   final void Function(String)? onChanged;
@@ -32,7 +36,7 @@ class CustomTextField extends StatefulWidget {
     this.innerText,
     this.hintText,
     this.errorText,
-    this.fontSize,
+    this.fontOption,
     this.width,
     this.controller,
     this.onChanged,
@@ -67,6 +71,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
     return SizedBox(
       width: widget.width,
       child: Directionality(
@@ -81,15 +88,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
           readOnly: widget.readOnly ?? false,
           keyboardType: widget.keyboardType ?? TextInputType.multiline,
           controller: widget.controller,
-          style: textStyle.copyWith(
-              fontSize: widget.fontSize, color: widget.fontColor),
+          style: textStyle(widget.fontOption, width, height, widget.fontColor),
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
           cursorColor: kPurple,
           decoration: InputDecoration(
             errorText: widget.errorText,
-            errorStyle: textStyle.copyWith(
-                fontSize: widget.fontSize! / 1.5, color: kRed),
+            errorStyle: textStyle(5, width, height, kRed),
             counterText: '',
             suffixIcon: widget.suffixIcon,
             prefixIcon: widget.prefixIcon,
@@ -97,8 +102,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 horizontal: widget.horizontalPadding!,
                 vertical: widget.verticalPadding!),
             hintText: widget.readOnly ?? false ? null : widget.hintText,
-            hintStyle:
-                textStyle.copyWith(fontSize: widget.fontSize, color: kOffWhite),
+            hintStyle: textStyle(widget.fontOption, width, height, kWhite),
             filled: true,
             isDense: widget.isDense ?? false,
             fillColor: widget.color,

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import '../const/borders.dart';
+import '../const/colors.dart';
+import '../const/fonts.dart';
 import 'question.dart';
 import 'quiz_setting.dart';
 import 'welcome.dart';
 import '../components/custom_container.dart';
-import '../components/custom_pop_up.dart';
 import '../components/custom_slider.dart';
 import '../components/custom_text_field.dart';
-import '../const.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
 import 'dashboard.dart';
@@ -59,7 +60,6 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
               headlineSet = result;
-              print(headlineSet);
               headlinesLoaded = true;
             });
     });
@@ -80,7 +80,6 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
               moduleSet = result;
-              print(moduleSet);
               modulesLoaded = true;
             });
     });
@@ -209,14 +208,8 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             Padding(
                               padding:
                                   EdgeInsets.symmetric(vertical: height / 25),
-                              child: Text(
-                                selectedSubjectName ?? '',
-                                style: textStyle.copyWith(
-                                  color: kWhite,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: width * 0.018,
-                                ),
-                              ),
+                              child: Text(selectedSubjectName ?? '',
+                                  style: textStyle(1, width, height, kWhite)),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -228,11 +221,8 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   children: [
                                     Text(
                                       'الفصل الأول',
-                                      style: textStyle.copyWith(
-                                        color: kWhite,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.012,
-                                      ),
+                                      style:
+                                          textStyle(2, width, height, kWhite),
                                     ),
                                     SizedBox(
                                       height: height * 0.35,
@@ -245,7 +235,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                 padding: EdgeInsets.symmetric(
                                                   vertical: height / 128,
                                                 ),
-                                                child: Button(
+                                                child: CustomContainer(
                                                   onTap: () {
                                                     setState(() {
                                                       bool status =
@@ -264,30 +254,30 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                     });
                                                   },
                                                   width: width * 0.2,
-                                                  verticalPadding: width / 150,
-                                                  horizontalPadding: width / 75,
-                                                  borderRadius: width * 0.006,
-                                                  border: 0,
+                                                  verticalPadding:
+                                                      height * 0.02,
+                                                  horizontalPadding:
+                                                      width * 0.02,
+                                                  borderRadius: width * 0.005,
+                                                  border: null,
                                                   buttonColor:
                                                       moduleStatus(module)
                                                           ? kDarkPurple
-                                                          : kLightGray,
+                                                          : kDarkGray,
                                                   child: Column(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
+                                                      SizedBox(
+                                                          width: width * 0.19),
                                                       Text(
                                                         module['name'],
-                                                        style:
-                                                            textStyle.copyWith(
-                                                                color: kWhite,
-                                                                fontSize:
-                                                                    width *
-                                                                        0.009,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500),
+                                                        style: textStyle(
+                                                            3,
+                                                            width,
+                                                            height,
+                                                            kWhite),
                                                       ),
                                                       Wrap(
                                                         children: [
@@ -299,51 +289,43 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                                   EdgeInsets.all(
                                                                       width /
                                                                           350),
-                                                              child: Button(
-                                                                  onTap: () {
-                                                                    setState(
-                                                                      () {
-                                                                        if (moduleStatus(
-                                                                            module)) {
-                                                                          selectedHeadlines
-                                                                              .removeAll(lesson['h1s']);
-                                                                        } else {
-                                                                          selectedHeadlines.containsAll(lesson['h1s'])
-                                                                              ? selectedHeadlines.removeAll(lesson['h1s'])
-                                                                              : selectedHeadlines.addAll(lesson['h1s']);
-                                                                        }
+                                                              child:
+                                                                  CustomContainer(
+                                                                      onTap:
+                                                                          () {
+                                                                        setState(
+                                                                          () {
+                                                                            if (moduleStatus(module)) {
+                                                                              selectedHeadlines.removeAll(lesson['h1s']);
+                                                                            } else {
+                                                                              selectedHeadlines.containsAll(lesson['h1s']) ? selectedHeadlines.removeAll(lesson['h1s']) : selectedHeadlines.addAll(lesson['h1s']);
+                                                                            }
+                                                                          },
+                                                                        );
                                                                       },
-                                                                    );
-                                                                  },
-                                                                  verticalPadding:
-                                                                      width /
-                                                                          250,
-                                                                  horizontalPadding:
-                                                                      width /
-                                                                          250,
-                                                                  borderRadius:
-                                                                      width *
-                                                                          0.005,
-                                                                  border: 0,
-                                                                  buttonColor: selectedHeadlines
-                                                                          .containsAll(
-                                                                              lesson['h1s'])
-                                                                      ? kPurple
-                                                                      : kGray,
-                                                                  child: Text(
-                                                                    lesson[
-                                                                        'name'],
-                                                                    style: textStyle
-                                                                        .copyWith(
-                                                                      color: selectedHeadlines
-                                                                              .containsAll(lesson['h1s'])
-                                                                          ? kWhite
-                                                                          : kOffWhite,
-                                                                      fontSize:
+                                                                      verticalPadding:
+                                                                          height *
+                                                                              0.002,
+                                                                      horizontalPadding:
                                                                           width *
-                                                                              0.007,
-                                                                    ),
-                                                                  )),
+                                                                              0.01,
+                                                                      borderRadius:
+                                                                          width *
+                                                                              0.005,
+                                                                      border:
+                                                                          null,
+                                                                      buttonColor: selectedHeadlines.containsAll(lesson[
+                                                                              'h1s'])
+                                                                          ? kPurple
+                                                                          : kGray,
+                                                                      child: Text(
+                                                                          lesson[
+                                                                              'name'],
+                                                                          style: textStyle(
+                                                                              4,
+                                                                              width,
+                                                                              height,
+                                                                              kWhite))),
                                                             )
                                                         ],
                                                       ),
@@ -357,14 +339,9 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                     SizedBox(
                                       height: height * 0.01,
                                     ),
-                                    Text(
-                                      'الفصل الثاني',
-                                      style: textStyle.copyWith(
-                                        color: kWhite,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.012,
-                                      ),
-                                    ),
+                                    Text('الفصل الثاني',
+                                        style: textStyle(
+                                            2, width, height, kWhite)),
                                     SizedBox(
                                       height: height * 0.35,
                                       width: width * 0.2,
@@ -376,7 +353,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                 padding: EdgeInsets.symmetric(
                                                   vertical: height / 128,
                                                 ),
-                                                child: Button(
+                                                child: CustomContainer(
                                                   onTap: () {
                                                     setState(() {
                                                       bool status =
@@ -395,30 +372,30 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                     });
                                                   },
                                                   width: width * 0.2,
-                                                  verticalPadding: width / 150,
-                                                  horizontalPadding: width / 75,
-                                                  borderRadius: width * 0.006,
-                                                  border: 0,
+                                                  verticalPadding:
+                                                      height * 0.02,
+                                                  horizontalPadding:
+                                                      width * 0.02,
+                                                  borderRadius: width * 0.005,
+                                                  border: null,
                                                   buttonColor:
                                                       moduleStatus(module)
                                                           ? kDarkPurple
-                                                          : kLightGray,
+                                                          : kDarkGray,
                                                   child: Column(
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
+                                                      SizedBox(
+                                                          width: width * 0.19),
                                                       Text(
                                                         module['name'],
-                                                        style:
-                                                            textStyle.copyWith(
-                                                                color: kWhite,
-                                                                fontSize:
-                                                                    width *
-                                                                        0.009,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500),
+                                                        style: textStyle(
+                                                            3,
+                                                            width,
+                                                            height,
+                                                            kWhite),
                                                       ),
                                                       Wrap(
                                                         children: [
@@ -430,51 +407,43 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                                   EdgeInsets.all(
                                                                       width /
                                                                           350),
-                                                              child: Button(
-                                                                  onTap: () {
-                                                                    setState(
-                                                                      () {
-                                                                        if (moduleStatus(
-                                                                            module)) {
-                                                                          selectedHeadlines
-                                                                              .removeAll(lesson['h1s']);
-                                                                        } else {
-                                                                          selectedHeadlines.containsAll(lesson['h1s'])
-                                                                              ? selectedHeadlines.removeAll(lesson['h1s'])
-                                                                              : selectedHeadlines.addAll(lesson['h1s']);
-                                                                        }
+                                                              child:
+                                                                  CustomContainer(
+                                                                      onTap:
+                                                                          () {
+                                                                        setState(
+                                                                          () {
+                                                                            if (moduleStatus(module)) {
+                                                                              selectedHeadlines.removeAll(lesson['h1s']);
+                                                                            } else {
+                                                                              selectedHeadlines.containsAll(lesson['h1s']) ? selectedHeadlines.removeAll(lesson['h1s']) : selectedHeadlines.addAll(lesson['h1s']);
+                                                                            }
+                                                                          },
+                                                                        );
                                                                       },
-                                                                    );
-                                                                  },
-                                                                  verticalPadding:
-                                                                      width /
-                                                                          250,
-                                                                  horizontalPadding:
-                                                                      width /
-                                                                          250,
-                                                                  borderRadius:
-                                                                      width *
-                                                                          0.005,
-                                                                  border: 0,
-                                                                  buttonColor: selectedHeadlines
-                                                                          .containsAll(
-                                                                              lesson['h1s'])
-                                                                      ? kPurple
-                                                                      : kGray,
-                                                                  child: Text(
-                                                                    lesson[
-                                                                        'name'],
-                                                                    style: textStyle
-                                                                        .copyWith(
-                                                                      color: selectedHeadlines
-                                                                              .containsAll(lesson['h1s'])
-                                                                          ? kWhite
-                                                                          : kOffWhite,
-                                                                      fontSize:
+                                                                      verticalPadding:
+                                                                          height *
+                                                                              0.002,
+                                                                      horizontalPadding:
                                                                           width *
-                                                                              0.007,
-                                                                    ),
-                                                                  )),
+                                                                              0.01,
+                                                                      borderRadius:
+                                                                          width *
+                                                                              0.005,
+                                                                      border:
+                                                                          null,
+                                                                      buttonColor: selectedHeadlines.containsAll(lesson[
+                                                                              'h1s'])
+                                                                          ? kPurple
+                                                                          : kGray,
+                                                                      child: Text(
+                                                                          lesson[
+                                                                              'name'],
+                                                                          style: textStyle(
+                                                                              4,
+                                                                              width,
+                                                                              height,
+                                                                              kWhite))),
                                                             )
                                                         ],
                                                       ),
@@ -493,39 +462,34 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   children: [
                                     Row(
                                       children: [
-                                        Text(
-                                          'المهارات',
-                                          style: textStyle.copyWith(
-                                            color: kWhite,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: width * 0.012,
-                                          ),
-                                        ),
-                                        SizedBox(width: width * 0.035),
+                                        Text('المهارات',
+                                            style: textStyle(
+                                                2, width, height, kWhite)),
+                                        SizedBox(width: width * 0.05),
                                         Icon(
                                           Icons.search_rounded,
                                           size: width * 0.016,
-                                          color: kOffWhite,
+                                          color: kWhite,
                                         ),
                                       ],
                                     ),
-                                    Button(
+                                    CustomContainer(
                                       onTap: null,
-                                      verticalPadding: width / 150,
-                                      horizontalPadding: width / 100,
+                                      verticalPadding: height * 0.03,
+                                      horizontalPadding: width * 0.01,
                                       borderRadius: width * 0.005,
-                                      border: 0,
-                                      buttonColor: kLightGray,
+                                      border: null,
+                                      buttonColor: kDarkGray,
                                       height: height * 0.5,
                                       width: width * 0.2,
                                       child: SingleChildScrollView(
                                         scrollDirection: Axis.vertical,
                                         child: Wrap(
-                                          runSpacing: width / 250,
-                                          spacing: width / 250,
+                                          runSpacing: width * 0.004,
+                                          spacing: width * 0.004,
                                           children: [
                                             for (Map headline in headlineSet)
-                                              Button(
+                                              CustomContainer(
                                                   onTap: () {
                                                     setState(
                                                       () {
@@ -543,28 +507,20 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                       },
                                                     );
                                                   },
-                                                  verticalPadding: width / 250,
+                                                  verticalPadding:
+                                                      height * 0.02,
                                                   horizontalPadding:
-                                                      width / 100,
+                                                      width * 0.01,
                                                   borderRadius: width * 0.005,
-                                                  border: 0,
+                                                  border: null,
                                                   buttonColor: selectedHeadlines
                                                           .contains(
                                                               headline['id'])
                                                       ? kPurple
                                                       : kGray,
-                                                  child: Text(
-                                                    headline['name'],
-                                                    style: textStyle.copyWith(
-                                                      color: selectedHeadlines
-                                                              .contains(
-                                                                  headline[
-                                                                      'id'])
-                                                          ? kWhite
-                                                          : kOffWhite,
-                                                      fontSize: width * 0.007,
-                                                    ),
-                                                  ))
+                                                  child: Text(headline['name'],
+                                                      style: textStyle(4, width,
+                                                          height, kWhite)))
                                           ],
                                         ),
                                       ),
@@ -575,23 +531,19 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'عدد الأسئلة',
-                                      style: textStyle.copyWith(
-                                        color: kWhite,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.012,
-                                      ),
-                                    ),
+                                    Text('عدد الأسئلة',
+                                        style: textStyle(
+                                            2, width, height, kWhite)),
                                     SizedBox(
                                       width: width * 0.3,
                                       child: Center(
                                         child: SliderTheme(
                                           data:
                                               SliderTheme.of(context).copyWith(
-                                            activeTrackColor: kPurple,
-                                            inactiveTrackColor: kGray,
-                                            trackHeight: height * 0.021,
+                                            activeTrackColor: kLightPurple,
+                                            inactiveTrackColor: kDarkGray,
+                                            thumbColor: kPurple,
+                                            trackHeight: height * 0.022,
                                             trackShape:
                                                 const RoundedTrackShape(),
                                             thumbShape: CustomSliderThumbRect(
@@ -601,10 +553,8 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                 thumbHeight: height * 0.04),
                                             overlayColor:
                                                 kPurple.withOpacity(0.3),
-                                            activeTickMarkColor:
-                                                Colors.transparent,
-                                            inactiveTickMarkColor:
-                                                Colors.transparent,
+                                            activeTickMarkColor: kTransparent,
+                                            inactiveTickMarkColor: kTransparent,
                                           ),
                                           child: Slider(
                                               min: 0,
@@ -622,27 +572,24 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: height / 32),
+                                    SizedBox(height: height * 0.04),
                                     Text(
                                       'وقت الإمتحان',
-                                      style: textStyle.copyWith(
-                                        color: kWhite,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.012,
-                                      ),
+                                      style:
+                                          textStyle(2, width, height, kWhite),
                                     ),
                                     SizedBox(
-                                      height: height * 0.01,
+                                      height: height * 0.02,
                                     ),
-                                    Button(
+                                    CustomContainer(
                                       onTap: null,
                                       width: width * 0.3,
-                                      height: height * 0.1,
+                                      height: height * 0.09,
                                       verticalPadding: 0,
                                       horizontalPadding: 0,
                                       borderRadius: width * 0.005,
-                                      border: 0,
-                                      buttonColor: kLightGray,
+                                      border: null,
+                                      buttonColor: kDarkGray,
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
@@ -656,7 +603,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                     bottomRight:
                                                         Radius.circular(
                                                             width * 0.005))),
-                                            height: height * 0.1,
+                                            height: height * 0.09,
                                             child: MaterialButton(
                                               color: withTime ? kPurple : kGray,
                                               onPressed: () {
@@ -675,24 +622,20 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                             width * 0.005)),
                                               ),
                                               padding:
-                                                  EdgeInsets.all(height * 0.03),
+                                                  EdgeInsets.all(height * 0.01),
                                               minWidth: width * 0.075,
                                               child: Text(
                                                 'تفعيل\nالمؤقت',
-                                                style: textStyle.copyWith(
-                                                    color: withTime
-                                                        ? kWhite
-                                                        : kOffWhite,
-                                                    fontSize: width * 0.009,
-                                                    fontWeight:
-                                                        FontWeight.w500),
+                                                style: textStyle(
+                                                    4, width, height, kWhite),
                                               ),
                                             ),
                                           ),
                                           CustomTextField(
                                             innerText: null,
                                             hintText: '00',
-                                            fontSize: width * 0.015,
+                                            fontOption: 3,
+                                            fontColor: kWhite,
                                             width: width * 0.05,
                                             controller: seconds,
                                             textAlign: TextAlign.center,
@@ -718,7 +661,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(
                                                       width * 0.005)),
-                                              borderSide: BorderSide(
+                                              borderSide: const BorderSide(
                                                 color: Colors.transparent,
                                                 width: 1,
                                               ),
@@ -735,15 +678,14 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                           ),
                                           Text(
                                             ':',
-                                            style: textStyle.copyWith(
-                                              fontSize: width * 0.035,
-                                              color: kWhite,
-                                            ),
+                                            style: textStyle(
+                                                2, width, height, kWhite),
                                           ),
                                           CustomTextField(
                                             innerText: null,
                                             hintText: '05',
-                                            fontSize: width * 0.015,
+                                            fontOption: 3,
+                                            fontColor: kWhite,
                                             width: width * 0.05,
                                             controller: minutes,
                                             textAlign: TextAlign.center,
@@ -786,15 +728,14 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                           ),
                                           Text(
                                             ':',
-                                            style: textStyle.copyWith(
-                                              fontSize: width * 0.035,
-                                              color: kWhite,
-                                            ),
+                                            style: textStyle(
+                                                2, width, height, kWhite),
                                           ),
                                           CustomTextField(
                                             innerText: null,
                                             hintText: '00',
-                                            fontSize: width * 0.015,
+                                            fontOption: 3,
+                                            fontColor: kWhite,
                                             width: width * 0.05,
                                             controller: hours,
                                             textAlign: TextAlign.center,
@@ -839,154 +780,128 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         ],
                                       ),
                                     ),
-                                    SizedBox(height: height / 32),
-                                    Text(
-                                      'صعوبة الإمتحان',
-                                      style: textStyle.copyWith(
-                                        color: kWhite,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: width * 0.012,
-                                      ),
-                                    ),
+                                    SizedBox(height: height * 0.04),
+                                    Text('صعوبة الإمتحان',
+                                        style: textStyle(
+                                            2, width, height, kWhite)),
                                     SizedBox(
-                                      height: height * 0.01,
+                                      height: height * 0.02,
                                     ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                          color: kLightGray,
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
+                                    CustomContainer(
+                                      buttonColor: kDarkGray,
+                                      borderRadius: width * 0.005,
                                       child: Row(
                                         children: [
-                                          Button(
+                                          CustomContainer(
                                             onTap: () {
                                               setState(() {
                                                 quizLevel = 0;
                                               });
                                             },
                                             width: width * 0.1,
-                                            verticalPadding: height * 0.01,
+                                            verticalPadding: height * 0.02,
                                             horizontalPadding: 0,
-                                            borderRadius: width * 0.006,
+                                            borderRadius: width * 0.005,
                                             buttonColor: quizLevel == 0
                                                 ? kPurple
-                                                : kLightGray,
-                                            border: 0,
+                                                : kDarkGray,
+                                            border: null,
                                             child: Center(
                                               child: Text(
                                                 'سهل',
-                                                style: textStyle.copyWith(
-                                                    color: quizLevel == 0
-                                                        ? kWhite
-                                                        : kOffWhite,
-                                                    fontSize: width * 0.009,
-                                                    fontWeight:
-                                                        FontWeight.w500),
+                                                style: textStyle(
+                                                    4, width, height, kWhite),
                                               ),
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: () {
                                               setState(() {
                                                 quizLevel = 1;
                                               });
                                             },
                                             width: width * 0.1,
-                                            verticalPadding: height * 0.01,
+                                            verticalPadding: height * 0.02,
                                             horizontalPadding: 0,
-                                            borderRadius: width * 0.006,
+                                            borderRadius: width * 0.005,
                                             buttonColor: quizLevel == 1
                                                 ? kPurple
-                                                : kLightGray,
-                                            border: 0,
+                                                : kDarkGray,
+                                            border: null,
                                             child: Center(
                                               child: Text(
                                                 'صعب',
-                                                style: textStyle.copyWith(
-                                                    color: quizLevel == 1
-                                                        ? kWhite
-                                                        : kOffWhite,
-                                                    fontSize: width * 0.009,
-                                                    fontWeight:
-                                                        FontWeight.w500),
+                                                style: textStyle(
+                                                    4, width, height, kWhite),
                                               ),
                                             ),
                                           ),
-                                          Button(
+                                          CustomContainer(
                                             onTap: () {
                                               setState(() {
                                                 quizLevel = 2;
                                               });
                                             },
                                             width: width * 0.1,
-                                            verticalPadding: height * 0.01,
+                                            verticalPadding: height * 0.02,
                                             horizontalPadding: 0,
-                                            borderRadius: width * 0.006,
+                                            borderRadius: width * 0.005,
                                             buttonColor: quizLevel == 2
                                                 ? kPurple
-                                                : kLightGray,
-                                            border: 0,
+                                                : kDarkGray,
+                                            border: null,
                                             child: Center(
                                               child: Text(
                                                 'تلقائي',
-                                                style: textStyle.copyWith(
-                                                    color: quizLevel == 2
-                                                        ? kWhite
-                                                        : kOffWhite,
-                                                    fontSize: width * 0.009,
-                                                    fontWeight:
-                                                        FontWeight.w500),
+                                                style: textStyle(
+                                                    4, width, height, kWhite),
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    SizedBox(height: height / 16),
+                                    SizedBox(height: height * 0.08),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Button(
+                                        CustomContainer(
                                           onTap: () {
                                             if (selectedHeadlines.isNotEmpty) {
                                               buildQuiz();
                                             }
                                           },
                                           width: width * 0.13,
-                                          verticalPadding: 8,
+                                          verticalPadding: height * 0.02,
                                           horizontalPadding: 0,
                                           borderRadius: width * 0.005,
                                           buttonColor: kPurple,
-                                          border: 0,
+                                          border: null,
                                           child: Center(
-                                            child: Text(
-                                              'ادرس',
-                                              style: textStyle.copyWith(
-                                                  fontSize: width * 0.009,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
+                                            child: Text('ادرس',
+                                                style: textStyle(
+                                                    3, width, height, kWhite)),
                                           ),
                                         ),
                                         SizedBox(width: width * 0.04),
-                                        Button(
+                                        CustomContainer(
                                           onTap: () {
                                             if (selectedHeadlines.isNotEmpty) {
                                               buildQuiz();
                                             }
                                           },
                                           width: width * 0.13,
-                                          verticalPadding: 8,
+                                          verticalPadding: height * 0.02,
                                           horizontalPadding: 0,
                                           borderRadius: width * 0.005,
                                           buttonColor: kPurple,
-                                          border: 0,
+                                          border: null,
                                           child: Center(
                                             child: Text(
                                               'امتحن',
-                                              style: textStyle.copyWith(
-                                                  fontSize: width * 0.009,
-                                                  fontWeight: FontWeight.w500),
+                                              style: textStyle(
+                                                  3, width, height, kWhite),
                                             ),
                                           ),
                                         ),
@@ -1031,36 +946,37 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             }));
                       });
                     },
-                    child: Container(
-                        height: height,
+                    child: CustomContainer(
+                        onTap: null,
                         width: width *
                             (0.06 * forwardAnimationValue +
                                 0.2 * backwardAnimationValue),
-                        decoration: BoxDecoration(
-                            color: kLightBlack.withOpacity(0.95),
-                            border: Border(
-                                left: BorderSide(color: kLightGray, width: 2))),
+                        height: height,
+                        verticalPadding: 0,
+                        horizontalPadding: 0,
+                        buttonColor: kLightBlack.withOpacity(0.95),
+                        border: singleLeftBorder(kDarkGray),
+                        borderRadius: null,
                         child: ListView(
                           children: [
-                            SizedBox(
-                              height: height * 0.06,
-                            ),
+                            SizedBox(height: height * 0.08),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1069,23 +985,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'الصفحة الرئيسية',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('الصفحة الرئيسية',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.home_rounded,
@@ -1099,85 +1009,132 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
-                                width: width *
-                                    (0.032 * forwardAnimationValue +
-                                        0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (backwardAnimationValue == 1)
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.01,
+                                    vertical: height * 0.01),
+                                child: CustomContainer(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, QuizSetting.route);
+                                  },
+                                  width: width *
+                                      (0.032 * forwardAnimationValue +
+                                          0.16 * backwardAnimationValue),
+                                  height: null,
+                                  verticalPadding: width * 0.01,
+                                  horizontalPadding: null,
+                                  buttonColor: kDarkBlack,
+                                  border: null,
+                                  borderRadius: width * 0.005,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      if (backwardAnimationValue == 1)
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: width *
+                                                  0.015 *
+                                                  backwardAnimationValue),
+                                          child: Text('معلوماتي',
+                                              style: textStyle(
+                                                  3, width, height, kWhite)),
+                                        ),
+                                      if (backwardAnimationValue != 1)
+                                        SizedBox(),
                                       Padding(
                                         padding: EdgeInsets.only(
-                                            right: width *
-                                                0.02 *
+                                            left: width *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'معلوماتي',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
+                                        child: Icon(
+                                          Icons.account_circle_outlined,
+                                          size: width * 0.02,
+                                          color: kWhite,
                                         ),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: width *
-                                              0.02 *
-                                              backwardAnimationValue),
-                                      child: Icon(
-                                        Icons.account_circle_outlined,
-                                        size: width * 0.02,
-                                        color: kWhite,
-                                      ),
-                                    ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                      if (backwardAnimationValue != 1)
+                                        SizedBox(),
+                                    ],
+                                  ),
+                                )),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: height * 0.02,
-                              ),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: height * 0.02),
                               child: Divider(
                                 thickness: 1,
                                 indent: width * 0.005,
                                 endIndent: width * 0.005,
-                                color: kLightGray,
+                                color: kDarkGray,
                               ),
                             ),
                             Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: width * 0.01,
+                                    vertical: height * 0.01),
+                                child: CustomContainer(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, Dashboard.route);
+                                  },
+                                  width: width *
+                                      (0.032 * forwardAnimationValue +
+                                          0.16 * backwardAnimationValue),
+                                  height: null,
+                                  verticalPadding: width * 0.01,
+                                  horizontalPadding: null,
+                                  buttonColor: kDarkBlack,
+                                  border: null,
+                                  borderRadius: width * 0.005,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      if (backwardAnimationValue == 1)
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              right: width *
+                                                  0.015 *
+                                                  backwardAnimationValue),
+                                          child: Text('يلا نساعدك بالدراسة',
+                                              style: textStyle(
+                                                  3, width, height, kWhite)),
+                                        ),
+                                      if (backwardAnimationValue != 1)
+                                        SizedBox(),
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            left: width *
+                                                0.015 *
+                                                backwardAnimationValue),
+                                        child: Icon(
+                                          Icons.school_outlined,
+                                          size: width * 0.02,
+                                          color: kWhite,
+                                        ),
+                                      ),
+                                      if (backwardAnimationValue != 1)
+                                        SizedBox(),
+                                    ],
+                                  ),
+                                )),
+                            Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1186,76 +1143,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'يلا نساعدك بالدراسة',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('امتحانات وأسئلة',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
-                                              backwardAnimationValue),
-                                      child: Icon(
-                                        Icons.school_outlined,
-                                        size: width * 0.02,
-                                        color: kWhite,
-                                      ),
-                                    ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
-                                width: width *
-                                    (0.032 * forwardAnimationValue +
-                                        0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    if (backwardAnimationValue == 1)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                            right: width *
-                                                0.02 *
-                                                backwardAnimationValue),
-                                        child: Text(
-                                          'امتحانات وأسئلة',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
-                                      ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                          left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.fact_check_outlined,
@@ -1270,20 +1168,21 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1292,23 +1191,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'نتائج وتحليلات',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('نتائج وتحليلات',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.analytics_outlined,
@@ -1323,20 +1216,21 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1345,23 +1239,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'مجتمع مدارس',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('مجتمع مدارس',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.groups,
@@ -1376,20 +1264,21 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1398,23 +1287,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'قائمة المتصدرين',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('قائمة المتصدرين',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.emoji_events_outlined,
@@ -1428,32 +1311,32 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: height * 0.02,
-                              ),
+                              padding:
+                                  EdgeInsets.symmetric(vertical: height * 0.02),
                               child: Divider(
                                 thickness: 1,
                                 indent: width * 0.005,
                                 endIndent: width * 0.005,
-                                color: kLightGray,
+                                color: kDarkGray,
                               ),
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1462,23 +1345,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'الإعدادات',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('الإعدادات',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.settings_outlined,
@@ -1493,20 +1370,21 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             ),
                             Padding(
                               padding: EdgeInsets.symmetric(
-                                  vertical: height * 0.01,
-                                  horizontal: width * 0.01),
-                              child: Button(
+                                  horizontal: width * 0.01,
+                                  vertical: height * 0.01),
+                              child: CustomContainer(
                                 onTap: () {
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
-                                verticalPadding: width * 0.006,
-                                horizontalPadding: width * 0.006,
-                                borderRadius: 8,
-                                buttonColor: kBlack.withOpacity(0.5),
-                                border: 0,
+                                height: null,
+                                verticalPadding: width * 0.01,
+                                horizontalPadding: null,
+                                buttonColor: kDarkBlack,
+                                border: null,
+                                borderRadius: width * 0.005,
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1515,23 +1393,17 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       Padding(
                                         padding: EdgeInsets.only(
                                             right: width *
-                                                0.02 *
+                                                0.015 *
                                                 backwardAnimationValue),
-                                        child: Text(
-                                          'تواصل معنا',
-                                          style: textStyle.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: width *
-                                                  (0.01 *
-                                                      backwardAnimationValue),
-                                              color: kWhite),
-                                        ),
+                                        child: Text('تواصل معنا',
+                                            style: textStyle(
+                                                3, width, height, kWhite)),
                                       ),
                                     if (backwardAnimationValue != 1) SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
-                                              0.02 *
+                                              0.015 *
                                               backwardAnimationValue),
                                       child: Icon(
                                         Icons.phone_outlined,
@@ -1552,7 +1424,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
             ),
           ))
         : Scaffold(
-            backgroundColor: kLightGray,
+            backgroundColor: kDarkGray,
             body: Center(
                 child: CircularProgressIndicator(
                     color: kPurple, strokeWidth: width * 0.05)));

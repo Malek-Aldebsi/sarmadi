@@ -14,7 +14,6 @@ TextStyle textStyle(fontOption, screenWidth, screenHeight, fontColor) {
       (scaleFactor / textOptions[fontOption]['size']).round().toDouble();
 
   FontWeight fontWeight = textOptions[fontOption]['weight'];
-
   return TextStyle(
       fontFamily: 'Dubai',
       fontSize: fontSize,

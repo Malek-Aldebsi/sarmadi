@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sarmadi/screens/dashboard.dart';
+import 'package:sarmadi/screens/quiz_result.dart';
 import 'package:sarmadi/screens/welcome.dart';
 import '../components/custom_container.dart';
 import '../components/custom_divider.dart';
@@ -11,6 +15,7 @@ import 'package:stop_watch_timer/stop_watch_timer.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
+import '../providers/quiz_provider.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
 import 'advance_quiz_setting.dart';
@@ -34,6 +39,9 @@ class _QuestionState extends State<Question> {
 
   bool showResult = false;
   bool waitResult = false;
+
+  bool copied = false;
+
   String quizResult = '0/0';
   String quizDuration = '00:00:00';
   String ideal_duration = '00:00:00';
@@ -41,6 +49,7 @@ class _QuestionState extends State<Question> {
   String _subjectID = '';
 
   List questions = [];
+
   Map<String, Map<String, dynamic>> answers = {};
 
   int questionIndex = 1;
@@ -57,9 +66,9 @@ class _QuestionState extends State<Question> {
     answers[questions[questionIndex - 1]['id']]!['duration'] +=
         stopwatch.elapsed.inSeconds;
 
-    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
+    String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = '123'; //await getSession('sessionValue');
+    String? value = await getSession('sessionValue');
     post('marking/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
@@ -75,8 +84,34 @@ class _QuestionState extends State<Question> {
                   '${result['correct_questions']}/${result['total_question_num']}';
               quizDuration = result['attempt_duration'];
               ideal_duration = result['ideal_duration'];
+              Provider.of<QuizProvider>(context, listen: false)
+                  .setQuizID(result['quiz_id']);
               waitResult = false;
               showResult = true;
+            });
+    });
+  }
+
+  void saveQuestion(questionID) async {
+    String? key0 = await getSession('sessionKey0');
+    String? key1 = await getSession('sessionKey1');
+    String? value = await getSession('sessionValue');
+    post(
+        answers[questions[questionIndex - 1]['id']]!['saved']
+            ? 'unsave_question/'
+            : 'save_question/',
+        {
+          if (key0 != null) 'email': key0,
+          if (key1 != null) 'phone': key1,
+          'password': value,
+          'question_id': questionID,
+        }).then((value) {
+      dynamic result = decode(value);
+      result == 0
+          ? Navigator.pushNamed(context, Welcome.route)
+          : setState(() {
+              answers[questions[questionIndex - 1]['id']]!['saved'] =
+                  !answers[questions[questionIndex - 1]['id']]!['saved'];
             });
     });
   }
@@ -85,22 +120,35 @@ class _QuestionState extends State<Question> {
 
   @override
   void initState() {
-    quizTimer = StopWatchTimer(
-      mode: StopWatchMode.countDown,
-      onEnded: endQuiz,
-    );
+    if (Provider.of<QuizProvider>(context, listen: false).withTime) {
+      quizTimer = StopWatchTimer(
+        mode: StopWatchMode.countDown,
+        onEnded: endQuiz,
+      );
+    } else {
+      quizTimer = StopWatchTimer(
+        mode: StopWatchMode.countUp,
+        onEnded: () {},
+      );
+    }
     Future.delayed(Duration.zero, () {
       try {
         dynamic arguments = ModalRoute.of(context)?.settings.arguments;
         setState(() {
-          quizTimer!.setPresetTime(mSec: arguments['duration'] * 1000);
+          if (Provider.of<QuizProvider>(context, listen: false).withTime) {
+            quizTimer!.setPresetTime(mSec: arguments['duration'] * 1000);
+          } else {
+            quizTimer!.setPresetTime(mSec: 1);
+          }
           questions = arguments['questions'];
+          print(questions);
           _subjectID = arguments['subjectID'];
           for (Map question in questions) {
-            print(answers);
-            answers[question['id']] = {'duration': 0};
+            answers[question['id']] = {'duration': 0, 'saved': false};
           }
+          print(answers);
           loaded = true;
+          print(loaded);
         });
       } catch (e) {
         Navigator.pushNamed(context, AdvanceQuizSetting.route);
@@ -135,260 +183,385 @@ class _QuestionState extends State<Question> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Container(
-                          height: double.infinity,
-                          width: width * 0.1,
-                          color: kPurple,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              InkWell(
-                                // onTap: () {
-                                //   popUp(
-                                //     context,
-                                //     width * 0.2,
-                                //     height * 0.25,
-                                //
-                                //     Padding(
-                                //       padding: const EdgeInsets.all(8.0),
-                                //       child: Text(
-                                //         questions[questionIndex - 1]
-                                //                     ['writer'] ==
-                                //                 'نمط اسئلة الكتاب'
-                                //             ? 'هذا السؤال على نمط اسئلة الكتاب'
-                                //             : 'هذا السؤال من اسئلة الاستاذ ${questions[questionIndex - 1]['writer']}',
-                                //         style: textStyle.copyWith(
-                                //             color: kLightPurple),
-                                //       ),
-                                //     ),
-                                //   );
-                                // },
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.lightbulb_outline_rounded,
-                                      size: width / 50,
-                                      color: kDarkBlack,
-                                    ),
-                                    Text('معلومات السؤال',
-                                        style: textStyle(
-                                            2, width, height, kDarkBlack)),
-                                  ],
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () {},
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.bookmark_add_outlined,
-                                      size: width / 50,
-                                      color: kDarkBlack,
-                                    ),
-                                    Text('حفظ السؤال',
-                                        style: textStyle(
-                                            2, width, height, kDarkBlack)),
-                                  ],
-                                ),
-                              ),
-                              Divider(
-                                thickness: 0.5,
-                                indent: 10,
-                                endIndent: 10,
-                                color: kDarkBlack,
-                              ),
-                              Column(
-                                children: [
-                                  Text('السؤال',
-                                      style: textStyle(
-                                          2, width, height, kDarkBlack)),
-                                  Text('$questionIndex/${questions.length}',
-                                      style: textStyle(
-                                          2, width, height, kDarkBlack)),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  Text('الوقت',
-                                      style: textStyle(
-                                          2, width, height, kDarkBlack)),
-                                  StreamBuilder<int>(
-                                    stream: quizTimer!.rawTime,
-                                    initialData: quizTimer!.rawTime.value,
-                                    builder: (context, snap) {
-                                      final displayTime =
-                                          StopWatchTimer.getDisplayTime(
-                                              snap.data!,
-                                              milliSecond: false);
-                                      return Text(displayTime,
-                                          style: textStyle(
-                                              2, width, height, kDarkBlack));
-                                    },
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  Text('رمز السؤال',
-                                      style: textStyle(
-                                          2, width, height, kDarkBlack)),
-                                  InkWell(
-                                    onTap: () async {
-                                      await Clipboard.setData(ClipboardData(
-                                          text: questions[questionIndex - 1]
-                                              ['id']));
-                                      // copied successfully
-                                    },
-                                    child: Text(
-                                        questions[questionIndex - 1]['id']
-                                            .substring(0, 8),
-                                        style: textStyle(
-                                            2, width, height, kDarkBlack)),
-                                  ),
-                                ],
-                              ),
-                              Divider(
-                                thickness: 0.5,
-                                indent: 10,
-                                endIndent: 10,
-                                color: kDarkBlack,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  InkWell(
-                                    // onTap: () {
-                                    //   popUp(context, width / 2, 'بلاغ', [
-                                    //     Padding(
-                                    //       padding: const EdgeInsets.all(8.0),
-                                    //       child: Text(
-                                    //         'ملاحظاتك',
-                                    //         style: textStyle.copyWith(
-                                    //             color: kLightPurple),
-                                    //       ),
-                                    //     ),
-                                    //     Padding(
-                                    //       padding: const EdgeInsets.symmetric(
-                                    //           vertical: 8.0),
-                                    //       child: CustomTextField(
-                                    //         innerText: null,
-                                    //         hintText: '',
-                                    //         fontSize: 15,
-                                    //         width: double.infinity,
-                                    //         controller: TextEditingController(),
-                                    //         onChanged: (text) {},
-                                    //         readOnly: false,
-                                    //         obscure: false,
-                                    //         suffixIcon: null,
-                                    //         keyboardType: null,
-                                    //         color: kWhite,
-                                    //         fontColor: kDarkBlack,
-                                    //         border: const OutlineInputBorder(),
-                                    //         focusedBorder:
-                                    //             const OutlineInputBorder(),
-                                    //         verticalPadding: 7.5,
-                                    //         horizontalPadding: 30,
-                                    //       ),
-                                    //     ),
-                                    //     Button(
-                                    //       onTap: () {
-                                    //         () {};
-                                    //         Navigator.of(context).pop();
-                                    //       },
-                                    //       width: double.infinity,
-                                    //       verticalPadding: 8,
-                                    //       horizontalPadding: 0,
-                                    //       borderRadius: 8,
-                                    //       buttonColor: kDarkBlack,
-                                    //       border: null,
-                                    //       child: Center(
-                                    //         child: Text(
-                                    //           'تأكيد',
-                                    //           style: textStyle,
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //     Container(
-                                    //       padding:
-                                    //           const EdgeInsets.only(top: 16.0),
-                                    //       child: Text(
-                                    //         'تنويه',
-                                    //         style: textStyle.copyWith(
-                                    //             color: kLightPurple),
-                                    //       ),
-                                    //     ),
-                                    //     Padding(
-                                    //       padding: const EdgeInsets.all(8.0),
-                                    //       child: Text(
-                                    //         'يرجى كتابة كافة ملاحظاتك عن السؤال وسيقوم الفريق المختص بالتأكد من الأمر بأقرب وقت',
-                                    //         style: textStyle.copyWith(
-                                    //             color: kLightPurple),
-                                    //       ),
-                                    //     ),
-                                    //   ]);
-                                    // },
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.warning_amber_rounded,
-                                          size: width / 50,
-                                          color: kDarkBlack,
-                                        ),
-                                        Text(
-                                          'بلاغ',
-                                          style: textStyle(
-                                              2, width, height, kDarkBlack),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  InkWell(
-                                    // onTap: () {
-                                    //   popUp(context, width / 4, 'مساعدة', [
-                                    //     Text(
-                                    //       questions[questionIndex - 1]
-                                    //               ['hint'] ??
-                                    //           'لا توجد اي معلومة اضافية لهذا السؤال',
-                                    //       style: textStyle.copyWith(
-                                    //           color: kLightPurple),
-                                    //     ),
-                                    //   ]);
-                                    // },
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.help_outline_rounded,
-                                          size: width / 50,
-                                          color: kDarkBlack,
-                                        ),
-                                        Text('مساعدة',
+                      CustomContainer(
+                          height: height,
+                          width: width * 0.08,
+                          buttonColor: kLightPurple,
+                          child: Padding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: width * 0.005),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const SizedBox(),
+                                CustomContainer(
+                                  onTap: () {
+                                    popUp(
+                                        context,
+                                        width * 0.2,
+                                        height * 0.25,
+                                        Center(
+                                          child: Text(
+                                            questions[questionIndex - 1]
+                                                        ['writer'] ==
+                                                    'نمط اسئلة الكتاب'
+                                                ? 'هذا السؤال على نمط اسئلة الكتاب'
+                                                : 'هذا السؤال من اسئلة الاستاذ ${questions[questionIndex - 1]['writer']}',
                                             style: textStyle(
-                                                2, width, height, kDarkBlack)),
-                                      ],
-                                    ),
+                                                3, width, height, kLightPurple),
+                                          ),
+                                        ),
+                                        kLightBlack,
+                                        kDarkBlack,
+                                        width * 0.01);
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.lightbulb_outline_rounded,
+                                        size: width * 0.014,
+                                        color: kDarkBlack,
+                                      ),
+                                      Text('معلومات السؤال',
+                                          textAlign: TextAlign.center,
+                                          style: textStyle(
+                                              4, width, height, kDarkBlack)),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  //TODO: add pop up are you sure?
-                                  endQuiz();
-                                },
-                                child: Column(
+                                ),
+                                CustomContainer(
+                                  onTap: () {
+                                    saveQuestion(
+                                        questions[questionIndex - 1]['id']);
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        answers[questions[questionIndex - 1]
+                                                ['id']]!['saved']
+                                            ? Icons.bookmark_add_rounded
+                                            : Icons.bookmark_add_outlined,
+                                        size: width * 0.014,
+                                        color: kDarkBlack,
+                                      ),
+                                      Text('حفظ السؤال',
+                                          textAlign: TextAlign.center,
+                                          style: textStyle(
+                                              4, width, height, kDarkBlack)),
+                                    ],
+                                  ),
+                                ),
+                                CustomDivider(
+                                  dashHeight: 0.5,
+                                  dashWidth: width * 0.001,
+                                  dashColor: kDarkBlack,
+                                  direction: Axis.horizontal,
+                                  fillRate: 1,
+                                ),
+                                Column(
                                   children: [
-                                    Icon(
-                                      Icons.exit_to_app_outlined,
-                                      size: width / 50,
-                                      color: kDarkBlack,
-                                    ),
-                                    Text('إنهاء الإمتحان',
+                                    Text('السؤال',
                                         style: textStyle(
-                                            2, width, height, kDarkBlack)),
+                                            3, width, height, kDarkBlack)),
+                                    Text('$questionIndex/${questions.length}',
+                                        style: textStyle(
+                                            3, width, height, kDarkBlack)),
                                   ],
                                 ),
-                              ),
-                            ],
+                                Column(
+                                  children: [
+                                    Text('الوقت',
+                                        style: textStyle(
+                                            3, width, height, kDarkBlack)),
+                                    StreamBuilder<int>(
+                                      stream: quizTimer!.rawTime,
+                                      initialData: quizTimer!.rawTime.value,
+                                      builder: (context, snap) {
+                                        final displayTime =
+                                            StopWatchTimer.getDisplayTime(
+                                                snap.data!,
+                                                milliSecond: false);
+                                        return Text(displayTime,
+                                            style: textStyle(
+                                                3, width, height, kDarkBlack));
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Stack(
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Text('رمز السؤال',
+                                            textAlign: TextAlign.center,
+                                            style: textStyle(
+                                                3, width, height, kDarkBlack)),
+                                        CustomContainer(
+                                          onTap: () async {
+                                            setState(() {
+                                              copied = true;
+                                            });
+                                            await Clipboard.setData(
+                                                ClipboardData(
+                                                    text: questions[
+                                                            questionIndex - 1]
+                                                        ['id']));
+                                            Timer(Duration(seconds: 2), () {
+                                              setState(() {
+                                                copied = false;
+                                              });
+                                            });
+                                          },
+                                          child: Text(
+                                              questions[questionIndex - 1]['id']
+                                                  .substring(0, 8),
+                                              style: textStyle(3, width, height,
+                                                  kDarkBlack)),
+                                        ),
+                                      ],
+                                    ),
+                                    Visibility(
+                                      visible: copied,
+                                      child: CustomContainer(
+                                        borderRadius: width * 0.05,
+                                        buttonColor: kDarkBlack,
+                                        border: fullBorder(kLightPurple),
+                                        horizontalPadding: width * 0.005,
+                                        verticalPadding: height * 0.005,
+                                        child: Text('تم النسخ',
+                                            textAlign: TextAlign.center,
+                                            style: textStyle(5, width, height,
+                                                kLightPurple)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                CustomDivider(
+                                  dashHeight: 0.5,
+                                  dashWidth: width * 0.001,
+                                  dashColor: kDarkBlack,
+                                  direction: Axis.horizontal,
+                                  fillRate: 1,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    CustomContainer(
+                                      width: width * 0.03,
+                                      onTap: () {
+                                        //TODO:
+                                        //   popUp(context, width / 2, 'بلاغ', [
+                                        //     Padding(
+                                        //       padding: const EdgeInsets.all(8.0),
+                                        //       child: Text(
+                                        //         'ملاحظاتك',
+                                        //         style: textStyle.copyWith(
+                                        //             color: kLightPurple),
+                                        //       ),
+                                        //     ),
+                                        //     Padding(
+                                        //       padding: const EdgeInsets.symmetric(
+                                        //           vertical: 8.0),
+                                        //       child: CustomTextField(
+                                        //         innerText: null,
+                                        //         hintText: '',
+                                        //         fontSize: 15,
+                                        //         width: double.infinity,
+                                        //         controller: TextEditingController(),
+                                        //         onChanged: (text) {},
+                                        //         readOnly: false,
+                                        //         obscure: false,
+                                        //         suffixIcon: null,
+                                        //         keyboardType: null,
+                                        //         color: kWhite,
+                                        //         fontColor: kDarkBlack,
+                                        //         border: const OutlineInputBorder(),
+                                        //         focusedBorder:
+                                        //             const OutlineInputBorder(),
+                                        //         verticalPadding: 7.5,
+                                        //         horizontalPadding: 30,
+                                        //       ),
+                                        //     ),
+                                        //     Button(
+                                        //       onTap: () {
+                                        //         () {};
+                                        //         Navigator.of(context).pop();
+                                        //       },
+                                        //       width: double.infinity,
+                                        //       verticalPadding: 8,
+                                        //       horizontalPadding: 0,
+                                        //       borderRadius: 8,
+                                        //       buttonColor: kDarkBlack,
+                                        //       border: null,
+                                        //       child: Center(
+                                        //         child: Text(
+                                        //           'تأكيد',
+                                        //           style: textStyle,
+                                        //         ),
+                                        //       ),
+                                        //     ),
+                                        //     Container(
+                                        //       padding:
+                                        //           const EdgeInsets.only(top: 16.0),
+                                        //       child: Text(
+                                        //         'تنويه',
+                                        //         style: textStyle.copyWith(
+                                        //             color: kLightPurple),
+                                        //       ),
+                                        //     ),
+                                        //     Padding(
+                                        //       padding: const EdgeInsets.all(8.0),
+                                        //       child: Text(
+                                        //         'يرجى كتابة كافة ملاحظاتك عن السؤال وسيقوم الفريق المختص بالتأكد من الأمر بأقرب وقت',
+                                        //         style: textStyle.copyWith(
+                                        //             color: kLightPurple),
+                                        //       ),
+                                        //     ),
+                                        //   ]);
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.warning_amber_rounded,
+                                            size: width * 0.014,
+                                            color: kDarkBlack,
+                                          ),
+                                          Text(
+                                            'بلاغ',
+                                            style: textStyle(
+                                                4, width, height, kDarkBlack),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    CustomContainer(
+                                      width: width * 0.03,
+                                      onTap: () {
+                                        popUp(
+                                            context,
+                                            width * 0.2,
+                                            height * 0.25,
+                                            Center(
+                                              child: Text(
+                                                questions[questionIndex - 1]
+                                                                ['hint'] ==
+                                                            '' ||
+                                                        questions[questionIndex -
+                                                                1]['hint'] ==
+                                                            null
+                                                    ? 'لا توجد اي معلومة اضافية لهذا السؤال'
+                                                    : questions[questionIndex -
+                                                        1]['hint'],
+                                                style: textStyle(3, width,
+                                                    height, kLightPurple),
+                                              ),
+                                            ),
+                                            kLightBlack,
+                                            kDarkBlack,
+                                            width * 0.01);
+                                      },
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.help_outline_rounded,
+                                            size: width * 0.014,
+                                            color: kDarkBlack,
+                                          ),
+                                          Text('مساعدة',
+                                              style: textStyle(4, width, height,
+                                                  kDarkBlack)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                CustomContainer(
+                                  onTap: () {
+                                    popUp(
+                                        context,
+                                        width * 0.2,
+                                        height * 0.25,
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'هل تريد انهاء الامتحان',
+                                              style: textStyle(3, width, height,
+                                                  kLightPurple),
+                                            ),
+                                            SizedBox(height: height * 0.04),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                CustomContainer(
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  width: width * 0.08,
+                                                  verticalPadding:
+                                                      height * 0.005,
+                                                  horizontalPadding: 0,
+                                                  borderRadius: width * 0.005,
+                                                  buttonColor: kDarkBlack,
+                                                  border:
+                                                      fullBorder(kLightPurple),
+                                                  child: Center(
+                                                    child: Text(
+                                                      'لا',
+                                                      style: textStyle(3, width,
+                                                          height, kLightPurple),
+                                                    ),
+                                                  ),
+                                                ),
+                                                SizedBox(width: width * 0.02),
+                                                CustomContainer(
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                    endQuiz();
+                                                  },
+                                                  width: width * 0.08,
+                                                  verticalPadding:
+                                                      height * 0.005,
+                                                  horizontalPadding: 0,
+                                                  borderRadius: width * 0.005,
+                                                  buttonColor: kLightPurple,
+                                                  border: null,
+                                                  child: Center(
+                                                    child: Text(
+                                                      'نعم',
+                                                      style: textStyle(3, width,
+                                                          height, kDarkBlack),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                        kLightBlack,
+                                        kDarkBlack,
+                                        width * 0.01);
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.exit_to_app_outlined,
+                                        size: width * 0.014,
+                                        color: kDarkBlack,
+                                      ),
+                                      Text('إنهاء الإمتحان',
+                                          textAlign: TextAlign.center,
+                                          style: textStyle(
+                                              4, width, height, kDarkBlack)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(),
+                              ],
+                            ),
                           )),
                       SizedBox(width: width * 0.03),
                       Column(
@@ -451,17 +624,18 @@ class _QuestionState extends State<Question> {
                                                           null
                                                       ? width * 0.84
                                                       : width * 0.4,
-                                              borderRadius: 8,
+                                              borderRadius: width * 0.005,
                                               border: null,
                                               buttonColor: answers[questions[
                                                               questionIndex - 1]
                                                           ['id']]!['id'] ==
                                                       questions[questionIndex -
                                                           1]['choices'][i]['id']
-                                                  ? kPurple
+                                                  ? kLightPurple
                                                   : kDarkGray,
-                                              child: SizedBox(
-                                                width: width * 0.3,
+                                              child: Align(
+                                                alignment:
+                                                    Alignment.centerRight,
                                                 child: stringWithLatex(
                                                     questions[questionIndex - 1]
                                                         ['choices'][i]['body'],
@@ -475,17 +649,21 @@ class _QuestionState extends State<Question> {
                                               ['choices']
                                           .isEmpty)
                                         CustomTextField(
-                                          innerText: answers[
-                                              questions[questionIndex - 1]
-                                                  ['id']]!['body'],
-                                          hintText: 'اكتب الجواب النهائي',
-                                          fontOption: 3,
+                                          controller: TextEditingController(),
                                           width: questions[questionIndex - 1]
                                                       ['image'] ==
                                                   null
                                               ? width * 0.84
                                               : width * 0.4,
-                                          controller: TextEditingController(),
+                                          fontOption: 3,
+                                          fontColor: kWhite,
+                                          textAlign: null,
+                                          obscure: false,
+                                          readOnly: false,
+                                          focusNode: null,
+                                          maxLines: null,
+                                          maxLength: null,
+                                          keyboardType: null,
                                           onChanged: (String text) {
                                             if (text == '') {
                                               answers[questions[
@@ -497,18 +675,25 @@ class _QuestionState extends State<Question> {
                                                       ['id']]!['body'] = text;
                                             }
                                           },
-                                          readOnly: false,
-                                          obscure: false,
-                                          suffixIcon: null,
-                                          keyboardType: null,
-                                          color: kDarkGray,
+                                          onSubmitted: null,
+                                          backgroundColor: kDarkGray,
                                           verticalPadding: width * 0.01,
                                           horizontalPadding: width * 0.02,
+                                          isDense: null,
+                                          innerText: answers[
+                                              questions[questionIndex - 1]
+                                                  ['id']]!['body'],
+                                          errorText: null,
+                                          hintText: 'اكتب الجواب النهائي',
+                                          hintTextColor:
+                                              kWhite.withOpacity(0.5),
+                                          suffixIcon: null,
+                                          prefixIcon: null,
                                           border: outlineInputBorder(
                                               width * 0.005, kTransparent),
                                           focusedBorder: outlineInputBorder(
-                                              width * 0.005, kPurple),
-                                        )
+                                              width * 0.005, kLightPurple),
+                                        ),
                                     ],
                                   ),
                                   if (questions[questionIndex - 1]['image'] !=
@@ -518,20 +703,16 @@ class _QuestionState extends State<Question> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        CustomDivider(
-                                          dashHeight: 2,
-                                          dashWidth: width * 0.005,
-                                          dashColor: kPurple.withOpacity(0.2),
-                                          direction: Axis.vertical,
-                                          fillRate: 1,
+                                        SizedBox(
+                                          height: height * 0.3,
+                                          child: CustomDivider(
+                                            dashHeight: 2,
+                                            dashWidth: width * 0.005,
+                                            dashColor: kDarkGray,
+                                            direction: Axis.vertical,
+                                            fillRate: 0.6,
+                                          ),
                                         ),
-                                        // Dash(
-                                        //     direction: Axis.vertical,
-                                        //     dashThickness: 0.2,
-                                        //     length: height / 2,
-                                        //     dashLength: height * 0.01,
-                                        //     dashColor:
-                                        //         kDarkPurple.withOpacity(0.2)),
                                       ],
                                     ),
                                     SizedBox(width: width * 0.02),
@@ -539,8 +720,8 @@ class _QuestionState extends State<Question> {
                                       image: NetworkImage(
                                           questions[questionIndex - 1]
                                               ['image']),
-                                      height: height * 0.5,
-                                      width: width * 0.4,
+                                      height: height * 0.3,
+                                      width: width * 0.3,
                                       fit: BoxFit.contain,
                                     ),
                                   ]
@@ -570,12 +751,12 @@ class _QuestionState extends State<Question> {
                                     verticalPadding: width * 0.005,
                                     horizontalPadding: 0,
                                     borderRadius: 8,
-                                    border: fullBorder(kPurple),
+                                    border: fullBorder(kLightPurple),
                                     buttonColor: kDarkBlack,
                                     child: Center(
                                       child: Text('السابق',
                                           style: textStyle(
-                                              2, width, height, kPurple)),
+                                              2, width, height, kLightPurple)),
                                     ),
                                   ),
                                 if (questionIndex != 1)
@@ -599,7 +780,7 @@ class _QuestionState extends State<Question> {
                                   horizontalPadding: 0,
                                   borderRadius: 8,
                                   border: null,
-                                  buttonColor: kPurple,
+                                  buttonColor: kLightPurple,
                                   child: Center(
                                     child: Text(
                                         questionIndex != questions.length
@@ -637,16 +818,37 @@ class _QuestionState extends State<Question> {
                         onTap: null,
                         width: width * 0.5,
                         height: height * 0.77,
-                        verticalPadding: height * 0.02,
+                        verticalPadding: height * 0.03,
                         horizontalPadding: width * 0.02,
                         borderRadius: width * 0.01,
                         border: fullBorder(kDarkBlack),
                         buttonColor: kLightBlack,
                         child: Column(
                           children: [
-                            Text(
-                              'أحسنت ، لقد أنهيت امتحانك !',
-                              style: textStyle(2, width, height, kLightPurple),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const SizedBox(),
+                                Text(
+                                  'أحسنت ، لقد أنهيت امتحانك !',
+                                  style:
+                                      textStyle(2, width, height, kLightPurple),
+                                ),
+                                CustomContainer(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                        context, Dashboard.route);
+                                  },
+                                  buttonColor: kTransparent,
+                                  border: fullBorder(kLightPurple),
+                                  borderRadius: width,
+                                  child: Icon(
+                                    Icons.home_rounded,
+                                    size: width * 0.02,
+                                    color: kLightPurple,
+                                  ),
+                                ),
+                              ],
                             ),
                             SizedBox(
                               height: height * 0.65,
@@ -661,9 +863,9 @@ class _QuestionState extends State<Question> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'العلامة : $quizResult',
+                                        'العلامة :  $quizResult',
                                         style: textStyle(
-                                            2, width, height, kLightPurple),
+                                            3, width, height, kLightPurple),
                                       ),
                                       SizedBox(
                                         width: width * 0.28,
@@ -678,7 +880,7 @@ class _QuestionState extends State<Question> {
                                       Text(
                                         'مهامك اكتملت بنسبة :',
                                         style: textStyle(
-                                            2, width, height, kLightPurple),
+                                            3, width, height, kLightPurple),
                                       ),
                                       Row(
                                         children: [
@@ -690,7 +892,7 @@ class _QuestionState extends State<Question> {
                                             horizontalPadding: 0,
                                             borderRadius: width * 0.005,
                                             border: null,
-                                            buttonColor: kDarkBlack,
+                                            buttonColor: kLightGray,
                                             child: Row(
                                               children: [
                                                 CustomContainer(
@@ -706,7 +908,7 @@ class _QuestionState extends State<Question> {
                                                 SizedBox(width: width * 0.005),
                                                 Text(
                                                   '25%',
-                                                  style: textStyle(2, width,
+                                                  style: textStyle(5, width,
                                                       height, kLightBlack),
                                                 )
                                               ],
@@ -718,7 +920,7 @@ class _QuestionState extends State<Question> {
                                           Text(
                                             'أظهر المزيد',
                                             style: textStyle(
-                                                2, width, height, kLightPurple),
+                                                5, width, height, kLightPurple),
                                           ),
                                         ],
                                       ),
@@ -738,18 +940,20 @@ class _QuestionState extends State<Question> {
                                               MainAxisAlignment.spaceEvenly,
                                           children: [
                                             Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
                                                   'الوقت المستهلك للحل :',
-                                                  style: textStyle(2, width,
+                                                  style: textStyle(3, width,
                                                       height, kLightPurple),
                                                 ),
                                                 Text(
                                                   '$quizDuration',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      3, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -766,24 +970,26 @@ class _QuestionState extends State<Question> {
                                                 child: Center(
                                                   child: Text(
                                                     'الوقت',
-                                                    style: textStyle(2, width,
+                                                    style: textStyle(3, width,
                                                         height, kLightBlack),
                                                   ),
                                                 )),
                                             const SizedBox(),
                                             Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
                                                   'الوقت المثالي للحل :',
-                                                  style: textStyle(2, width,
+                                                  style: textStyle(3, width,
                                                       height, kLightPurple),
                                                 ),
                                                 Text(
                                                   '$ideal_duration',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      3, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -795,7 +1001,7 @@ class _QuestionState extends State<Question> {
                                       Text(
                                         'معدل التحصيل لكل مهارات الامتحان',
                                         style: textStyle(
-                                            2, width, height, kLightPurple),
+                                            3, width, height, kLightPurple),
                                       ),
                                       Stack(
                                         alignment: Alignment.center,
@@ -840,12 +1046,12 @@ class _QuestionState extends State<Question> {
                                                 Text(
                                                   'مشتقتا الضرب والقسمة والمشتقات العليا',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '20%',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -895,12 +1101,12 @@ class _QuestionState extends State<Question> {
                                                 Text(
                                                   'الاشتقاق الضمني',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '50%',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -950,12 +1156,12 @@ class _QuestionState extends State<Question> {
                                                 Text(
                                                   'قاعدة السلسلة',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '100%',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -1005,12 +1211,12 @@ class _QuestionState extends State<Question> {
                                                 Text(
                                                   'الاشتقاق',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 ),
                                                 Text(
                                                   '65%',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 )
                                               ],
                                             ),
@@ -1060,10 +1266,10 @@ class _QuestionState extends State<Question> {
                                                 Text(
                                                   'مراجعة الوحدة الأولى',
                                                   style: textStyle(
-                                                      2, width, height, kWhite),
+                                                      4, width, height, kWhite),
                                                 ),
                                                 Text('40%',
-                                                    style: textStyle(2, width,
+                                                    style: textStyle(4, width,
                                                         height, kWhite))
                                               ],
                                             ),
@@ -1085,7 +1291,10 @@ class _QuestionState extends State<Question> {
                                     children: [
                                       const SizedBox(),
                                       CustomContainer(
-                                        onTap: null,
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                              context, QuizResult.route);
+                                        },
                                         width: width * 0.13,
                                         height: height * 0.06,
                                         verticalPadding: 0,
@@ -1097,7 +1306,7 @@ class _QuestionState extends State<Question> {
                                           child: Text(
                                             'ملخص وتحليل الامتحان',
                                             style: textStyle(
-                                                2, width, height, kDarkBlack),
+                                                3, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
@@ -1114,7 +1323,7 @@ class _QuestionState extends State<Question> {
                                           child: Text(
                                             'تقرير تقدم المادة',
                                             style: textStyle(
-                                                2, width, height, kDarkBlack),
+                                                3, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
@@ -1129,9 +1338,9 @@ class _QuestionState extends State<Question> {
                                         buttonColor: kLightPurple,
                                         child: Center(
                                           child: Text(
-                                            'ملخص وتحليل الامتحان',
+                                            'حل امتحان شبيه',
                                             style: textStyle(
-                                                2, width, height, kDarkBlack),
+                                                3, width, height, kDarkBlack),
                                           ),
                                         ),
                                       ),
@@ -1146,7 +1355,7 @@ class _QuestionState extends State<Question> {
                                         buttonColor: kLightPurple,
                                         child: Center(
                                           child: Text('اعادة الامتحان',
-                                              style: textStyle(2, width, height,
+                                              style: textStyle(3, width, height,
                                                   kDarkBlack)),
                                         ),
                                       ),
@@ -1165,7 +1374,7 @@ class _QuestionState extends State<Question> {
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text('قائمة المتصدرين',
-                                                style: textStyle(2, width,
+                                                style: textStyle(3, width,
                                                     height, kLightPurple)),
                                             Icon(
                                               Icons.emoji_events_outlined,
@@ -1189,7 +1398,7 @@ class _QuestionState extends State<Question> {
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text('مجتمع مدارس',
-                                                style: textStyle(2, width,
+                                                style: textStyle(3, width,
                                                     height, kLightPurple)),
                                             Icon(
                                               Icons.groups,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
+import '../providers/quiz_provider.dart';
+import '../providers/website_provider.dart';
 import 'advance_quiz_setting.dart';
 import 'welcome.dart';
 import '../components/custom_container.dart';
@@ -20,16 +23,14 @@ class QuizSetting extends StatefulWidget {
 
 class _QuizSettingState extends State<QuizSetting>
     with TickerProviderStateMixin {
-  bool loaded = false;
-
-  String? selectedSubjectID;
-  String? selectedSubjectName;
+  // String? selectedSubjectID;
+  // String? selectedSubjectName;
   List subjects = [];
 
   void getSubjects() async {
-    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
+    String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = '123'; //await getSession('sessionValue');
+    String? value = await getSession('sessionValue');
     post('subject_set/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
@@ -40,7 +41,8 @@ class _QuizSettingState extends State<QuizSetting>
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
               subjects = result;
-              loaded = true;
+              Provider.of<WebsiteProvider>(context, listen: false)
+                  .setLoaded(true);
             });
     });
   }
@@ -86,7 +88,7 @@ class _QuizSettingState extends State<QuizSetting>
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return loaded
+    return Provider.of<WebsiteProvider>(context, listen: true).loaded
         ? Scaffold(
             body: Directionality(
             textDirection: TextDirection.rtl,
@@ -139,25 +141,27 @@ class _QuizSettingState extends State<QuizSetting>
                                                   left: width * 0.02),
                                               child: CustomContainer(
                                                 onTap: () {
-                                                  setState(() {
-                                                    selectedSubjectID ==
-                                                            subjects[i + j]
-                                                                ['id']
-                                                        ? {
-                                                            selectedSubjectID =
-                                                                null,
-                                                            selectedSubjectName =
-                                                                null
-                                                          }
-                                                        : {
-                                                            selectedSubjectID =
-                                                                subjects[i + j]
-                                                                    ['id'],
-                                                            selectedSubjectName =
-                                                                subjects[i + j]
-                                                                    ['name']
-                                                          };
-                                                  });
+                                                  Provider.of<QuizProvider>(
+                                                          context,
+                                                          listen: false)
+                                                      .setSubjectID(
+                                                          subjects[i + j]
+                                                              ['id']);
+                                                  Provider.of<QuizProvider>(
+                                                          context,
+                                                          listen: false)
+                                                      .setSubjectName(
+                                                          subjects[i + j]
+                                                              ['name']);
+
+                                                  Provider.of<WebsiteProvider>(
+                                                          context,
+                                                          listen: false)
+                                                      .setLoaded(false);
+                                                  Navigator.pushNamed(
+                                                    context,
+                                                    AdvanceQuizSetting.route,
+                                                  );
                                                 },
                                                 width: width * 0.21,
                                                 height: height * 0.16,
@@ -166,7 +170,11 @@ class _QuizSettingState extends State<QuizSetting>
                                                 borderRadius: width * 0.005,
                                                 border: null,
                                                 buttonColor:
-                                                    selectedSubjectID ==
+                                                    Provider.of<QuizProvider>(
+                                                                    context,
+                                                                    listen:
+                                                                        true)
+                                                                .subjectID ==
                                                             subjects[i + j]
                                                                 ['id']
                                                         ? kPurple
@@ -195,7 +203,11 @@ class _QuizSettingState extends State<QuizSetting>
                                                               2,
                                                               width,
                                                               height,
-                                                              selectedSubjectID ==
+                                                              Provider.of<QuizProvider>(
+                                                                              context,
+                                                                              listen:
+                                                                                  true)
+                                                                          .subjectID ==
                                                                       subjects[i +
                                                                               j]
                                                                           ['id']
@@ -213,32 +225,6 @@ class _QuizSettingState extends State<QuizSetting>
                                     )
                                   ],
                                 ],
-                              ),
-                            ),
-                            SizedBox(height: height / 32),
-                            CustomContainer(
-                              onTap: () {
-                                if (selectedSubjectName != null) {
-                                  Navigator.pushNamed(
-                                      context, AdvanceQuizSetting.route,
-                                      arguments: {
-                                        'subjectName': selectedSubjectName,
-                                        'subjectID': selectedSubjectID
-                                      });
-                                }
-                              },
-                              width: width * 0.15,
-                              verticalPadding: height * 0.01,
-                              horizontalPadding: width / 70,
-                              borderRadius: width * 0.005,
-                              border: null,
-                              buttonColor: kPurple,
-                              child: Center(
-                                child: Text(
-                                  'المتابعة',
-                                  style:
-                                      textStyle(2, width, height, kDarkBlack),
-                                ),
                               ),
                             ),
                           ],
@@ -297,6 +283,9 @@ class _QuizSettingState extends State<QuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
+                                  Provider.of<WebsiteProvider>(context,
+                                          listen: false)
+                                      .setLoaded(false);
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
@@ -346,10 +335,7 @@ class _QuizSettingState extends State<QuizSetting>
                                     horizontal: width * 0.01,
                                     vertical: height * 0.01),
                                 child: CustomContainer(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                        context, QuizSetting.route);
-                                  },
+                                  onTap: () {},
                                   width: width *
                                       (0.032 * forwardAnimationValue +
                                           0.16 * backwardAnimationValue),
@@ -406,10 +392,7 @@ class _QuizSettingState extends State<QuizSetting>
                                     horizontal: width * 0.01,
                                     vertical: height * 0.01),
                                 child: CustomContainer(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                        context, Dashboard.route);
-                                  },
+                                  onTap: () {},
                                   width: width *
                                       (0.032 * forwardAnimationValue +
                                           0.16 * backwardAnimationValue),
@@ -457,7 +440,11 @@ class _QuizSettingState extends State<QuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
+                                  Provider.of<WebsiteProvider>(context,
+                                          listen: false)
+                                      .setLoaded(false);
+                                  Navigator.pushNamed(
+                                      context, QuizSetting.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
@@ -506,9 +493,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -556,9 +541,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -606,9 +589,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -666,9 +647,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -716,9 +695,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../utils/session.dart';
+import 'dashboard.dart';
+
 // import 'dashboard.dart';
 // import 'log_in.dart';
 // import 'sign_up.dart';
@@ -7,13 +10,38 @@ import 'package:flutter/material.dart';
 // import '../const.dart';
 // import '../utils/http_requests.dart';
 // import '../utils/session.dart';
-class Welcome extends StatelessWidget {
+class Welcome extends StatefulWidget {
   static const String route = '/';
 
   const Welcome({Key? key}) : super(key: key);
 
   @override
+  State<Welcome> createState() => _WelcomeState();
+}
+
+class _WelcomeState extends State<Welcome> {
+  void checkSession() async {
+    String? key0 = await getSession('sessionKey0');
+    String? key1 = await getSession('sessionKey1');
+    String? value = await getSession('sessionValue');
+
+    if ((key0 != null || key1 != null) && (value != null)) {
+      Navigator.pushNamed(context, Dashboard.route);
+    }
+  }
+
+  @override
+  void initState() {
+    checkSession();
+    // delSession('sessionKey0');
+    // delSession('sessionKey1');
+    // delSession('sessionValue');
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    checkSession();
     return const Placeholder();
   }
 }

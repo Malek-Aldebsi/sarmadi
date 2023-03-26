@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sarmadi/providers/quiz_provider.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
+import '../providers/website_provider.dart';
 import 'question.dart';
 import 'quiz_setting.dart';
 import 'welcome.dart';
@@ -15,9 +18,7 @@ import 'dashboard.dart';
 class AdvanceQuizSetting extends StatefulWidget {
   static const String route = '/AdvanceQuizSetting/';
 
-  final String? subjectID;
-  final String? subjectName;
-  const AdvanceQuizSetting({super.key, this.subjectID, this.subjectName});
+  const AdvanceQuizSetting({super.key});
 
   @override
   State<AdvanceQuizSetting> createState() => _AdvanceQuizSettingState();
@@ -25,18 +26,11 @@ class AdvanceQuizSetting extends StatefulWidget {
 
 class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
     with TickerProviderStateMixin {
-  bool headlinesLoaded = false;
-  bool modulesLoaded = false;
-
-  String? selectedSubjectName;
-  String? selectedSubjectID;
-
   int questionNum = 20;
-
+  int lesson_num = 0;
   TextEditingController hours = TextEditingController(text: '00');
   TextEditingController minutes = TextEditingController(text: '05');
   TextEditingController seconds = TextEditingController(text: '00');
-  bool withTime = true;
 
   List headlineSet = [];
   Set selectedHeadlines = {};
@@ -46,62 +40,39 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
   int quizLevel = 0; // 0 easy, 1 hard, 2 default
 
   void getHeadlines() async {
-    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
+    String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = '123'; //await getSession('sessionValue');
+    String? value = await getSession('sessionValue');
     post('headline_set/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
-      'subject_id': selectedSubjectID,
+      'subject_id': Provider.of<QuizProvider>(context, listen: false).subjectID,
     }).then((value) {
       dynamic result = decode(value);
       result == 0
           ? Navigator.pushNamed(context, Welcome.route)
           : setState(() {
-              headlineSet = result;
-              headlinesLoaded = true;
-            });
-    });
-  }
-
-  void getModules() async {
-    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
-    String? key1 = await getSession('sessionKey1');
-    String? value = '123'; //await getSession('sessionValue');
-    post('module_set/', {
-      if (key0 != null) 'email': key0,
-      if (key1 != null) 'phone': key1,
-      'password': value,
-      'subject_id': selectedSubjectID,
-    }).then((value) {
-      dynamic result = decode(value);
-      result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
-          : setState(() {
-              moduleSet = result;
-              modulesLoaded = true;
+              headlineSet = result['headlines'];
+              moduleSet = result['modules'];
+              Provider.of<WebsiteProvider>(context, listen: false)
+                  .setLoaded(true);
             });
     });
   }
 
   void buildQuiz() async {
-    //TODO another one for study
-    setState(() {
-      headlinesLoaded = false;
-      modulesLoaded = false;
-    });
+    Provider.of<WebsiteProvider>(context, listen: false).setLoaded(true);
 
-    String? key0 = 'user@gmail.com'; //await getSession('sessionKey0');
+    String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
-    String? value = '123'; //await getSession('sessionValue');
+    String? value = await getSession('sessionValue');
     post('build_quiz/', {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
       'headlines': selectedHeadlines.toList(),
       'question_num': questionNum,
-      'duration': 5000,
       'quiz_level': quizLevel,
     }).then((value) {
       dynamic result = decode(value);
@@ -114,7 +85,8 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                         3600 +
                     int.parse(minutes.text == '' ? '05' : minutes.text) * 60 +
                     int.parse(seconds.text == '' ? '00' : seconds.text),
-                'subjectID': selectedSubjectID,
+                'subjectID':
+                    Provider.of<QuizProvider>(context, listen: false).subjectID,
               })
             };
     });
@@ -122,21 +94,15 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () {
-      try {
-        dynamic arguments = ModalRoute.of(context)?.settings.arguments;
-        setState(() {
-          selectedSubjectName = arguments['subjectName'];
-          selectedSubjectID = arguments['subjectID'];
-        });
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Provider.of<QuizProvider>(context, listen: false).subjectID != '') {
         getHeadlines();
-        getModules();
-      } catch (e) {
+      } else {
         Navigator.pushNamed(context, QuizSetting.route);
       }
     });
-
-    super.initState();
 
     forwardAnimationController = AnimationController(
         vsync: this,
@@ -183,7 +149,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return modulesLoaded && headlinesLoaded
+    return Provider.of<WebsiteProvider>(context, listen: true).loaded
         ? Scaffold(
             body: Directionality(
             textDirection: TextDirection.rtl,
@@ -208,7 +174,10 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                             Padding(
                               padding:
                                   EdgeInsets.symmetric(vertical: height / 25),
-                              child: Text(selectedSubjectName ?? '',
+                              child: Text(
+                                  Provider.of<QuizProvider>(context,
+                                          listen: true)
+                                      .subjectName,
                                   style: textStyle(1, width, height, kWhite)),
                             ),
                             Row(
@@ -227,113 +196,149 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                     SizedBox(
                                       height: height * 0.35,
                                       width: width * 0.2,
-                                      child: ListView(
-                                        children: [
-                                          for (Map module in moduleSet)
-                                            if (module['semester'] == 1)
-                                              Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: height / 128,
-                                                ),
-                                                child: CustomContainer(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      bool status =
-                                                          moduleStatus(module);
-                                                      for (Map lesson in module[
-                                                          'lessons']) {
-                                                        status
-                                                            ? selectedHeadlines
-                                                                .removeAll(
-                                                                    lesson[
-                                                                        'h1s'])
-                                                            : selectedHeadlines
-                                                                .addAll(lesson[
-                                                                    'h1s']);
-                                                      }
-                                                    });
-                                                  },
-                                                  width: width * 0.2,
-                                                  verticalPadding:
-                                                      height * 0.02,
-                                                  horizontalPadding:
-                                                      width * 0.02,
-                                                  borderRadius: width * 0.005,
-                                                  border: null,
-                                                  buttonColor:
-                                                      moduleStatus(module)
-                                                          ? kDarkPurple
-                                                          : kDarkGray,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      SizedBox(
-                                                          width: width * 0.19),
-                                                      Text(
-                                                        module['name'],
-                                                        style: textStyle(
-                                                            3,
-                                                            width,
-                                                            height,
-                                                            kWhite),
-                                                      ),
-                                                      Wrap(
-                                                        children: [
-                                                          for (Map lesson
-                                                              in module[
-                                                                  'lessons'])
-                                                            Padding(
-                                                              padding:
-                                                                  EdgeInsets.all(
-                                                                      width /
-                                                                          350),
-                                                              child:
-                                                                  CustomContainer(
-                                                                      onTap:
-                                                                          () {
-                                                                        setState(
-                                                                          () {
-                                                                            if (moduleStatus(module)) {
-                                                                              selectedHeadlines.removeAll(lesson['h1s']);
-                                                                            } else {
-                                                                              selectedHeadlines.containsAll(lesson['h1s']) ? selectedHeadlines.removeAll(lesson['h1s']) : selectedHeadlines.addAll(lesson['h1s']);
-                                                                            }
-                                                                          },
-                                                                        );
-                                                                      },
-                                                                      verticalPadding:
-                                                                          height *
-                                                                              0.002,
-                                                                      horizontalPadding:
-                                                                          width *
-                                                                              0.01,
-                                                                      borderRadius:
-                                                                          width *
-                                                                              0.005,
-                                                                      border:
-                                                                          null,
-                                                                      buttonColor: selectedHeadlines.containsAll(lesson[
-                                                                              'h1s'])
-                                                                          ? kPurple
-                                                                          : kGray,
-                                                                      child: Text(
+                                      child: Theme(
+                                        data: Theme.of(context).copyWith(
+                                          scrollbarTheme: ScrollbarThemeData(
+                                            minThumbLength: 1,
+                                            mainAxisMargin: 55,
+                                            crossAxisMargin: 2,
+                                            thumbVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            trackVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            thumbColor: MaterialStateProperty
+                                                .all<Color>(kLightPurple),
+                                            trackColor: MaterialStateProperty
+                                                .all<Color>(kTransparent),
+                                            trackBorderColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(kTransparent),
+                                          ),
+                                        ),
+                                        child: ListView(
+                                          children: [
+                                            for (Map module in moduleSet)
+                                              if (module['semester'] == 1)
+                                                Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: height / 128,
+                                                  ),
+                                                  child: CustomContainer(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        bool status =
+                                                            moduleStatus(
+                                                                module);
+                                                        for (Map lesson
+                                                            in module[
+                                                                'lessons']) {
+                                                          status
+                                                                  ? selectedHeadlines
+                                                                      .removeAll(
                                                                           lesson[
-                                                                              'name'],
-                                                                          style: textStyle(
-                                                                              4,
-                                                                              width,
-                                                                              height,
-                                                                              kWhite))),
-                                                            )
-                                                        ],
-                                                      ),
-                                                    ],
+                                                                              'h1s'])
+                                                                  : selectedHeadlines
+                                                                      .addAll(lesson[
+                                                                          'h1s'])
+                                                              // if (questionNum <
+                                                              //     selectedHeadlines
+                                                              //         .length)
+                                                              //   questionNum =
+                                                              //       selectedHeadlines
+                                                              //           .length
+                                                              ;
+                                                        }
+                                                      });
+                                                    },
+                                                    width: width * 0.2,
+                                                    verticalPadding:
+                                                        height * 0.02,
+                                                    horizontalPadding:
+                                                        width * 0.02,
+                                                    borderRadius: width * 0.005,
+                                                    border: null,
+                                                    buttonColor:
+                                                        moduleStatus(module)
+                                                            ? kDarkPurple
+                                                            : kDarkGray,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        SizedBox(
+                                                            width:
+                                                                width * 0.19),
+                                                        Text(
+                                                          module['name'],
+                                                          style: textStyle(
+                                                              3,
+                                                              width,
+                                                              height,
+                                                              kWhite),
+                                                        ),
+                                                        Wrap(
+                                                          children: [
+                                                            for (Map lesson
+                                                                in module[
+                                                                    'lessons'])
+                                                              Padding(
+                                                                padding: EdgeInsets
+                                                                    .all(width /
+                                                                        350),
+                                                                child:
+                                                                    CustomContainer(
+                                                                        onTap:
+                                                                            () {
+                                                                          setState(
+                                                                            () {
+                                                                              if (moduleStatus(module)) {
+                                                                                selectedHeadlines.removeAll(lesson['h1s']);
+                                                                              } else {
+                                                                                selectedHeadlines.containsAll(lesson['h1s'])
+                                                                                    ? selectedHeadlines.removeAll(lesson['h1s'])
+                                                                                    : {
+                                                                                        selectedHeadlines.addAll(lesson['h1s']),
+                                                                                        lesson_num++,
+                                                                                        if (questionNum < lesson_num) questionNum = lesson_num
+                                                                                      };
+                                                                              }
+                                                                            },
+                                                                          );
+                                                                        },
+                                                                        verticalPadding:
+                                                                            height *
+                                                                                0.002,
+                                                                        horizontalPadding:
+                                                                            width *
+                                                                                0.01,
+                                                                        borderRadius:
+                                                                            width *
+                                                                                0.005,
+                                                                        border:
+                                                                            null,
+                                                                        buttonColor: selectedHeadlines.containsAll(lesson['h1s'])
+                                                                            ? kPurple
+                                                                            : kGray,
+                                                                        child: Text(
+                                                                            lesson[
+                                                                                'name'],
+                                                                            style: textStyle(
+                                                                                4,
+                                                                                width,
+                                                                                height,
+                                                                                kWhite))),
+                                                              )
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     SizedBox(
@@ -345,113 +350,149 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                     SizedBox(
                                       height: height * 0.35,
                                       width: width * 0.2,
-                                      child: ListView(
-                                        children: [
-                                          for (Map module in moduleSet)
-                                            if (module['semester'] == 2)
-                                              Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: height / 128,
-                                                ),
-                                                child: CustomContainer(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      bool status =
-                                                          moduleStatus(module);
-                                                      for (Map lesson in module[
-                                                          'lessons']) {
-                                                        status
-                                                            ? selectedHeadlines
-                                                                .removeAll(
-                                                                    lesson[
-                                                                        'h1s'])
-                                                            : selectedHeadlines
-                                                                .addAll(lesson[
-                                                                    'h1s']);
-                                                      }
-                                                    });
-                                                  },
-                                                  width: width * 0.2,
-                                                  verticalPadding:
-                                                      height * 0.02,
-                                                  horizontalPadding:
-                                                      width * 0.02,
-                                                  borderRadius: width * 0.005,
-                                                  border: null,
-                                                  buttonColor:
-                                                      moduleStatus(module)
-                                                          ? kDarkPurple
-                                                          : kDarkGray,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      SizedBox(
-                                                          width: width * 0.19),
-                                                      Text(
-                                                        module['name'],
-                                                        style: textStyle(
-                                                            3,
-                                                            width,
-                                                            height,
-                                                            kWhite),
-                                                      ),
-                                                      Wrap(
-                                                        children: [
-                                                          for (Map lesson
-                                                              in module[
-                                                                  'lessons'])
-                                                            Padding(
-                                                              padding:
-                                                                  EdgeInsets.all(
-                                                                      width /
-                                                                          350),
-                                                              child:
-                                                                  CustomContainer(
-                                                                      onTap:
-                                                                          () {
-                                                                        setState(
-                                                                          () {
-                                                                            if (moduleStatus(module)) {
-                                                                              selectedHeadlines.removeAll(lesson['h1s']);
-                                                                            } else {
-                                                                              selectedHeadlines.containsAll(lesson['h1s']) ? selectedHeadlines.removeAll(lesson['h1s']) : selectedHeadlines.addAll(lesson['h1s']);
-                                                                            }
-                                                                          },
-                                                                        );
-                                                                      },
-                                                                      verticalPadding:
-                                                                          height *
-                                                                              0.002,
-                                                                      horizontalPadding:
-                                                                          width *
-                                                                              0.01,
-                                                                      borderRadius:
-                                                                          width *
-                                                                              0.005,
-                                                                      border:
-                                                                          null,
-                                                                      buttonColor: selectedHeadlines.containsAll(lesson[
-                                                                              'h1s'])
-                                                                          ? kPurple
-                                                                          : kGray,
-                                                                      child: Text(
+                                      child: Theme(
+                                        data: Theme.of(context).copyWith(
+                                          scrollbarTheme: ScrollbarThemeData(
+                                            minThumbLength: 1,
+                                            mainAxisMargin: 55,
+                                            crossAxisMargin: 2,
+                                            thumbVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            trackVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            thumbColor: MaterialStateProperty
+                                                .all<Color>(kLightPurple),
+                                            trackColor: MaterialStateProperty
+                                                .all<Color>(kTransparent),
+                                            trackBorderColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(kTransparent),
+                                          ),
+                                        ),
+                                        child: ListView(
+                                          children: [
+                                            for (Map module in moduleSet)
+                                              if (module['semester'] == 2)
+                                                Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: height / 128,
+                                                  ),
+                                                  child: CustomContainer(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        bool status =
+                                                            moduleStatus(
+                                                                module);
+                                                        for (Map lesson
+                                                            in module[
+                                                                'lessons']) {
+                                                          status
+                                                                  ? selectedHeadlines
+                                                                      .removeAll(
                                                                           lesson[
-                                                                              'name'],
-                                                                          style: textStyle(
-                                                                              4,
-                                                                              width,
-                                                                              height,
-                                                                              kWhite))),
-                                                            )
-                                                        ],
-                                                      ),
-                                                    ],
+                                                                              'h1s'])
+                                                                  : selectedHeadlines
+                                                                      .addAll(lesson[
+                                                                          'h1s'])
+                                                              // if (questionNum <
+                                                              //     selectedHeadlines
+                                                              //         .length)
+                                                              //   questionNum =
+                                                              //       selectedHeadlines
+                                                              //           .length
+                                                              ;
+                                                        }
+                                                      });
+                                                    },
+                                                    width: width * 0.2,
+                                                    verticalPadding:
+                                                        height * 0.02,
+                                                    horizontalPadding:
+                                                        width * 0.02,
+                                                    borderRadius: width * 0.005,
+                                                    border: null,
+                                                    buttonColor:
+                                                        moduleStatus(module)
+                                                            ? kDarkPurple
+                                                            : kDarkGray,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        SizedBox(
+                                                            width:
+                                                                width * 0.19),
+                                                        Text(
+                                                          module['name'],
+                                                          style: textStyle(
+                                                              3,
+                                                              width,
+                                                              height,
+                                                              kWhite),
+                                                        ),
+                                                        Wrap(
+                                                          children: [
+                                                            for (Map lesson
+                                                                in module[
+                                                                    'lessons'])
+                                                              Padding(
+                                                                padding: EdgeInsets
+                                                                    .all(width /
+                                                                        350),
+                                                                child:
+                                                                    CustomContainer(
+                                                                        onTap:
+                                                                            () {
+                                                                          setState(
+                                                                            () {
+                                                                              if (moduleStatus(module)) {
+                                                                                selectedHeadlines.removeAll(lesson['h1s']);
+                                                                              } else {
+                                                                                selectedHeadlines.containsAll(lesson['h1s'])
+                                                                                    ? selectedHeadlines.removeAll(lesson['h1s'])
+                                                                                    : {
+                                                                                        selectedHeadlines.addAll(lesson['h1s']),
+                                                                                        lesson_num++,
+                                                                                        if (questionNum < lesson_num) questionNum = lesson_num
+                                                                                      };
+                                                                              }
+                                                                            },
+                                                                          );
+                                                                        },
+                                                                        verticalPadding:
+                                                                            height *
+                                                                                0.002,
+                                                                        horizontalPadding:
+                                                                            width *
+                                                                                0.01,
+                                                                        borderRadius:
+                                                                            width *
+                                                                                0.005,
+                                                                        border:
+                                                                            null,
+                                                                        buttonColor: selectedHeadlines.containsAll(lesson['h1s'])
+                                                                            ? kPurple
+                                                                            : kGray,
+                                                                        child: Text(
+                                                                            lesson[
+                                                                                'name'],
+                                                                            style: textStyle(
+                                                                                4,
+                                                                                width,
+                                                                                height,
+                                                                                kWhite))),
+                                                              )
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     )
                                   ],
@@ -482,46 +523,79 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       buttonColor: kDarkGray,
                                       height: height * 0.5,
                                       width: width * 0.2,
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.vertical,
-                                        child: Wrap(
-                                          runSpacing: width * 0.004,
-                                          spacing: width * 0.004,
-                                          children: [
-                                            for (Map headline in headlineSet)
-                                              CustomContainer(
-                                                  onTap: () {
-                                                    setState(
-                                                      () {
+                                      child: Theme(
+                                        data: Theme.of(context).copyWith(
+                                          scrollbarTheme: ScrollbarThemeData(
+                                            minThumbLength: 1,
+                                            mainAxisMargin: 55,
+                                            crossAxisMargin: 2,
+                                            thumbVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            trackVisibility:
+                                                MaterialStateProperty.all<bool>(
+                                                    true),
+                                            thumbColor: MaterialStateProperty
+                                                .all<Color>(kLightPurple),
+                                            trackColor: MaterialStateProperty
+                                                .all<Color>(kTransparent),
+                                            trackBorderColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(kTransparent),
+                                          ),
+                                        ),
+                                        child: SingleChildScrollView(
+                                          scrollDirection: Axis.vertical,
+                                          child: Wrap(
+                                            runSpacing: width * 0.004,
+                                            spacing: width * 0.004,
+                                            children: [
+                                              for (Map headline in headlineSet)
+                                                CustomContainer(
+                                                    onTap: () {
+                                                      setState(
+                                                        () {
+                                                          selectedHeadlines.contains(
+                                                                      headline[
+                                                                          'id'])
+                                                                  ? selectedHeadlines.remove(
+                                                                      (headline[
+                                                                          'id']))
+                                                                  : selectedHeadlines.add(
+                                                                      (headline[
+                                                                          'id']))
+                                                              // if (questionNum <
+                                                              //     selectedHeadlines
+                                                              //         .length)
+                                                              //   questionNum =
+                                                              //       selectedHeadlines
+                                                              //           .length
+                                                              ;
+                                                        },
+                                                      );
+                                                    },
+                                                    verticalPadding: height *
+                                                        0.02,
+                                                    horizontalPadding:
+                                                        width * 0.01,
+                                                    borderRadius: width * 0.005,
+                                                    border: null,
+                                                    buttonColor:
                                                         selectedHeadlines
                                                                 .contains(
                                                                     headline[
                                                                         'id'])
-                                                            ? selectedHeadlines
-                                                                .remove(
-                                                                    (headline[
-                                                                        'id']))
-                                                            : selectedHeadlines
-                                                                .add((headline[
-                                                                    'id']));
-                                                      },
-                                                    );
-                                                  },
-                                                  verticalPadding:
-                                                      height * 0.02,
-                                                  horizontalPadding:
-                                                      width * 0.01,
-                                                  borderRadius: width * 0.005,
-                                                  border: null,
-                                                  buttonColor: selectedHeadlines
-                                                          .contains(
-                                                              headline['id'])
-                                                      ? kPurple
-                                                      : kGray,
-                                                  child: Text(headline['name'],
-                                                      style: textStyle(4, width,
-                                                          height, kWhite)))
-                                          ],
+                                                            ? kPurple
+                                                            : kGray,
+                                                    child: Text(
+                                                        headline['name'],
+                                                        style: textStyle(
+                                                            4,
+                                                            width,
+                                                            height,
+                                                            kWhite)))
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -559,14 +633,13 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                           child: Slider(
                                               min: 0,
                                               max: 60,
-                                              value: questionNum >
-                                                      selectedHeadlines.length
-                                                  ? questionNum.toDouble()
-                                                  : selectedHeadlines.length
-                                                      .toDouble(),
+                                              value: questionNum.toDouble(),
                                               onChanged: (value) {
                                                 setState(() {
-                                                  questionNum = value.floor();
+                                                  value < lesson_num
+                                                      ? questionNum = lesson_num
+                                                      : questionNum =
+                                                          value.floor();
                                                 });
                                               }),
                                         ),
@@ -605,11 +678,19 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                             width * 0.005))),
                                             height: height * 0.09,
                                             child: MaterialButton(
-                                              color: withTime ? kPurple : kGray,
+                                              color: Provider.of<QuizProvider>(
+                                                          context,
+                                                          listen: true)
+                                                      .withTime
+                                                  ? kPurple
+                                                  : kGray,
                                               onPressed: () {
                                                 setState(
                                                   () {
-                                                    withTime = !withTime;
+                                                    Provider.of<QuizProvider>(
+                                                            context,
+                                                            listen: false)
+                                                        .setWithTime(false);
                                                   },
                                                 );
                                               },
@@ -632,150 +713,135 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             ),
                                           ),
                                           CustomTextField(
-                                            innerText: null,
-                                            hintText: '00',
-                                            fontOption: 3,
-                                            fontColor: kWhite,
-                                            width: width * 0.05,
-                                            controller: seconds,
-                                            textAlign: TextAlign.center,
-                                            onChanged: (text) {
-                                              if (!RegExp(r'^[0-9:]+$')
-                                                  .hasMatch(text)) {
-                                                seconds.text = '';
-                                              }
-                                              if (int.parse(text) > 60) {
-                                                seconds.text = '60';
-                                              } else if (text.length > 2) {
-                                                seconds.text = '00';
-                                              }
-                                            },
-                                            verticalPadding: width * 0.004,
-                                            horizontalPadding: width * 0.008,
-                                            readOnly: false,
-                                            obscure: false,
-                                            suffixIcon: null,
-                                            keyboardType: TextInputType.number,
-                                            color: kGray,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                              controller: seconds,
+                                              width: width * 0.05,
+                                              fontOption: 3,
+                                              fontColor: kWhite,
+                                              textAlign: TextAlign.center,
+                                              obscure: false,
+                                              readOnly: false,
+                                              focusNode: null,
+                                              maxLines: null,
+                                              maxLength: null,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              onChanged: (text) {
+                                                if (!RegExp(r'^[0-9:]+$')
+                                                    .hasMatch(text)) {
+                                                  seconds.text = '';
+                                                }
+                                                if (int.parse(text) > 60) {
+                                                  seconds.text = '60';
+                                                } else if (text.length > 2) {
+                                                  seconds.text = '00';
+                                                }
+                                              },
+                                              onSubmitted: null,
+                                              backgroundColor: kGray,
+                                              horizontalPadding: width * 0.008,
+                                              verticalPadding: width * 0.004,
+                                              isDense: null,
+                                              innerText: null,
+                                              errorText: null,
+                                              hintText: '00',
+                                              hintTextColor:
+                                                  kWhite.withOpacity(0.5),
+                                              suffixIcon: null,
+                                              prefixIcon: null,
+                                              border: outlineInputBorder(
+                                                  width * 0.005, kTransparent),
+                                              focusedBorder: outlineInputBorder(
+                                                  width * 0.005, kTransparent)),
                                           Text(
                                             ':',
                                             style: textStyle(
                                                 2, width, height, kWhite),
                                           ),
                                           CustomTextField(
-                                            innerText: null,
-                                            hintText: '05',
-                                            fontOption: 3,
-                                            fontColor: kWhite,
-                                            width: width * 0.05,
-                                            controller: minutes,
-                                            textAlign: TextAlign.center,
-                                            onChanged: (text) {
-                                              if (!RegExp(r'^[0-9:]+$')
-                                                  .hasMatch(text)) {
-                                                minutes.text = '';
-                                              }
-                                              if (int.parse(text) > 60) {
-                                                minutes.text = '60';
-                                              } else if (text.length > 2) {
-                                                minutes.text = '00';
-                                              }
-                                            },
-                                            verticalPadding: width * 0.004,
-                                            horizontalPadding: width * 0.008,
-                                            readOnly: false,
-                                            obscure: false,
-                                            suffixIcon: null,
-                                            keyboardType: TextInputType.number,
-                                            color: kGray,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                              controller: minutes,
+                                              width: width * 0.05,
+                                              fontOption: 3,
+                                              fontColor: kWhite,
+                                              textAlign: TextAlign.center,
+                                              obscure: false,
+                                              readOnly: false,
+                                              focusNode: null,
+                                              maxLines: null,
+                                              maxLength: null,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              onChanged: (text) {
+                                                if (!RegExp(r'^[0-9:]+$')
+                                                    .hasMatch(text)) {
+                                                  minutes.text = '';
+                                                }
+                                                if (int.parse(text) > 60) {
+                                                  minutes.text = '60';
+                                                } else if (text.length > 2) {
+                                                  minutes.text = '00';
+                                                }
+                                              },
+                                              onSubmitted: null,
+                                              backgroundColor: kGray,
+                                              horizontalPadding: width * 0.008,
+                                              verticalPadding: width * 0.004,
+                                              isDense: null,
+                                              innerText: null,
+                                              errorText: null,
+                                              hintText: '05',
+                                              hintTextColor:
+                                                  kWhite.withOpacity(0.5),
+                                              suffixIcon: null,
+                                              prefixIcon: null,
+                                              border: outlineInputBorder(
+                                                  width * 0.005, kTransparent),
+                                              focusedBorder: outlineInputBorder(
+                                                  width * 0.005, kTransparent)),
                                           Text(
                                             ':',
                                             style: textStyle(
                                                 2, width, height, kWhite),
                                           ),
                                           CustomTextField(
-                                            innerText: null,
-                                            hintText: '00',
-                                            fontOption: 3,
-                                            fontColor: kWhite,
-                                            width: width * 0.05,
-                                            controller: hours,
-                                            textAlign: TextAlign.center,
-                                            onChanged: (text) {
-                                              if (!RegExp(r'^[0-9:]+$')
-                                                  .hasMatch(text)) {
-                                                hours.text = '';
-                                              }
-                                              if (int.parse(text) > 5) {
-                                                hours.text = '05';
-                                              } else if (text.length > 2) {
-                                                hours.text = '00';
-                                              }
-                                            },
-                                            verticalPadding: width * 0.004,
-                                            horizontalPadding: width * 0.008,
-                                            readOnly: false,
-                                            obscure: false,
-                                            suffixIcon: null,
-                                            keyboardType: TextInputType.number,
-                                            color: kGray,
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(
-                                                      width * 0.005)),
-                                              borderSide: const BorderSide(
-                                                color: Colors.transparent,
-                                                width: 1,
-                                              ),
-                                            ),
-                                          ),
+                                              controller: hours,
+                                              width: width * 0.05,
+                                              fontOption: 3,
+                                              fontColor: kWhite,
+                                              textAlign: TextAlign.center,
+                                              obscure: false,
+                                              readOnly: false,
+                                              focusNode: null,
+                                              maxLines: null,
+                                              maxLength: null,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              onChanged: (text) {
+                                                if (!RegExp(r'^[0-9:]+$')
+                                                    .hasMatch(text)) {
+                                                  hours.text = '';
+                                                }
+                                                if (int.parse(text) > 5) {
+                                                  hours.text = '05';
+                                                } else if (text.length > 2) {
+                                                  hours.text = '00';
+                                                }
+                                              },
+                                              onSubmitted: null,
+                                              backgroundColor: kGray,
+                                              horizontalPadding: width * 0.008,
+                                              verticalPadding: width * 0.004,
+                                              isDense: null,
+                                              innerText: null,
+                                              errorText: null,
+                                              hintText: '00',
+                                              hintTextColor:
+                                                  kWhite.withOpacity(0.5),
+                                              suffixIcon: null,
+                                              prefixIcon: null,
+                                              border: outlineInputBorder(
+                                                  width * 0.005, kTransparent),
+                                              focusedBorder: outlineInputBorder(
+                                                  width * 0.005, kTransparent)),
                                           const SizedBox(),
                                         ],
                                       ),
@@ -862,51 +928,26 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                       ),
                                     ),
                                     SizedBox(height: height * 0.08),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        CustomContainer(
-                                          onTap: () {
-                                            if (selectedHeadlines.isNotEmpty) {
-                                              buildQuiz();
-                                            }
-                                          },
-                                          width: width * 0.13,
-                                          verticalPadding: height * 0.02,
-                                          horizontalPadding: 0,
-                                          borderRadius: width * 0.005,
-                                          buttonColor: kPurple,
-                                          border: null,
-                                          child: Center(
-                                            child: Text('ادرس',
-                                                style: textStyle(
-                                                    3, width, height, kWhite)),
-                                          ),
+                                    CustomContainer(
+                                      onTap: () {
+                                        if (selectedHeadlines.isNotEmpty) {
+                                          buildQuiz();
+                                        }
+                                      },
+                                      width: width * 0.3,
+                                      verticalPadding: height * 0.02,
+                                      horizontalPadding: 0,
+                                      borderRadius: width * 0.005,
+                                      buttonColor: kPurple,
+                                      border: null,
+                                      child: Center(
+                                        child: Text(
+                                          'امتحن',
+                                          style: textStyle(
+                                              3, width, height, kWhite),
                                         ),
-                                        SizedBox(width: width * 0.04),
-                                        CustomContainer(
-                                          onTap: () {
-                                            if (selectedHeadlines.isNotEmpty) {
-                                              buildQuiz();
-                                            }
-                                          },
-                                          width: width * 0.13,
-                                          verticalPadding: height * 0.02,
-                                          horizontalPadding: 0,
-                                          borderRadius: width * 0.005,
-                                          buttonColor: kPurple,
-                                          border: null,
-                                          child: Center(
-                                            child: Text(
-                                              'امتحن',
-                                              style: textStyle(
-                                                  3, width, height, kWhite),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -966,6 +1007,9 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
+                                  Provider.of<WebsiteProvider>(context,
+                                          listen: false)
+                                      .setLoaded(false);
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
@@ -1013,10 +1057,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                     horizontal: width * 0.01,
                                     vertical: height * 0.01),
                                 child: CustomContainer(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                        context, QuizSetting.route);
-                                  },
+                                  onTap: () {},
                                   width: width *
                                       (0.032 * forwardAnimationValue +
                                           0.16 * backwardAnimationValue),
@@ -1073,10 +1114,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                     horizontal: width * 0.01,
                                     vertical: height * 0.01),
                                 child: CustomContainer(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                        context, Dashboard.route);
-                                  },
+                                  onTap: () {},
                                   width: width *
                                       (0.032 * forwardAnimationValue +
                                           0.16 * backwardAnimationValue),
@@ -1124,7 +1162,11 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
+                                  Provider.of<WebsiteProvider>(context,
+                                          listen: false)
+                                      .setLoaded(false);
+                                  Navigator.pushNamed(
+                                      context, QuizSetting.route);
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
@@ -1171,9 +1213,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -1219,9 +1259,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -1267,9 +1305,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -1325,9 +1361,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),
@@ -1373,9 +1407,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                   horizontal: width * 0.01,
                                   vertical: height * 0.01),
                               child: CustomContainer(
-                                onTap: () {
-                                  Navigator.pushNamed(context, Dashboard.route);
-                                },
+                                onTap: () {},
                                 width: width *
                                     (0.032 * forwardAnimationValue +
                                         0.16 * backwardAnimationValue),

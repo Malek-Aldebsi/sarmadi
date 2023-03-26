@@ -152,8 +152,8 @@ class CustomSliderThumbRect extends SliderComponentShape {
 
     final rRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
-          center: center, width: thumbHeight * 1.2, height: thumbHeight * 0.6),
-      Radius.circular(thumbRadius * .4),
+          center: center, width: thumbHeight * 1.2, height: thumbHeight * 0.8),
+      Radius.circular(thumbRadius * .6),
     );
 
     final paint = Paint()

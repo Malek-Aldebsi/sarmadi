@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:flutter_tex/flutter_tex.dart';
+import '../const/colors.dart';
 import '../const/fonts.dart';
+import 'dart:ui' as ui;
 
 // Widget stringWithLatex(str, fontOption, width, height, fontColor) {
 //   List<InlineSpan> textSpan = [];
@@ -44,34 +47,44 @@ Widget stringWithLatex(str, fontOption, width, height, fontColor) {
   textPainter.layout();
   final baseline = textPainter.computeLineMetrics()[0].baseline;
 
-  List<Widget> textSpan = [];
+  List<Widget> textWidgets = [];
   int startIndex = str.indexOf(r'$');
-  if (startIndex == -1) {
-    textSpan
-        .add(Text(str, style: textStyle(fontOption, width, height, fontColor)));
+  int endIndex = str.indexOf(r'$', startIndex + 1);
+
+  if (endIndex == -1) {
+    if (str.contains('\n')) {
+      str = str.split('\n');
+      textWidgets.add(Text("${str[0]}",
+          style: textStyle(fontOption, width, height, fontColor)));
+      textWidgets.add(Container());
+      textWidgets.add(Text("${str[1]}",
+          style: textStyle(fontOption, width, height, fontColor)));
+    } else {
+      textWidgets.add(
+          Text(str, style: textStyle(fontOption, width, height, fontColor)));
+    }
   } else {
-    int endIndex;
     do {
       endIndex = str.indexOf(r'$', startIndex + 1);
       dynamic text = str.substring(0, startIndex);
       String math = str.substring(startIndex + 1, endIndex);
       str = str.substring(endIndex + 1);
       text = text.split(" ");
-      print(text);
+
       for (dynamic i in text) {
         if (i.contains('\n')) {
           i = i.split("\n");
-          textSpan.add(Text("${i[0]}",
+          textWidgets.add(Text("${i[0]}",
               style: textStyle(fontOption, width, height, fontColor)));
-          textSpan.add(Container());
-          textSpan.add(Text("${i[1]}",
+          textWidgets.add(Container());
+          textWidgets.add(Text("${i[1]}",
               style: textStyle(fontOption, width, height, fontColor)));
         } else {
-          textSpan.add(Text("$i ",
+          textWidgets.add(Text("$i ",
               style: textStyle(fontOption, width, height, fontColor)));
         }
       }
-      textSpan.add(Baseline(
+      textWidgets.add(Baseline(
         baseline: baseline,
         baselineType: TextBaseline.alphabetic,
         child: Math.tex(math,
@@ -84,19 +97,19 @@ Widget stringWithLatex(str, fontOption, width, height, fontColor) {
     for (dynamic i in str) {
       if (i.contains('\n')) {
         i = i.split("\n");
-        textSpan.add(Text("${i[0]}",
+        textWidgets.add(Text("${i[0]}",
             style: textStyle(fontOption, width, height, fontColor)));
-        textSpan.add(Container());
-        textSpan.add(Text("${i[1]}",
+        textWidgets.add(Container());
+        textWidgets.add(Text("${i[1]}",
             style: textStyle(fontOption, width, height, fontColor)));
       } else {
-        textSpan.add(Text("$i ",
+        textWidgets.add(Text("$i ",
             style: textStyle(fontOption, width, height, fontColor)));
       }
     }
   }
   return Wrap(
     direction: Axis.horizontal,
-    children: textSpan,
+    children: textWidgets,
   );
 }

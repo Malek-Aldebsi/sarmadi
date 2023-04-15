@@ -62,7 +62,7 @@ class CircularChart extends StatelessWidget {
         margin: const EdgeInsets.all(0),
         annotations: <CircularChartAnnotation>[
           CircularChartAnnotation(
-              widget: Text('$label%',
+              widget: Text('${label.roundToDouble()}%',
                   style: TextStyle(color: labelColor, fontSize: width * 0.2)))
         ],
         series: getRadialBarSeries(),

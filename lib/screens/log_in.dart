@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sarmadi/const/borders.dart';
-import 'package:sarmadi/const/colors.dart';
+import '../const/borders.dart';
+import '../const/colors.dart';
 import '../const/fonts.dart';
 import '../providers/user_info_provider.dart';
-import 'sign_up.dart';
 import '../components/custom_container.dart';
 import '../components/custom_text_field.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 import '../utils/session.dart';
-import '../utils/hashCode.dart';
 import '../utils/http_requests.dart';
 
 import 'dashboard.dart';
@@ -27,11 +25,11 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   final CarouselController controller = CarouselController();
 
-  // TextEditingController email = TextEditingController();
-  //
-  // TextEditingController phone = TextEditingController();
-  //
-  // TextEditingController password = TextEditingController();
+  TextEditingController email = TextEditingController();
+
+  TextEditingController phone = TextEditingController();
+
+  TextEditingController password = TextEditingController();
 
   bool obscurePassword = true;
 
@@ -39,6 +37,8 @@ class _LogInState extends State<LogIn> {
   int loginMethod = 0; // 0 email 1 phone
 
   void logIn(password, [email, phone]) {
+    UserInfoProvider userInfoProvider =
+        Provider.of<UserInfoProvider>(context, listen: false);
     email == ''
         ? post('log_in/', {
             'phone': phone,
@@ -48,10 +48,8 @@ class _LogInState extends State<LogIn> {
             switch (result) {
               case 0:
                 //TODO:
-                Provider.of<UserInfoProvider>(context, listen: false)
-                    .setUserPhone(phone);
-                Provider.of<UserInfoProvider>(context, listen: false)
-                    .setUserPassword(password);
+                userInfoProvider.setUserPhone(phone);
+                userInfoProvider.setUserPassword(password);
                 Navigator.pushNamed(context, Dashboard.route);
                 break;
               case 1:
@@ -73,10 +71,8 @@ class _LogInState extends State<LogIn> {
             switch (result) {
               case 0:
                 //TODO:
-                Provider.of<UserInfoProvider>(context, listen: false)
-                    .setUserEmail(email);
-                Provider.of<UserInfoProvider>(context, listen: false)
-                    .setUserPassword(password);
+                userInfoProvider.setUserEmail(email);
+                userInfoProvider.setUserPassword(password);
                 Navigator.pushNamed(context, Dashboard.route);
 
                 break;
@@ -106,7 +102,7 @@ class _LogInState extends State<LogIn> {
   @override
   void initState() {
     // checkSession();
-    print(3);
+
     // delSession('sessionKey0');
     // delSession('sessionKey1');
     // delSession('sessionValue');
@@ -116,7 +112,7 @@ class _LogInState extends State<LogIn> {
   @override
   Widget build(BuildContext context) {
     // checkSession();
-    print(2);
+
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
@@ -243,7 +239,14 @@ class _LogInState extends State<LogIn> {
                                 ? TextInputType.emailAddress
                                 : TextInputType.phone,
                             onChanged: (String text) {},
-                            onSubmitted: null,
+                            onSubmitted: (value) {
+                              if ((email.text != '' || phone.text != '') &&
+                                  password.text != '') {
+                                //TODO:
+                                // String passwordSha256 = hashCode(password.text);
+                                logIn(password.text, email.text, phone.text);
+                              }
+                            },
                             backgroundColor: kDarkGray,
                             verticalPadding: width * 0.01,
                             horizontalPadding: width * 0.02,
@@ -277,7 +280,14 @@ class _LogInState extends State<LogIn> {
                             maxLength: null,
                             keyboardType: null,
                             onChanged: (String text) {},
-                            onSubmitted: null,
+                            onSubmitted: (value) {
+                              if ((email.text != '' || phone.text != '') &&
+                                  password.text != '') {
+                                //TODO:
+                                // String passwordSha256 = hashCode(password.text);
+                                logIn(password.text, email.text, phone.text);
+                              }
+                            },
                             backgroundColor: kDarkGray,
                             verticalPadding: width * 0.01,
                             horizontalPadding: width * 0.02,
@@ -313,7 +323,7 @@ class _LogInState extends State<LogIn> {
                           padding: EdgeInsets.only(
                               top: height / 32, bottom: height / 64),
                           child: CustomContainer(
-                            onTap: () async {
+                            onTap: () {
                               if ((email.text != '' || phone.text != '') &&
                                   password.text != '') {
                                 //TODO:

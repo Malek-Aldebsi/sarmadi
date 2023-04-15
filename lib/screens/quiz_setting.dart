@@ -5,10 +5,10 @@ import '../const/colors.dart';
 import '../const/fonts.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/website_provider.dart';
+import '../utils/http_requests.dart';
 import 'advance_quiz_setting.dart';
 import 'welcome.dart';
 import '../components/custom_container.dart';
-import '../utils/http_requests.dart';
 import '../utils/session.dart';
 import 'dashboard.dart';
 
@@ -23,33 +23,38 @@ class QuizSetting extends StatefulWidget {
 
 class _QuizSettingState extends State<QuizSetting>
     with TickerProviderStateMixin {
-  // String? selectedSubjectID;
-  // String? selectedSubjectName;
-  List subjects = [];
-
-  void getSubjects() async {
+  void checkSession() async {
     String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
     String? value = await getSession('sessionValue');
-    post('subject_set/', {
-      if (key0 != null) 'email': key0,
-      if (key1 != null) 'phone': key1,
-      'password': value,
-    }).then((value) {
-      dynamic result = decode(value);
-      result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
-          : setState(() {
-              subjects = result;
-              Provider.of<WebsiteProvider>(context, listen: false)
-                  .setLoaded(true);
-            });
-    });
+    if ((key0 != null || key1 != null) &&
+        value != null &&
+        Provider.of<WebsiteProvider>(context, listen: false)
+            .subjects
+            .isNotEmpty) {
+      Provider.of<WebsiteProvider>(context, listen: false).setLoaded(true);
+    } else {
+      post('subject_set/', {
+        if (key0 != null) 'email': key0,
+        if (key1 != null) 'phone': key1,
+        'password': value,
+      }).then((value) {
+        dynamic result = decode(value);
+        result == 0
+            ? Navigator.pushNamed(context, Welcome.route)
+            : {
+                Provider.of<WebsiteProvider>(context, listen: false)
+                    .setSubjects(result),
+                Provider.of<WebsiteProvider>(context, listen: false)
+                    .setLoaded(true)
+              };
+      });
+    }
   }
 
   @override
   void initState() {
-    getSubjects();
+    checkSession();
     super.initState();
     forwardAnimationController = AnimationController(
         vsync: this,
@@ -88,7 +93,9 @@ class _QuizSettingState extends State<QuizSetting>
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return Provider.of<WebsiteProvider>(context, listen: true).loaded
+    QuizProvider quizProvider = Provider.of<QuizProvider>(context);
+    WebsiteProvider websiteProvider = Provider.of<WebsiteProvider>(context);
+    return websiteProvider.loaded
         ? Scaffold(
             body: Directionality(
             textDirection: TextDirection.rtl,
@@ -121,12 +128,12 @@ class _QuizSettingState extends State<QuizSetting>
                               ),
                             ),
                             SizedBox(
-                              width: width * 0.7,
+                              width: width * 0.72,
                               height: height * 0.65,
                               child: ListView(
                                 children: [
                                   for (int i = 0;
-                                      i < subjects.length;
+                                      i < websiteProvider.subjects.length;
                                       i += 3) ...[
                                     Padding(
                                       padding: EdgeInsets.symmetric(
@@ -134,29 +141,25 @@ class _QuizSettingState extends State<QuizSetting>
                                       child: Row(
                                         children: [
                                           for (int j = 0;
-                                              j < 3 && j + i < subjects.length;
+                                              j < 3 &&
+                                                  j + i <
+                                                      websiteProvider
+                                                          .subjects.length;
                                               j++)
                                             Padding(
                                               padding: EdgeInsets.only(
                                                   left: width * 0.02),
                                               child: CustomContainer(
                                                 onTap: () {
-                                                  Provider.of<QuizProvider>(
-                                                          context,
-                                                          listen: false)
-                                                      .setSubjectID(
-                                                          subjects[i + j]
-                                                              ['id']);
-                                                  Provider.of<QuizProvider>(
-                                                          context,
-                                                          listen: false)
-                                                      .setSubjectName(
-                                                          subjects[i + j]
-                                                              ['name']);
+                                                  quizProvider.setSubject(
+                                                      websiteProvider
+                                                              .subjects[i + j]
+                                                          ['id'],
+                                                      websiteProvider
+                                                              .subjects[i + j]
+                                                          ['name']);
 
-                                                  Provider.of<WebsiteProvider>(
-                                                          context,
-                                                          listen: false)
+                                                  websiteProvider
                                                       .setLoaded(false);
                                                   Navigator.pushNamed(
                                                     context,
@@ -169,16 +172,13 @@ class _QuizSettingState extends State<QuizSetting>
                                                 horizontalPadding: 0,
                                                 borderRadius: width * 0.005,
                                                 border: null,
-                                                buttonColor:
-                                                    Provider.of<QuizProvider>(
-                                                                    context,
-                                                                    listen:
-                                                                        true)
-                                                                .subjectID ==
-                                                            subjects[i + j]
-                                                                ['id']
-                                                        ? kPurple
-                                                        : kDarkGray,
+                                                buttonColor: quizProvider
+                                                            .subjectID ==
+                                                        websiteProvider
+                                                                .subjects[i + j]
+                                                            ['id']
+                                                    ? kPurple
+                                                    : kDarkGray,
                                                 child: Stack(
                                                   alignment:
                                                       Alignment.bottomLeft,
@@ -198,17 +198,13 @@ class _QuizSettingState extends State<QuizSetting>
                                                         alignment: Alignment
                                                             .centerRight,
                                                         child: Text(
-                                                          '${subjects[i + j]['name']}',
+                                                          '${websiteProvider.subjects[i + j]['name']}',
                                                           style: textStyle(
                                                               2,
                                                               width,
                                                               height,
-                                                              Provider.of<QuizProvider>(
-                                                                              context,
-                                                                              listen:
-                                                                                  true)
-                                                                          .subjectID ==
-                                                                      subjects[i +
+                                                              quizProvider.subjectID ==
+                                                                      websiteProvider.subjects[i +
                                                                               j]
                                                                           ['id']
                                                                   ? kDarkBlack
@@ -283,9 +279,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
-                                  Provider.of<WebsiteProvider>(context,
-                                          listen: false)
-                                      .setLoaded(false);
+                                  websiteProvider.setLoaded(false);
                                   Navigator.pushNamed(context, Dashboard.route);
                                 },
                                 width: width *
@@ -440,9 +434,7 @@ class _QuizSettingState extends State<QuizSetting>
                                   vertical: height * 0.01),
                               child: CustomContainer(
                                 onTap: () {
-                                  Provider.of<WebsiteProvider>(context,
-                                          listen: false)
-                                      .setLoaded(false);
+                                  websiteProvider.setLoaded(false);
                                   Navigator.pushNamed(
                                       context, QuizSetting.route);
                                 },

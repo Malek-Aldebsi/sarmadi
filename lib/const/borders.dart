@@ -35,8 +35,8 @@ Border bottomRightTopBorder(borderColor) {
   );
 }
 
-Border fullBorder(borderColor) {
-  return Border.all(width: 2, color: borderColor);
+Border fullBorder(borderColor, [width = 2]) {
+  return Border.all(width: width, color: borderColor);
 }
 
 OutlineInputBorder outlineInputBorder(borderRadius, borderColor) {

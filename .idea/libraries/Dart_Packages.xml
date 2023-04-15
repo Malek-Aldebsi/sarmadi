@@ -184,6 +184,20 @@
             </list>
           </value>
         </entry>
+        <entry key="flutter_localization">
+          <value>
+            <list>
+              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_localization-0.1.10/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="flutter_localizations">
+          <value>
+            <list>
+              <option value="G:/flutter_windows_3.0.5-stable/flutter/packages/flutter_localizations/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flutter_math_fork">
           <value>
             <list>
@@ -307,6 +321,13 @@
           <value>
             <list>
               <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/http_parser-4.0.2/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="image_picker_web">
+          <value>
+            <list>
+              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/image_picker_web-3.0.0+1/lib" />
             </list>
           </value>
         </entry>
@@ -467,7 +488,7 @@
         <entry key="shared_preferences">
           <value>
             <list>
-              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences-2.0.15/lib" />
+              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences-2.0.20/lib" />
             </list>
           </value>
         </entry>
@@ -478,10 +499,10 @@
             </list>
           </value>
         </entry>
-        <entry key="shared_preferences_ios">
+        <entry key="shared_preferences_foundation">
           <value>
             <list>
-              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_ios-2.1.1/lib" />
+              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_foundation-2.1.5/lib" />
             </list>
           </value>
         </entry>
@@ -489,13 +510,6 @@
           <value>
             <list>
               <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_linux-2.1.2/lib" />
-            </list>
-          </value>
-        </entry>
-        <entry key="shared_preferences_macos">
-          <value>
-            <list>
-              <option value="G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_macos-2.0.4/lib" />
             </list>
           </value>
         </entry>
@@ -702,6 +716,7 @@
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_auth_platform_interface-4.1.1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_facebook_auth_web-4.1.1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_lints-2.0.1/lib" />
+      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_localization-0.1.10/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_math_fork-0.6.3+1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_secure_storage-7.0.1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_secure_storage_linux-1.1.2/lib" />
@@ -718,6 +733,7 @@
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/google_sign_in_web-0.10.2/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/http-0.13.5/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/http_parser-4.0.2/lib" />
+      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/image_picker_web-3.0.0+1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/intl-0.17.0/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/js-0.6.4/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/lints-2.0.1/lib" />
@@ -740,11 +756,10 @@
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/provider-6.0.5/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/quiver-3.2.1/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/rxdart-0.27.7/lib" />
-      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences-2.0.15/lib" />
+      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences-2.0.20/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_android-2.0.14/lib" />
-      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_ios-2.1.1/lib" />
+      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_foundation-2.1.5/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_linux-2.1.2/lib" />
-      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_macos-2.0.4/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_platform_interface-2.1.0/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_web-2.0.4/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/shared_preferences_windows-2.1.2/lib" />
@@ -771,6 +786,7 @@
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/xml-6.1.0/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/bin/cache/pkg/sky_engine/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/packages/flutter/lib" />
+      <root url="file://G:/flutter_windows_3.0.5-stable/flutter/packages/flutter_localizations/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/packages/flutter_test/lib" />
       <root url="file://G:/flutter_windows_3.0.5-stable/flutter/packages/flutter_web_plugins/lib" />
     </CLASSES>

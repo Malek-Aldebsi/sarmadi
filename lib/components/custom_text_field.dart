@@ -18,6 +18,7 @@ class CustomTextField extends StatefulWidget {
   final FocusNode? focusNode;
 
   final int? maxLines;
+  final int? minLines;
   final int? maxLength;
 
   final TextInputType? keyboardType;
@@ -55,6 +56,7 @@ class CustomTextField extends StatefulWidget {
     this.readOnly,
     this.focusNode,
     this.maxLines,
+    this.minLines,
     this.maxLength,
     this.keyboardType,
     this.onChanged,
@@ -99,7 +101,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         obscureText: widget.obscure ?? false,
         readOnly: widget.readOnly ?? false,
         focusNode: widget.focusNode,
-        minLines: 1,
+        minLines: widget.minLines ?? 1,
         maxLines: widget.maxLines,
         maxLength: widget.maxLength,
         keyboardType: widget.keyboardType ?? TextInputType.multiline,

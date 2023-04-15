@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../utils/session.dart';
 
-// Provider.of<UserInfoProvider>(context, listen: false)
-// .createReceipt()
-//     .then((value) {
-// });
-// Provider.of<UserInfoProvider>(context, listen: true).userName
-// Provider.of<UserInfoProvider>(context, listen: false).setUserName(result['user_name']);
 class UserInfoProvider with ChangeNotifier {
   String _userName = '';
   String _userPhone = '';

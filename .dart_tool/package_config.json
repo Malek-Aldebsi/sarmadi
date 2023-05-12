@@ -266,6 +266,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "holding_gesture",
+      "rootUri": "file:///G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/holding_gesture-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "http",
       "rootUri": "file:///G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/http-0.13.5",
       "packageUri": "lib/",
@@ -318,6 +324,18 @@
       "rootUri": "file:///G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/material_color_utilities-0.1.5",
       "packageUri": "lib/",
       "languageVersion": "2.13"
+    },
+    {
+      "name": "math_expressions",
+      "rootUri": "file:///G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/math_expressions-2.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "math_keyboard",
+      "rootUri": "file:///G:/flutter_windows_3.0.5-stable/flutter/.pub-cache/hosted/pub.dartlang.org/math_keyboard-0.1.9",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
     },
     {
       "name": "meta",
@@ -596,7 +614,7 @@
       "languageVersion": "2.18"
     }
   ],
-  "generated": "2023-04-14T13:39:54.778048Z",
+  "generated": "2023-05-12T16:50:04.229246Z",
   "generator": "pub",
   "generatorVersion": "2.18.0"
 }

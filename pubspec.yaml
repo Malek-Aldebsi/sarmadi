@@ -50,7 +50,6 @@ dependencies:
 
   flutter_math_fork: ^0.6.3+1
   flutter_tex: ^4.0.3+4
-  #  math_keyboard: ^0.1.7
 
   syncfusion_flutter_sliders: ^20.4.38
   syncfusion_flutter_charts: ^20.3.47
@@ -62,8 +61,7 @@ dependencies:
   flutter_localization: ^0.1.10
 
   image_picker_web: ^3.0.0+1
-
-#  intl: ^0.17.0
+  math_keyboard: ^0.1.9
 
 #  dotted_border: ^2.0.0
 

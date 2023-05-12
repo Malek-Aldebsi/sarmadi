@@ -9,7 +9,6 @@ import '../components/string_with_latex.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
 import '../providers/question_provider.dart';
-// import '../providers/quiz_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/website_provider.dart';
 import 'dashboard.dart';
@@ -30,7 +29,6 @@ class QuizReview extends StatefulWidget {
 }
 
 class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
-
   ScrollController mainScrollController = ScrollController();
   ScrollController questionsScrollController = ScrollController();
 
@@ -42,20 +40,31 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
-      'quiz_id': Provider.of<QuizProvider>(context, listen: false).quizID
+      'quiz_id': Provider.of<ReviewProvider>(context, listen: false).quizID
     }).then((value) {
       dynamic result = decode(value);
-
       result == 0
           ? Navigator.pushNamed(context, Welcome.route)
-          :{
-              Provider.of<ReviewProvider>(context, listen: false).setQuizSubject(result['quiz_subject']),
-              Provider.of<ReviewProvider>(context, listen: false).setQuizTime(result['quiz_duration']),
-              Provider.of<ReviewProvider>(context, listen: false).setQuestions(result['answers']),
-              Provider.of<ReviewProvider>(context, listen: false).setCorrectQuestionsNum(result['correct_questions_num']),
-              Provider.of<ReviewProvider>(context, listen: false).setSkills(result['best_worst_skills']),
-              Provider.of<ReviewProvider>(context, listen: false).setQuestionIndex(1),
-              Provider.of<WebsiteProvider>(context, listen: false).setLoaded(true),
+          : {
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuizSubject(result['quiz_subject']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuizTime(result['quiz_duration']),
+
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuestions(result['answers']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setCorrectQuestionsNum(result['correct_questions_num']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuestionsNum(result['question_num']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setSkills(result['best_worst_skills']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setStatements(result['statements']),
+              Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuestionIndex(1),
+              Provider.of<WebsiteProvider>(context, listen: false)
+                  .setLoaded(true),
             };
     });
   }
@@ -64,43 +73,34 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
   void initState() {
     getResult();
     mainScrollController.addListener(() {
-
-      if (mainScrollController.positions.last.pixels+2>MediaQuery.of(context).size.height&&!Provider.of<
-          ReviewProvider>(
-          context,
-          listen: false)
-          .questionScrollState){
-        Provider.of<
-            ReviewProvider>(
-            context,
-            listen: false)
-      .setQuestionScrollState(true);
-      }else if (mainScrollController.positions.last.pixels<MediaQuery.of(context).size.height&&Provider.of<
-          ReviewProvider>(
-          context,
-          listen: false)
-          .questionScrollState){
-        Provider.of<
-            ReviewProvider>(
-            context,
-            listen: false)
+      if (mainScrollController.positions.last.pixels + 2 >
+              MediaQuery.of(context).size.height &&
+          !Provider.of<ReviewProvider>(context, listen: false)
+              .questionScrollState) {
+        Provider.of<ReviewProvider>(context, listen: false)
+            .setQuestionScrollState(true);
+      } else if (mainScrollController.positions.last.pixels <
+              MediaQuery.of(context).size.height &&
+          Provider.of<ReviewProvider>(context, listen: false)
+              .questionScrollState) {
+        Provider.of<ReviewProvider>(context, listen: false)
             .setQuestionScrollState(false);
       }
     });
 
     questionsScrollController.addListener(() {
-      if ((questionsScrollController.positions.last.pixels/MediaQuery.of(context).size.height).round()+1!= Provider.of<
-          ReviewProvider>(
-          context,
-          listen: false)
-          .questionIndex) {
-        Provider.of<
-          ReviewProvider>(
-          context,
-          listen: false)
-          .setQuestionIndex((questionsScrollController.positions.last.pixels/MediaQuery.of(context).size.height).round()+1);
+      if ((questionsScrollController.positions.last.pixels /
+                      MediaQuery.of(context).size.height)
+                  .round() +
+              1 !=
+          Provider.of<ReviewProvider>(context, listen: false).questionIndex) {
+        Provider.of<ReviewProvider>(context, listen: false).setQuestionIndex(
+            (questionsScrollController.positions.last.pixels /
+                        MediaQuery.of(context).size.height)
+                    .round() +
+                1);
       }
-      });
+    });
     super.initState();
 
     forwardAnimationController = AnimationController(
@@ -147,14 +147,932 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
     micros = (double.parse(parts[parts.length - 1]) * 1000000).round();
     return Duration(hours: hours, minutes: minutes, microseconds: micros);
   }
-  double fontWidth(fontOption, width, height){
+
+  double fontWidth(fontOption, width, height) {
     final textPainter = TextPainter(
       text: TextSpan(
           text: 'مهارة', style: textStyle(fontOption, width, height, kWhite)),
       textDirection: TextDirection.rtl,
     );
     textPainter.layout();
-    return textPainter.computeLineMetrics()[0].width/5;
+    return textPainter.computeLineMetrics()[0].width / 5;
+  }
+
+  bool checkAnswer(reviewProvider, questionIndex) {
+    if (reviewProvider.questions[questionIndex - 1]['question']['type'] ==
+        'multipleChoiceQuestion') {
+      return reviewProvider.questions[questionIndex - 1]['choice'] != null &&
+          reviewProvider.questions[questionIndex - 1]['question']
+                  ['correct_answer']['id'] ==
+              reviewProvider.questions[questionIndex - 1]['choice']['id'];
+    } else if (reviewProvider.questions[questionIndex - 1]['question']
+            ['type'] ==
+        'finalAnswerQuestion') {
+      return reviewProvider.questions[questionIndex - 1]['body'] != null &&
+          reviewProvider.questions[questionIndex - 1]['question']
+                  ['correct_answer']['body'] ==
+              reviewProvider.questions[questionIndex - 1]['body'];
+    }else if (reviewProvider.questions[questionIndex - 1]['question']
+    ['type'] ==
+        'multiSectionQuestion') {
+      bool correctAnswer = true;
+      for (Map question in reviewProvider.questions[questionIndex - 1]['question']['sub_questions']){
+        if (question['type']=='finalAnswerQuestion') {
+          correctAnswer = correctAnswer && question['correct_answer']['body']==reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][question['id']];
+        }else if(question['type']=='multipleChoiceQuestion'){
+          correctAnswer = correctAnswer && question['correct_answer']['id']==reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][question['id']];
+        }
+      }
+      return correctAnswer;
+    } else {
+      return false;
+    }
+  }
+
+  int choiceState(reviewProvider, questionIndex, choiceIndex) {
+    /// 1 if its the correct answer
+    /// 2 if its selected and its incorrect answer
+    /// 3 if it is not selected
+    return reviewProvider.questions[questionIndex - 1]['question']['choices']
+                [choiceIndex]['id'] ==
+            reviewProvider.questions[questionIndex - 1]['question']
+                ['correct_answer']['id']
+        ? 1
+        : reviewProvider.questions[questionIndex - 1]['choice'] != null &&
+                reviewProvider.questions[questionIndex - 1]['question']
+                        ['choices'][choiceIndex]['id'] ==
+                    reviewProvider.questions[questionIndex - 1]['choice']['id']
+            ? 2
+            : 3;
+  }
+
+  bool isSelected(reviewProvider, questionIndex, choiceIndex) {
+    return reviewProvider.questions[questionIndex - 1]['choice'] != null &&
+        reviewProvider.questions[questionIndex - 1]['question']['choices']
+                [choiceIndex]['id'] ==
+            reviewProvider.questions[questionIndex - 1]['choice']['id'];
+  }
+
+  Widget finalAnswerQuestionWithImage(
+      width, height, reviewProvider, questionIndex) {
+    return CustomContainer(
+      width: width * 0.66,
+
+      buttonColor: kDarkGray,
+      borderRadius: width * 0.005,
+      verticalPadding: height * 0.03,
+      horizontalPadding: width * 0.02,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: height * 0.02),
+            child: SizedBox(
+              width: width * 0.61,
+              child: stringWithLatex(
+                  reviewProvider.questions[questionIndex - 1]['question']
+                      ['body'],
+                  // width * 0.61,
+                  3,
+                  width,
+                  height,
+                  kWhite),
+            ),
+          ),
+          SizedBox(height: height*0.01),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+  Column(
+    mainAxisAlignment:MainAxisAlignment.center,children: [CustomContainer(
+      onTap: null,
+      verticalPadding: height * 0.03,
+      horizontalPadding: width * 0.02,
+      width: width * 0.3,
+      borderRadius: width * 0.005,
+      border: null,
+      buttonColor: kGray,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(
+            width: width * 0.22,
+            child: stringWithLatex(
+                reviewProvider.questions[questionIndex - 1]['body'],
+                3,
+                width,
+                height,
+                kWhite),
+          ),
+          checkAnswer(reviewProvider, questionIndex)
+              ? Icon(
+            Icons.check_rounded,
+            size: width * 0.015,
+            color: kGreen,
+          )
+              : Icon(
+            Icons.close,
+            size: width * 0.015,
+            color: kRed,
+          )
+        ],
+      )),
+    if (!checkAnswer(reviewProvider, questionIndex))
+
+      ...[SizedBox(height: height*0.01),CustomContainer(
+          onTap: null,
+          verticalPadding: height * 0.03,
+          horizontalPadding: width * 0.02,
+          width: width * 0.3,
+          borderRadius: width * 0.005,
+          border: null,
+          buttonColor: kGray,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: width * 0.22,
+                child: stringWithLatex(
+                    reviewProvider.questions[questionIndex - 1]['question']['correct_answer']['body'],
+                    3,
+                    width,
+                    height,
+                    kWhite),
+              ),
+              Icon(
+                Icons.check_rounded,
+                size: width * 0.015,
+                color: kGreen,
+              )
+
+            ],
+          ))],],),
+              SizedBox(
+                height: height * 0.35,
+                child: CustomDivider(
+                  dashHeight: 2,
+                  dashWidth: width * 0.005,
+                  dashColor: kGray.withOpacity(0.9),
+                  direction: Axis.vertical,
+                  fillRate: 0.7,
+                ),
+              ),
+              Image(
+                image: NetworkImage(reviewProvider.questions[questionIndex - 1]
+                    ['question']['image']),
+                height: height * 0.35,
+                width: width * 0.3,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget finalAnswerQuestionWithoutImage(
+      width, height, reviewProvider, questionIndex) {
+    return CustomContainer(
+      width: width * 0.66,
+
+      buttonColor: kDarkGray,
+      borderRadius: width * 0.005,
+      verticalPadding: height * 0.04,
+      horizontalPadding: width * 0.02,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: height * 0.02),
+            child: SizedBox(
+              width: width * 0.61,
+              child: stringWithLatex(
+                  reviewProvider.questions[questionIndex - 1]['question']
+                      ['body'],
+                  // width * 0.61,
+                  3,
+                  width,
+                  height,
+                  kWhite),
+            ),
+          ),
+          SizedBox(height: height*0.01),
+          CustomContainer(
+              onTap: null,
+              verticalPadding: height * 0.03,
+              horizontalPadding: width * 0.02,
+              width: width * 0.61,
+              borderRadius: width * 0.005,
+              border: null,
+              buttonColor: kGray,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: width * 0.53,
+                    child: stringWithLatex(
+                        reviewProvider.questions[questionIndex - 1]['body'],
+                        3,
+                        width,
+                        height,
+                        kWhite),
+                  ),
+                  checkAnswer(reviewProvider, questionIndex)
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: width * 0.015,
+                          color: kGreen,
+                        )
+                      : Icon(
+                          Icons.close,
+                          size: width * 0.015,
+                          color: kRed,
+                        )
+                ],
+              )),
+          if (!checkAnswer(reviewProvider, questionIndex))
+
+            ...[SizedBox(height: height*0.01),CustomContainer(
+                onTap: null,
+                verticalPadding: height * 0.03,
+                horizontalPadding: width * 0.02,
+                width: width * 0.61,
+                borderRadius: width * 0.005,
+                border: null,
+                buttonColor: kGray,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: width * 0.53,
+                      child: stringWithLatex(
+                          reviewProvider.questions[questionIndex - 1]['question']['correct_answer']['body'],
+                          3,
+                          width,
+                          height,
+                          kWhite),
+                    ),
+                     Icon(
+                      Icons.check_rounded,
+                      size: width * 0.015,
+                      color: kGreen,
+                    )
+
+                  ],
+                ))],
+        ],
+      ),
+    );
+  }
+
+  Widget multipleChoiceQuestionWithImage(
+      width, height, reviewProvider, questionIndex) {
+    return CustomContainer(
+      width: width * 0.66,
+
+      buttonColor: kDarkGray,
+      borderRadius: width * 0.005,
+      verticalPadding: height * 0.03,
+      horizontalPadding: width * 0.02,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: height * 0.02),
+            child: SizedBox(
+              width: width * 0.61,
+              child: stringWithLatex(
+                  reviewProvider.questions[questionIndex - 1]['question']
+                      ['body'],
+                  // width * 0.61,
+                  3,
+                  width,
+                  height,
+                  kWhite),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  for (int choiceIndex = 0;
+                      choiceIndex <
+                          reviewProvider
+                              .questions[questionIndex - 1]['question']
+                                  ['choices']
+                              .length;
+                      choiceIndex++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: height * 0.02),
+                      child: CustomContainer(
+                          onTap: null,
+                          verticalPadding: height * 0.02,
+                          horizontalPadding: width * 0.02,
+                          width: width * 0.3,
+                          borderRadius: width * 0.005,
+                          border: fullBorder(choiceState(reviewProvider,
+                                      questionIndex, choiceIndex) ==
+                                  1
+                              ? kGreen
+                              : choiceState(reviewProvider, questionIndex,
+                                          choiceIndex) ==
+                                      2
+                                  ? kRed
+                                  : kTransparent),
+                          buttonColor: isSelected(
+                                  reviewProvider, questionIndex, choiceIndex)
+                              ? kLightPurple
+                              : kGray,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                width: width * 0.22,
+                                child: stringWithLatex(
+                                    reviewProvider.questions[questionIndex - 1]
+                                            ['question']['choices'][choiceIndex]
+                                        ['body'],
+                                    3,
+                                    width,
+                                    height,
+                                    kWhite),
+                              ),
+                              choiceState(reviewProvider, questionIndex,
+                                          choiceIndex) ==
+                                      1
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      size: width * 0.015,
+                                      color: kGreen,
+                                    )
+                                  : choiceState(reviewProvider, questionIndex,
+                                              choiceIndex) ==
+                                          2
+                                      ? Icon(
+                                          Icons.close,
+                                          size: width * 0.015,
+                                          color: kRed,
+                                        )
+                                      : const SizedBox()
+                            ],
+                          )),
+                    ),
+                ],
+              ),
+              SizedBox(
+                height: height * 0.25,
+                child: CustomDivider(
+                  dashHeight: 2,
+                  dashWidth: width * 0.005,
+                  dashColor: kGray.withOpacity(0.9),
+                  direction: Axis.vertical,
+                  fillRate: 0.7,
+                ),
+              ),
+              Image(
+                image: NetworkImage(reviewProvider.questions[questionIndex - 1]
+                    ['question']['image']),
+                height: height * 0.25,
+                width: width * 0.25,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget multipleChoiceQuestionWithoutImage(
+      width, height, reviewProvider, questionIndex) {
+    return CustomContainer(
+
+      width: width * 0.66,
+      buttonColor: kDarkGray,
+      borderRadius: width * 0.005,
+      verticalPadding: height * 0.03,
+      horizontalPadding: width * 0.02,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: height * 0.02),
+            child: SizedBox(
+              width: width * 0.61,
+              child: stringWithLatex(
+                  reviewProvider.questions[questionIndex - 1]['question']
+                      ['body'],
+                  // width * 0.61,
+                  3,
+                  width,
+                  height,
+                  kWhite),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                children: [
+                  for (int choiceIndex = 0;
+                      choiceIndex <
+                          reviewProvider
+                              .questions[questionIndex - 1]['question']
+                                  ['choices']
+                              .length;
+                      choiceIndex++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: height * 0.02),
+                      child: CustomContainer(
+                          onTap: null,
+                          verticalPadding: height * 0.02,
+                          horizontalPadding: width * 0.02,
+                          width: width * 0.61,
+                          borderRadius: width * 0.005,
+                          border: fullBorder(choiceState(reviewProvider,
+                                      questionIndex, choiceIndex) ==
+                                  1
+                              ? kGreen
+                              : choiceState(reviewProvider, questionIndex,
+                                          choiceIndex) ==
+                                      2
+                                  ? kRed
+                                  : kTransparent),
+                          buttonColor: isSelected(
+                                  reviewProvider, questionIndex, choiceIndex)
+                              ? kLightPurple
+                              : kGray,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                width: width * 0.53,
+                                child: stringWithLatex(
+                                    reviewProvider.questions[questionIndex - 1]
+                                            ['question']['choices'][choiceIndex]
+                                        ['body'],
+                                    3,
+                                    width,
+                                    height,
+                                    kWhite),
+                              ),
+                              choiceState(reviewProvider, questionIndex,
+                                          choiceIndex) ==
+                                      1
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      size: width * 0.015,
+                                      color: kGreen,
+                                    )
+                                  : choiceState(reviewProvider, questionIndex,
+                                              choiceIndex) ==
+                                          2
+                                      ? Icon(
+                                          Icons.close,
+                                          size: width * 0.015,
+                                          color: kRed,
+                                        )
+                                      : const SizedBox()
+                            ],
+                          )),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget multiSectionQuestionWithoutImage(
+      width, height, reviewProvider, questionIndex) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: CustomContainer(
+        width: width * 0.66,
+        height: height*0.6,
+        buttonColor: kDarkGray,
+        borderRadius: width * 0.005,
+        verticalPadding: height * 0.03,
+        horizontalPadding: width * 0.01,
+        child: ListView(children: [
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Padding(
+              padding:  EdgeInsets.symmetric(horizontal: width*0.01),
+              child: Column(children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: height * 0.01),
+                  child: SizedBox(
+                    width: width * 0.61,
+                    child: stringWithLatex(
+                        reviewProvider.questions[questionIndex - 1]['question']
+                        ['body'],
+                        // width * 0.61,
+                        3,
+                        width,
+                        height,
+                        kWhite),
+                  ),
+                ),
+                for (Map subQuestion in reviewProvider.questions[questionIndex - 1]['question']['sub_questions']) ...[
+                  SizedBox(height: height * 0.03),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: height * 0.02),
+                    child: SizedBox(
+                      width: width * 0.61,
+                      child: stringWithLatex(
+                          subQuestion['body'],
+                          // width * 0.61,
+                          3,
+                          width,
+                          height,
+                          kWhite),
+                    ),
+                  ),
+                  if (subQuestion['type'] == 'multipleChoiceQuestion')
+                    Column(
+                      children: [
+                        for (int choiceIndex = 0;
+                        choiceIndex < subQuestion['choices'].length;
+                        choiceIndex++)
+                          Padding(
+                            padding: EdgeInsets.only(bottom: height * 0.02),
+                            child: CustomContainer(
+                                onTap: null,
+                                verticalPadding: height * 0.02,
+                                horizontalPadding: width * 0.02,
+                                width: width * 0.61,
+                                borderRadius: width * 0.005,
+                                border: fullBorder(subQuestion['choices']
+                                [choiceIndex]['id'] ==
+                                    subQuestion['correct_answer']
+                                    ['id']
+                                    ? kGreen
+                                    :
+                                    subQuestion['choices'][choiceIndex]['id'] ==
+                                        reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                    ? kRed
+                                    : kTransparent),
+                                buttonColor:
+                                    subQuestion['choices']
+                                    [choiceIndex]['id'] ==
+                                        reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                    ? kLightPurple
+                                    : kGray,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SizedBox(
+                                      width: width * 0.53,
+                                      child: stringWithLatex(
+                                          subQuestion['choices']
+                                          [choiceIndex]['body'],
+                                          3,
+                                          width,
+                                          height,
+                                          kWhite),
+                                    ),
+                                    subQuestion['choices'][choiceIndex]
+                                    ['id'] ==
+                                        subQuestion['correct_answer']
+                                        ['id']
+                                        ? Icon(
+                                      Icons.check_rounded,
+                                      size: width * 0.015,
+                                      color: kGreen,
+                                    )
+                                        :
+                                        subQuestion['choices']
+                                        [choiceIndex]['id'] ==
+                                            reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                        ? Icon(
+                                      Icons.close,
+                                      size: width * 0.015,
+                                      color: kRed,
+                                    )
+                                        : const SizedBox()
+                                  ],
+                                )),
+                          ),
+                      ],
+                    )
+                  else if (subQuestion['type'] == 'finalAnswerQuestion')
+                    Column(
+                      children: [
+                        CustomContainer(
+                            onTap: null,
+                            verticalPadding: height * 0.02,
+                            horizontalPadding: width * 0.02,
+                            width: width * 0.61,
+                            borderRadius: width * 0.005,
+                            border: null,
+                            buttonColor: kGray,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  width: width * 0.53,
+                                  child: stringWithLatex(
+
+                                      reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']], 3, width, height, kWhite),
+                                ),
+                                reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']] ==
+                                    subQuestion['correct_answer']['body']
+                                    ? Icon(
+                                  Icons.check_rounded,
+                                  size: width * 0.015,
+                                  color: kGreen,
+                                )
+                                    : Icon(
+                                  Icons.close,
+                                  size: width * 0.015,
+                                  color: kRed,
+                                )
+                              ],
+                            )),
+    if (!(reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']] ==
+        subQuestion['correct_answer']['body']))
+
+    ...[SizedBox(height: height*0.01),CustomContainer(
+    onTap: null,
+    verticalPadding: height * 0.02,
+    horizontalPadding: width * 0.02,
+    width: width * 0.61,
+    borderRadius: width * 0.005,
+    border: null,
+    buttonColor: kGray,
+    child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+    SizedBox(
+    width: width * 0.53,
+    child: stringWithLatex(
+        subQuestion['correct_answer']['body'],
+    3,
+    width,
+    height,
+    kWhite),
+    ),
+    Icon(
+    Icons.check_rounded,
+    size: width * 0.015,
+    color: kGreen,
+    )
+
+    ],
+    ))]
+                      ],
+                    ),
+                ]
+              ],),
+            ),
+          )
+        ],),
+      ),
+    );
+  }
+
+  Widget multiSectionQuestionWithImage(
+      width, height, reviewProvider, questionIndex) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: CustomContainer(
+        width: width * 0.66,
+        height: height*0.6,
+        buttonColor: kDarkGray,
+        borderRadius: width * 0.005,
+        verticalPadding: height * 0.03,
+        horizontalPadding: width * 0.01,
+        child: ListView(
+          children: [
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: width*0.01),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(bottom: height * 0.01),
+                      child: SizedBox(
+                        width: width * 0.61,
+                        child: stringWithLatex(
+                            reviewProvider.questions[questionIndex - 1]['question']
+                                ['body'],
+                            // width * 0.61,
+                            3,
+                            width,
+                            height,
+                            kWhite),
+                      ),
+                    ),
+                    SizedBox(
+                      width: width*0.61,
+                      child: Row(
+                        children: [
+                          Column(
+                            children: [
+                              for (Map subQuestion
+                                  in reviewProvider.questions[questionIndex - 1]
+                              ['question']['sub_questions']) ...[
+                                SizedBox(height: height * 0.03),
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: height * 0.02),
+                                  child: SizedBox(
+                                    width: width * 0.3,
+                                    child: stringWithLatex(
+                                        subQuestion['body'],
+                                        // width * 0.61,
+                                        3,
+                                        width,
+                                        height,
+                                        kWhite),
+                                  ),
+                                ),
+                                if (subQuestion['type'] ==
+                                    'multipleChoiceQuestion')
+                                  Column(
+                                    children: [
+                                      for (int choiceIndex = 0;
+                                          choiceIndex <
+                                              subQuestion['choices'].length;
+                                          choiceIndex++)
+                                        Padding(
+                                          padding: EdgeInsets.only(bottom: height * 0.02),
+                                          child: CustomContainer(
+                                              onTap: null,
+                                              verticalPadding: height * 0.02,
+                                              horizontalPadding: width * 0.02,
+                                              width: width * 0.3,
+                                              borderRadius: width * 0.005,
+                                              border: fullBorder(subQuestion
+                                                          ['choices'][choiceIndex]['id'] ==
+                                                      subQuestion
+                                                          ['correct_answer']['id']
+                                                  ? kGreen
+                                                  :
+                                                          subQuestion['choices']
+                                                                  [choiceIndex]['id'] ==
+                                                              reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                                      ? kRed
+                                                      : kTransparent),
+                                              buttonColor:
+                                                      subQuestion['choices']
+                                                              [choiceIndex]['id'] ==
+                                                          reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                                  ? kLightPurple
+                                                  : kGray,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  SizedBox(
+                                                    width: width * 0.22,
+                                                    child: stringWithLatex(
+                                                        subQuestion['choices']
+                                                            [choiceIndex]['body'],
+                                                        3,
+                                                        width,
+                                                        height,
+                                                        kWhite),
+                                                  ),
+                                                  subQuestion['choices']
+                                                              [choiceIndex]['id'] ==
+                                                          subQuestion
+                                                              ['correct_answer']['id']
+                                                      ? Icon(
+                                                          Icons.check_rounded,
+                                                          size: width * 0.015,
+                                                          color: kGreen,
+                                                        )
+                                                      :
+                                                              subQuestion
+                                                                          ['choices']
+                                                                      [choiceIndex]['id'] ==
+                                                                  reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']]
+                                                          ? Icon(
+                                                              Icons.close,
+                                                              size: width * 0.015,
+                                                              color: kRed,
+                                                            )
+                                                          : const SizedBox()
+                                                ],
+                                              )),
+                                        ),
+                                    ],
+                                  )
+                                else if (subQuestion['type'] ==
+                                    'finalAnswerQuestion')
+                                  Column(
+                                    children: [
+                                      CustomContainer(
+                                          onTap: null,
+                                          verticalPadding: height * 0.02,
+                                          horizontalPadding: width * 0.02,
+                                          width: width * 0.3,
+                                          borderRadius: width * 0.005,
+                                          border: null,
+                                          buttonColor: kGray,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              SizedBox(
+                                                width: width * 0.22,
+                                                child: stringWithLatex(reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']], 3,
+                                                    width, height, kWhite),
+                                              ),
+                                              reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']] ==
+                                                      subQuestion['correct_answer']
+                                                          ['body']
+                                                  ? Icon(
+                                                      Icons.check_rounded,
+                                                      size: width * 0.015,
+                                                      color: kGreen,
+                                                    )
+                                                  : Icon(
+                                                      Icons.close,
+                                                      size: width * 0.015,
+                                                      color: kRed,
+                                                    )
+                                            ],
+                                          )),
+                                      if (!(reviewProvider.questions[questionIndex - 1]['sub_questions_answers'][subQuestion['id']] ==
+                                          subQuestion['correct_answer']['body']))
+                                        ...[
+                                          SizedBox(height: height*0.01),
+                                          CustomContainer(
+                                              onTap: null,
+                                              verticalPadding: height * 0.02,
+                                              horizontalPadding: width * 0.02,
+                                              width: width * 0.3,
+                                              borderRadius: width * 0.005,
+                                              border: null,
+                                              buttonColor: kGray,
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  SizedBox(
+                                                    width: width * 0.22,
+                                                    child: stringWithLatex(subQuestion['correct_answer']['body'], 3,
+                                                        width, height, kWhite),
+                                                  ),
+                                                  Icon(
+                                                    Icons.check_rounded,
+                                                    size: width * 0.015,
+                                                    color: kGreen,
+                                                  )
+
+                                                ],
+                                              )),
+                                        ]
+                                    ],
+                                  ),
+                              ]
+                            ],
+                          ),
+                          SizedBox(width: width * 0.02),
+                          SizedBox(
+                            height: height * 0.3,
+                            child: CustomDivider(
+                              dashHeight: 2,
+                              dashWidth: width * 0.005,
+                              dashColor: kGray.withOpacity(0.9),
+                              direction: Axis.vertical,
+                              fillRate: 0.7,
+                            ),
+                          ),
+                          SizedBox(width: width * 0.02),
+                          Image(
+                            image: NetworkImage(reviewProvider.questions[questionIndex - 1]
+                                ['question']['image']),
+                            height: height * 0.3,
+                            width: width * 0.25,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -162,7 +1080,11 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    return Provider.of<WebsiteProvider>(context, listen: true).loaded
+    QuestionProvider quizProvider = Provider.of<QuestionProvider>(context);
+    WebsiteProvider websiteProvider = Provider.of<WebsiteProvider>(context);
+    ReviewProvider reviewProvider = Provider.of<ReviewProvider>(context);
+
+    return websiteProvider.loaded
         ? Scaffold(
             body: Container(
                 width: double.infinity,
@@ -201,8 +1123,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            Text(Provider.of<ReviewProvider>(context, listen: true).quizSubject
-                                              ,style: textStyle(
+                                            Text(reviewProvider.quizSubject,
+                                                style: textStyle(
                                                     1, width, height, kWhite)),
                                             Row(
                                               children: [
@@ -240,7 +1162,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                   .spaceBetween,
                                                           children: [
                                                             Text(
-                                                                'جاوبت على ${Provider.of<ReviewProvider>(context, listen: true).correctQuestionsNum} أسئلة من أصل ${Provider.of<ReviewProvider>(context, listen: true).questions.length}',
+                                                                'حصلت على ${reviewProvider.correctQuestionsNum} من أصل ${reviewProvider.questionsNum} علامات',
                                                                 style: textStyle(
                                                                     4,
                                                                     width,
@@ -250,8 +1172,9 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                               width:
                                                                   width * 0.035,
                                                               label: double.parse((100 *
-                                                                  Provider.of<ReviewProvider>(context, listen: true).correctQuestionsNum /
-                                                                  Provider.of<ReviewProvider>(context, listen: true).questions.length)
+                                                                      reviewProvider
+                                                                          .correctQuestionsNum /
+                                                                  reviewProvider.questionsNum)
                                                                   .toStringAsFixed(
                                                                       1)),
                                                               inActiveColor:
@@ -298,7 +1221,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                   .spaceBetween,
                                                           children: [
                                                             Text(
-                                                                'أنهيت الامتحان ب${Duration(seconds: Provider.of<ReviewProvider>(context, listen: true).questions.fold(0, (prev, curr) => prev + toDuration(curr['duration']).inSeconds)).inMinutes} دقائق\nمن أصل ${toDuration(Provider.of<ReviewProvider>(context, listen: true).quizTime==null?'00:00:00': Provider.of<ReviewProvider>(context, listen: true).quizTime).inMinutes}',
+                                                                'أنهيت الامتحان ب${Duration(seconds: reviewProvider.questions.fold(0, (prev, curr) => prev + toDuration(curr['duration']).inSeconds)).inMinutes} دقائق\nمن أصل ${toDuration(reviewProvider.quizTime == null ? '00:00:00' : reviewProvider.quizTime).inMinutes}',
                                                                 style: textStyle(
                                                                     4,
                                                                     width,
@@ -308,8 +1231,17 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                               width:
                                                                   width * 0.035,
                                                               label: double.parse((100 *
-                                                                  Provider.of<ReviewProvider>(context, listen: true).questions.fold(0, (prev, curr) => prev + toDuration(curr['duration']).inSeconds) /
-                                                                  toDuration(Provider.of<ReviewProvider>(context, listen: true).quizTime==null?'00:00:00': Provider.of<ReviewProvider>(context, listen: true).quizTime).inSeconds)
+                                                                      reviewProvider.questions.fold(
+                                                                          0,
+                                                                          (prev, curr) =>
+                                                                              prev +
+                                                                              toDuration(curr['duration'])
+                                                                                  .inSeconds) /
+                                                                      toDuration(reviewProvider.quizTime == null
+                                                                              ? '00:00:00'
+                                                                              : reviewProvider
+                                                                                  .quizTime)
+                                                                          .inSeconds)
                                                                   .toStringAsFixed(
                                                                       1)),
                                                               inActiveColor:
@@ -327,8 +1259,10 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                 width: width * 0.42,
                                                 height: height * 0.08,
                                                 onTap: () {
-                                                  mainScrollController.animateTo(
-                                                    mainScrollController.position
+                                                  mainScrollController
+                                                      .animateTo(
+                                                    mainScrollController
+                                                        .position
                                                         .maxScrollExtent,
                                                     duration: Duration(
                                                         milliseconds: 500),
@@ -399,94 +1333,108 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                   SizedBox(
                                                       height: height * 0.02),
                                                   SizedBox(
-                                                    height:height*0.3,
+                                                    height: height * 0.3,
                                                     child: ListView(
                                                       children: [
                                                         Wrap(
-
-                                                          spacing: width * 0.005,
-                                                          runSpacing: height * 0.01,
+                                                          spacing:
+                                                              width * 0.005,
+                                                          runSpacing:
+                                                              height * 0.01,
                                                           children: [
-                                                            for(MapEntry skill in Provider.of<ReviewProvider>(context, listen: true).skills.entries)
-                                                                Stack(
-                                                                  alignment: Alignment
-                                                                      .center,
-                                                                  children: [
-                                                                    CustomContainer(
-                                                                      onTap: null,
-                                                                      width: width *
-                                                                              0.055 +
-                                                                          (skill.key.length *
-                                                                              fontWidth(5, width, height)),
-                                                                      height:height*0.05,
-                                                                      borderRadius:
-                                                                          width *
-                                                                              0.005,
-                                                                      border: null,
-                                                                      buttonColor:
-                                                                          kDarkGray,
-                                                                      child: Row(
-                                                                        children: [
-                                                                          CustomContainer(
-                                                                              onTap:
-                                                                                  null,
-                                                                              width: (width *
-                                                                                      0.055 + (skill.key.length *
-                                                                                      fontWidth(5, width, height)))*skill.value['correct']/skill.value['all'],
-                                                                              height:height*0.05,
-                                                                              borderRadius:
-                                                                                  width *
-                                                                                      0.005,
-                                                                              border:
-                                                                                  null,
-                                                                              buttonColor: kOrange
-                                                                              ,
-                                                                              child: null),
-                                                                        ],
-                                                                      ),
+                                                            for (MapEntry skill
+                                                                in reviewProvider
+                                                                    .skills
+                                                                    .entries)
+                                                              Stack(
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                children: [
+                                                                  CustomContainer(
+                                                                    onTap: null,
+                                                                    width: width *
+                                                                            0.055 +
+                                                                        (skill.key.length *
+                                                                            fontWidth(
+                                                                                5,
+                                                                                width,
+                                                                                height)),
+                                                                    height:
+                                                                        height *
+                                                                            0.05,
+                                                                    borderRadius:
+                                                                        width *
+                                                                            0.005,
+                                                                    border:
+                                                                        null,
+                                                                    buttonColor:
+                                                                        kDarkGray,
+                                                                    child: Row(
+                                                                      children: [
+                                                                        CustomContainer(
+                                                                            onTap:
+                                                                                null,
+                                                                            width: (width * 0.055 + (skill.key.length * fontWidth(5, width, height))) *
+                                                                                skill.value['correct'] /
+                                                                                skill.value['all'],
+                                                                            height: height * 0.05,
+                                                                            borderRadius: width * 0.005,
+                                                                            border: null,
+                                                                            buttonColor: kOrange,
+                                                                            child: null),
+                                                                      ],
                                                                     ),
-                                                                    CustomContainer(
-                                                                      onTap: null,
-                                                                      width: width *
-                                                                              0.055 +
-                                                                          (skill.key.length *
-                                                                              fontWidth(5, width, height)),
-                                                                      verticalPadding:
-                                                                          height *
-                                                                              0.02,
-                                                                      horizontalPadding:
-                                                                          width *
-                                                                              0.01,
-                                                                      borderRadius: 0,
-                                                                      border: null,
-                                                                      buttonColor: Colors
-                                                                          .transparent,
-                                                                      child: Row(
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment
-                                                                                .spaceBetween,
-                                                                        children: [
-                                                                          Text(
-                                                                        skill.key,
-                                                                            style: textStyle(
+                                                                  ),
+                                                                  CustomContainer(
+                                                                    onTap: null,
+                                                                    width: width *
+                                                                            0.055 +
+                                                                        (skill.key.length *
+                                                                            fontWidth(
                                                                                 5,
                                                                                 width,
-                                                                                height,
-                                                                                kWhite),
-                                                                          ),
-                                                                          Text(
-                                                                            "${(100*skill.value['correct']/skill.value['all']).round()}%",
-                                                                            style: textStyle(
-                                                                                5,
-                                                                                width,
-                                                                                height,
-                                                                                kWhite),
-                                                                          )
-                                                                        ],
-                                                                      ),
-                                                                    )
-                                                                  ],
-                                                                ),
+                                                                                height)),
+                                                                    verticalPadding:
+                                                                        height *
+                                                                            0.02,
+                                                                    horizontalPadding:
+                                                                        width *
+                                                                            0.01,
+                                                                    borderRadius:
+                                                                        0,
+                                                                    border:
+                                                                        null,
+                                                                    buttonColor:
+                                                                        Colors
+                                                                            .transparent,
+                                                                    child: Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                      children: [
+                                                                        Text(
+                                                                          skill
+                                                                              .key,
+                                                                          style: textStyle(
+                                                                              5,
+                                                                              width,
+                                                                              height,
+                                                                              kWhite),
+                                                                        ),
+                                                                        Text(
+                                                                          "${(100 * skill.value['correct'] / skill.value['all']).round()}%",
+                                                                          style: textStyle(
+                                                                              5,
+                                                                              width,
+                                                                              height,
+                                                                              kWhite),
+                                                                        )
+                                                                      ],
+                                                                    ),
+                                                                  )
+                                                                ],
+                                                              ),
                                                           ],
                                                         ),
                                                       ],
@@ -538,28 +1486,28 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                 ),
                                 SizedBox(height: height * 0.05),
                                 SizedBox(
-                                  height:height,
+                                  height: height,
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(height: height * 0.03),
-
                                           Text('سجل الأسئلة',
                                               style: textStyle(
                                                   2, width, height, kWhite)),
                                           SizedBox(height: height * 0.01),
-
                                           SizedBox(
                                             width: width * 0.16,
                                             child: Row(
                                               mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
                                               children: [
                                                 Text('الأسئلة',
                                                     style: textStyle(3, width,
@@ -568,44 +1516,37 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                   children: [
                                                     CustomContainer(
                                                         onTap: () {
-                                                            Provider.of<ReviewProvider>(context, listen: false).questionIndex==
-                                                                Provider.of<ReviewProvider>(context, listen: false).questions
-                                                                    .length?
-                                                            {
-                                                              Provider.of<
-                                                                  ReviewProvider>(
-                                                                  context,
-                                                                  listen: false)
-                                                                  .setQuestionIndex(
-                                                                  1),
-                                                            questionsScrollController.jumpTo(
-                                                              0,
-                                                            )
-                                                            }:
-                                                            {
-                                                              questionsScrollController.animateTo(
-                                                                Provider.of<
-                                                                    ReviewProvider>(
-                                                                    context,
-                                                                    listen: false)
-                                                                    .questionIndex*height,
-                                                                duration: const Duration(
-                                                                    milliseconds: 500),
-                                                                curve: Curves.easeOut,
-                                                              ),
-                                                              Provider.of<
-                                                                  ReviewProvider>(
-                                                                  context,
-                                                                  listen: false)
-                                                                  .setQuestionIndex(
-                                                                  Provider
-                                                                      .of<
-                                                                      ReviewProvider>(
-                                                                      context,
-                                                                      listen: false)
-                                                                      .questionIndex +
-                                                                      1),
-                                                            };
+                                                          reviewProvider
+                                                                      .questionIndex ==
+                                                                  reviewProvider
+                                                                      .questions
+                                                                      .length
+                                                              ? {
+                                                                  reviewProvider
+                                                                      .setQuestionIndex(
+                                                                          1),
+                                                                  questionsScrollController
+                                                                      .jumpTo(
+                                                                    0,
+                                                                  )
+                                                                }
+                                                              : {
+                                                                  questionsScrollController
+                                                                      .animateTo(
+                                                                    reviewProvider
+                                                                            .questionIndex *
+                                                                        height,
+                                                                    duration: const Duration(
+                                                                        milliseconds:
+                                                                            500),
+                                                                    curve: Curves
+                                                                        .easeOut,
+                                                                  ),
+                                                                  reviewProvider
+                                                                      .setQuestionIndex(
+                                                                          reviewProvider.questionIndex +
+                                                                              1),
+                                                                };
                                                         },
                                                         width: width * 0.022,
                                                         height: width * 0.022,
@@ -627,54 +1568,38 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                         width: width * 0.005),
                                                     CustomContainer(
                                                         onTap: () {
-                                                          Provider.of<ReviewProvider>(context, listen: false).questionIndex==1?
-                                                          {
-
-                                                            Provider.of<
-                                                                ReviewProvider>(
-                                                                context,
-                                                                listen: false)
-                                                                .setQuestionIndex(
-                                                                Provider
-                                                                    .of<
-                                                                    ReviewProvider>(
-                                                                    context,
-                                                                    listen: false)
-                                                                    .questions
-                                                                    .length),
-                                                            questionsScrollController.jumpTo(
-                                                              (Provider.of<
-                                                                  ReviewProvider>(
-                                                                  context,
-                                                                  listen: false)
-                                                                  .questionIndex-1)*height,
-                                                            ),
-                                                          }:
-                                                          {
-                                                            Provider.of<
-                                                                ReviewProvider>(
-                                                                context,
-                                                                listen: false)
-                                                                .setQuestionIndex(
-                                                                Provider
-                                                                    .of<
-                                                                    ReviewProvider>(
-                                                                    context,
-                                                                    listen: false)
-                                                                    .questionIndex -
-                                                                    1),
-                                                            questionsScrollController.animateTo(
-                                                              (Provider.of<
-                                                                  ReviewProvider>(
-                                                                  context,
-                                                                  listen: false)
-                                                                  .questionIndex-1)*height,
-                                                              duration: const Duration(
-                                                                  milliseconds: 500),
-                                                              curve: Curves.easeOut,
-                                                            ),
-                                                          };
-
+                                                          reviewProvider
+                                                                      .questionIndex ==
+                                                                  1
+                                                              ? {
+                                                                  reviewProvider.setQuestionIndex(
+                                                                      reviewProvider
+                                                                          .questions
+                                                                          .length),
+                                                                  questionsScrollController
+                                                                      .jumpTo(
+                                                                    (reviewProvider.questionIndex -
+                                                                            1) *
+                                                                        height,
+                                                                  ),
+                                                                }
+                                                              : {
+                                                                  reviewProvider
+                                                                      .setQuestionIndex(
+                                                                          reviewProvider.questionIndex -
+                                                                              1),
+                                                                  questionsScrollController
+                                                                      .animateTo(
+                                                                    (reviewProvider.questionIndex -
+                                                                            1) *
+                                                                        height,
+                                                                    duration: const Duration(
+                                                                        milliseconds:
+                                                                            500),
+                                                                    curve: Curves
+                                                                        .easeOut,
+                                                                  ),
+                                                                };
                                                         },
                                                         width: width * 0.022,
                                                         height: width * 0.022,
@@ -698,106 +1623,126 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                             ),
                                           ),
                                           SizedBox(height: height * 0.01),
-
                                           SizedBox(
-                                              height:height*0.82,
-                                              width: width * 0.18,
-                                              child: Theme(
-                                                  data: Theme.of(context).copyWith(
-                                                    scrollbarTheme: ScrollbarThemeData(
-                                                      minThumbLength: 1,
-                                                      mainAxisMargin: 0,
-                                                      crossAxisMargin: 0,
-                                                      radius:
-                                                      Radius.circular(width * 0.005),
-                                                      thumbVisibility:
-                                                      MaterialStateProperty.all<bool>(
-                                                          true),
-                                                      trackVisibility:
-                                                      MaterialStateProperty.all<bool>(
-                                                          true),
-                                                      thumbColor: MaterialStateProperty
-                                                          .all<Color>(kLightPurple),
-                                                      trackColor: MaterialStateProperty
-                                                          .all<Color>(kDarkGray),
-                                                      trackBorderColor:
-                                                      MaterialStateProperty.all<
-                                                          Color>(kTransparent),
-                                                    ),
+                                            height: height * 0.82,
+                                            width: width * 0.18,
+                                            child: Theme(
+                                                data:
+                                                    Theme.of(context).copyWith(
+                                                  scrollbarTheme:
+                                                      ScrollbarThemeData(
+                                                    minThumbLength: 1,
+                                                    mainAxisMargin: 0,
+                                                    crossAxisMargin: 0,
+                                                    radius: Radius.circular(
+                                                        width * 0.005),
+                                                    thumbVisibility:
+                                                        MaterialStateProperty
+                                                            .all<bool>(true),
+                                                    trackVisibility:
+                                                        MaterialStateProperty
+                                                            .all<bool>(true),
+                                                    thumbColor:
+                                                        MaterialStateProperty
+                                                            .all<Color>(
+                                                                kLightPurple),
+                                                    trackColor:
+                                                        MaterialStateProperty
+                                                            .all<Color>(
+                                                                kDarkGray),
+                                                    trackBorderColor:
+                                                        MaterialStateProperty
+                                                            .all<Color>(
+                                                                kTransparent),
                                                   ),
-                                                  child: Directionality(
-                                                    textDirection: TextDirection.ltr,
-                                                child: ListView(
-                                                  children: [
-                                                    for (int i = 1;
-                                                        i <= Provider.of<ReviewProvider>(context, listen: true).questions.length;
-                                                        i++) ...[
-                                                      Directionality(
-                                                        textDirection:
-                                                        TextDirection.rtl,
-                                                        child: Padding(
-                                                          padding:  EdgeInsets.symmetric(horizontal:width*0.02),
-                                                          child: CustomContainer(
-                                                              onTap: () {
-                                                                Provider.of<ReviewProvider>(context, listen: false).setQuestionIndex(i);
-                                                                questionsScrollController.jumpTo(
-                                                                  (Provider.of<
-                                                                      ReviewProvider>(
-                                                                      context,
-                                                                      listen: false)
-                                                                      .questionIndex-1)*height,
-
-                                                                );
-                                                              },
-                                                              height: height * 0.06,
-                                                              verticalPadding:
-                                                                  height * 0.02,
-                                                              horizontalPadding:
-                                                                  width * 0.02,
-                                                              borderRadius:
-                                                                  width * 0.005,
-                                                              border: null,
-                                                              buttonColor:
-                                                              Provider.of<ReviewProvider>(context, listen: true).questionIndex == i
-                                                                      ? kPurple
-                                                                      : kDarkGray,
-                                                              child: Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                                children: [
-                                                                  Text('سؤال #$i',
-                                                                      style: textStyle(
-                                                                          4,
-                                                                          width,
-                                                                          height,
-                                                                          kWhite)),
-                                                                  Provider.of<ReviewProvider>(context, listen: true).questions[i-1]['choice']!=null &&Provider.of<ReviewProvider>(context, listen: true).questions[i-1]['question']['correct_answer']['id'] == Provider.of<ReviewProvider>(context, listen: true).questions[i-1]['choice']['id']
-                                                                      ? Icon(
-                                                                          Icons
-                                                                              .check_rounded,
-                                                                          size: width *
-                                                                              0.015,
-                                                                          color: kGreen,
-                                                                        )
-                                                                      : Icon(
-                                                                          Icons.close,
-                                                                          size: width *
-                                                                              0.015,
-                                                                          color: kRed,
-                                                                        )
-                                                                ],
-                                                              )),
-                                                        ),
-                                                      ),
-                                                      SizedBox(
-                                                          height: height * 0.01),
-                                                    ]
-                                                  ],
                                                 ),
-                                              )),),
+                                                child: Directionality(
+                                                  textDirection:
+                                                      TextDirection.ltr,
+                                                  child: ListView(
+                                                    children: [
+                                                      for (int i = 1;
+                                                          i <=
+                                                              reviewProvider
+                                                                  .questions
+                                                                  .length;
+                                                          i++) ...[
+                                                        Directionality(
+                                                          textDirection:
+                                                              TextDirection.rtl,
+                                                          child: Padding(
+                                                            padding: EdgeInsets
+                                                                .symmetric(
+                                                                    horizontal:
+                                                                        width *
+                                                                            0.02),
+                                                            child:
+                                                                CustomContainer(
+                                                                    onTap: () {
+                                                                      reviewProvider
+                                                                          .setQuestionIndex(
+                                                                              i);
+                                                                      questionsScrollController
+                                                                          .jumpTo(
+                                                                        (reviewProvider.questionIndex -
+                                                                                1) *
+                                                                            height,
+                                                                      );
+                                                                    },
+                                                                    height: height *
+                                                                        0.06,
+                                                                    verticalPadding:
+                                                                        height *
+                                                                            0.02,
+                                                                    horizontalPadding:
+                                                                        width *
+                                                                            0.02,
+                                                                    borderRadius:
+                                                                        width *
+                                                                            0.005,
+                                                                    border:
+                                                                        null,
+                                                                    buttonColor: reviewProvider.questionIndex ==
+                                                                            i
+                                                                        ? kPurple
+                                                                        : kDarkGray,
+                                                                    child: Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                      children: [
+                                                                        Text(
+                                                                            'سؤال #$i',
+                                                                            style: textStyle(
+                                                                                4,
+                                                                                width,
+                                                                                height,
+                                                                                kWhite)),
+                                                                        checkAnswer(reviewProvider,
+                                                                                i)
+                                                                            ? Icon(
+                                                                                Icons.check_rounded,
+                                                                                size: width * 0.015,
+                                                                                color: kGreen,
+                                                                              )
+                                                                            : Icon(
+                                                                                Icons.close,
+                                                                                size: width * 0.015,
+                                                                                color: kRed,
+                                                                              )
+                                                                      ],
+                                                                    )),
+                                                          ),
+                                                        ),
+                                                        SizedBox(
+                                                            height:
+                                                                height * 0.01),
+                                                      ]
+                                                    ],
+                                                  ),
+                                                )),
+                                          ),
                                           SizedBox(height: height * 0.02),
-
                                         ],
                                       ),
                                       SizedBox(
@@ -811,346 +1756,273 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                         ),
                                       ),
                                       SizedBox(
-                                        height:height,
+                                        height: height,
                                         width: width * 0.7,
                                         child: Theme(
                                             data: Theme.of(context).copyWith(
-                                              scrollbarTheme: ScrollbarThemeData(
+                                              scrollbarTheme:
+                                                  ScrollbarThemeData(
                                                 minThumbLength: 1,
-                                                mainAxisMargin: height*0.02,
+                                                mainAxisMargin: height * 0.02,
                                                 crossAxisMargin: 0,
-                                                radius:
-                                                Radius.circular(width * 0.005),
+                                                radius: Radius.circular(
+                                                    width * 0.005),
                                                 thumbVisibility:
-                                                MaterialStateProperty.all<bool>(
-                                                    true),
+                                                    MaterialStateProperty.all<
+                                                        bool>(true),
                                                 trackVisibility:
-                                                MaterialStateProperty.all<bool>(
-                                                    true),
-                                                thumbColor: MaterialStateProperty
-                                                    .all<Color>(kLightPurple),
-                                                trackColor: MaterialStateProperty
-                                                    .all<Color>(kDarkGray),
+                                                    MaterialStateProperty.all<
+                                                        bool>(true),
+                                                thumbColor:
+                                                    MaterialStateProperty.all<
+                                                        Color>(kLightPurple),
+                                                trackColor:
+                                                    MaterialStateProperty.all<
+                                                        Color>(kDarkGray),
                                                 trackBorderColor:
-                                                MaterialStateProperty.all<
-                                                    Color>(kTransparent),
+                                                    MaterialStateProperty.all<
+                                                        Color>(kTransparent),
                                               ),
                                             ),
                                             child: Directionality(
                                               textDirection: TextDirection.ltr,
                                               child: ListView(
-                                                physics:Provider.of<
-                                                    ReviewProvider>(
-                                                    context,
-                                                    listen: true)
-                                                    .questionScrollState?ScrollPhysics():NeverScrollableScrollPhysics(),
-                                                  controller:questionsScrollController,
+                                                physics: reviewProvider
+                                                        .questionScrollState
+                                                    ? ScrollPhysics()
+                                                    : NeverScrollableScrollPhysics(),
+                                                controller:
+                                                    questionsScrollController,
                                                 children: [
                                                   for (int questionIndex = 1;
-                                                  questionIndex <= Provider.of<ReviewProvider>(context, listen: true).questions.length;
-                                                  questionIndex++) ...[
+                                                      questionIndex <=
+                                                          reviewProvider
+                                                              .questions.length;
+                                                      questionIndex++) ...[
                                                     Directionality(
                                                       textDirection:
-                                                      TextDirection.rtl,
+                                                          TextDirection.rtl,
                                                       child: Padding(
-                                                        padding:  EdgeInsets.symmetric(horizontal:width*0.02),
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal:
+                                                                    width *
+                                                                        0.02),
                                                         child: SizedBox(
                                                           width: width * 0.66,
-                                                          height:height,
+                                                          height: height,
                                                           child: Column(
-                                                            mainAxisAlignment:MainAxisAlignment.spaceBetween,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
                                                             children: [
-                                                              SizedBox(),SizedBox(),
+                                                              SizedBox(
+                                                                  height:
+                                                                      height *
+                                                                          0.02),
                                                               Row(
                                                                 mainAxisAlignment:
-                                                                MainAxisAlignment.spaceBetween,
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
                                                                 children: [
-                                                                  Text('سؤال #$questionIndex',
-                                                                      style: textStyle(3, width,
-                                                                          height, kWhite)),
+                                                                  Text(
+                                                                      'سؤال #$questionIndex',
+                                                                      style: textStyle(
+                                                                          3,
+                                                                          width,
+                                                                          height,
+                                                                          kWhite)),
                                                                   CustomContainer(
                                                                     onTap: () {
-                                                                      Provider.of<QuestionProvider>(context, listen: false).setQuestionId(Provider.of<ReviewProvider>(context, listen: false).questions[
-                                                                      questionIndex-1]
-                                                                      ['question']['id']);
-                                                                      Provider.of<WebsiteProvider>(context, listen: false).setLoaded(false);
+                                                                      quizProvider.setQuestionId(reviewProvider
+                                                                              .questions[
+                                                                          questionIndex -
+                                                                              1]['question']['id']);
+                                                                      websiteProvider
+                                                                          .setLoaded(
+                                                                              false);
 
                                                                       Navigator.pushNamed(
-                                                                          context, Question.route);
+                                                                          context,
+                                                                          Question
+                                                                              .route);
                                                                     },
-                                                                    verticalPadding: height * 0.01,
-                                                                    horizontalPadding: width * 0.02,
-                                                                    borderRadius: width * 0.005,
-                                                                    border: null,
-                                                                    buttonColor: kLightPurple,
-                                                                    child: Center(
+                                                                    verticalPadding:
+                                                                        height *
+                                                                            0.01,
+                                                                    horizontalPadding:
+                                                                        width *
+                                                                            0.02,
+                                                                    borderRadius:
+                                                                        width *
+                                                                            0.005,
+                                                                    border:
+                                                                        null,
+                                                                    buttonColor:
+                                                                        kLightPurple,
+                                                                    child:
+                                                                        Center(
                                                                       child: Text(
                                                                           'تمرن أكثر بحل أسئلة شبيهه لهذا السؤال',
-                                                                          style: textStyle(3, width,
-                                                                              height, kDarkBlack)),
+                                                                          style: textStyle(
+                                                                              3,
+                                                                              width,
+                                                                              height,
+                                                                              kDarkBlack)),
                                                                     ),
                                                                   ),
                                                                 ],
                                                               ),
-                                                              SizedBox(),
-                                                              CustomContainer(
-                                                                width: width * 0.66,
-                                                                buttonColor: kDarkGray,
-                                                                borderRadius: width * 0.005,
-                                                                verticalPadding: height * 0.03,
-                                                                horizontalPadding: width * 0.02,
-                                                                child: Column(
-                                                                  mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .spaceBetween,
-                                                                  crossAxisAlignment:
-                                                                  CrossAxisAlignment.start,
-                                                                  children: [
-                                                                    Padding(
-                                                                      padding: EdgeInsets.only(
-                                                                          bottom: height * 0.03),
-                                                                      child: SizedBox(
-                                                                        width: width * 0.61,
-                                                                        child: stringWithLatex(
-                                                                            Provider.of<ReviewProvider>(context, listen: true).questions[
-                                                                            questionIndex-1]
-                                                                            ['question']['body'],
-                                                                            // width * 0.61,
-                                                                            3,
-                                                                            width,
-                                                                            height,
-                                                                            kWhite),
-                                                                      ),
-                                                                    ),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                      crossAxisAlignment:
-                                                                      CrossAxisAlignment.start,
-                                                                      children: [
-                                                                        Column(
-                                                                          children: [
-                                                                            for (int i = 0;
-                                                                            i <
-                                                                                Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                [
-                                                                                'question']
-                                                                                [
-                                                                                'choices']
-                                                                                    .length;
-                                                                            i++)
-                                                                              Padding(
-                                                                                padding:
-                                                                                EdgeInsets.only(
-                                                                                    bottom:
-                                                                                    height *
-                                                                                        0.02),
-                                                                                child:
-                                                                                CustomContainer(
-                                                                                    onTap: null,
-                                                                                    verticalPadding:
-                                                                                    height *
-                                                                                        0.02,
-                                                                                    horizontalPadding:
-                                                                                    width *
-                                                                                        0.02,
-                                                                                    width: Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question'][
-                                                                                    'image'] ==
-                                                                                        null
-                                                                                        ? width *
-                                                                                        0.61
-                                                                                        : width *
-                                                                                        0.3,
-                                                                                    borderRadius:
-                                                                                    width *
-                                                                                        0.005,
-                                                                                    border: fullBorder(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['id'] ==
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['correct_answer']['id']
-                                                                                        ? kGreen
-                                                                                        : Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice'] != null && Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['id'] == Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice']['id']
-                                                                                        ? kRed
-                                                                                        : kTransparent),
-                                                                                    buttonColor: Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice'] != null && Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['id'] == Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice']['id'] ? kLightPurple : kGray,
-                                                                                    child: Row(
-                                                                                      mainAxisAlignment:
-                                                                                      MainAxisAlignment
-                                                                                          .spaceBetween,
-                                                                                      children: [
-                                                                                        SizedBox(width:
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question'][
-                                                                                        'image'] ==
-                                                                                            null
-                                                                                            ? width *
-                                                                                            0.53
-                                                                                            : width *
-                                                                                            0.22,
-                                                                                          child: stringWithLatex(
-                                                                                              Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['body'],
+                                                              SizedBox(
+                                                                  height:
+                                                                      height *
+                                                                          0.01),
 
-                                                                                              3,
-                                                                                              width,
-                                                                                              height,
-                                                                                              kWhite),
-                                                                                        ),
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['id'] ==
-                                                                                            Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['correct_answer']['id']
-                                                                                            ? Icon(
-                                                                                          Icons.check_rounded,
-                                                                                          size: width * 0.015,
-                                                                                          color: kGreen,
-                                                                                        )
-                                                                                            : Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice']!=null &&Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['choices'][i]['id'] == Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['choice']['id']
-                                                                                            ? Icon(
-                                                                                          Icons.close,
-                                                                                          size: width * 0.015,
-                                                                                          color: kRed,
-                                                                                        )
-                                                                                            : const SizedBox()
-                                                                                      ],
-                                                                                    )),
-                                                                              ),
-                                                                            if (Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                            ['question']
-                                                                            ['choices']
-                                                                                .isEmpty)
-                                                                              CustomContainer(
-                                                                                  onTap: null,
-                                                                                  verticalPadding:
-                                                                                  height * 0.02,
-                                                                                  horizontalPadding:
-                                                                                  width * 0.02,
-                                                                                  width: Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                  [
-                                                                                  'image'] ==
-                                                                                      null
-                                                                                      ? width * 0.61
-                                                                                      : width * 0.3,
-                                                                                  borderRadius:
-                                                                                  width * 0.005,
-                                                                                  border: null,
-                                                                                  buttonColor:
-                                                                                  kGray,
-                                                                                  child: Row(
-                                                                                    mainAxisAlignment:
-                                                                                    MainAxisAlignment
-                                                                                        .spaceBetween,
-                                                                                    children: [
-                                                                                      SizedBox(
-                                                                                        width: Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                        [
-                                                                                        'image'] ==
-                                                                                            null
-                                                                                            ? width * 0.53
-                                                                                            : width * 0.22,
-                                                                                        child: stringWithLatex(
-                                                                                            Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                            [
-                                                                                            'answer'],
-                                                                                            3,
-                                                                                            width,
-                                                                                            height,
-                                                                                            kWhite),
-                                                                                      ),
-                                                                                      Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                      [
-                                                                                      'correct_answer'] ==
-                                                                                          Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                          [
-                                                                                          'answer']
-                                                                                          ? Icon(
-                                                                                        Icons
-                                                                                            .check_rounded,
-                                                                                        size: width *
-                                                                                            0.015,
-                                                                                        color:
-                                                                                        kGreen,
-                                                                                      )
-                                                                                          : Icon(
-                                                                                        Icons
-                                                                                            .close,
-                                                                                        size: width *
-                                                                                            0.015,
-                                                                                        color:
-                                                                                        kRed,
-                                                                                      )
-                                                                                    ],
-                                                                                  ))
-                                                                          ],
-                                                                        ),
-                                                                        if (Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']
-                                                                        ['image'] !=
-                                                                            null) ...[
-                                                                          SizedBox(
-                                                                            height: height * 0.25,
-                                                                            child: CustomDivider(
-                                                                              dashHeight: 2,
-                                                                              dashWidth:
-                                                                              width * 0.005,
-                                                                              dashColor: kGray
-                                                                                  .withOpacity(0.9),
-                                                                              direction:
-                                                                              Axis.vertical,
-                                                                              fillRate: 0.7,
-                                                                            ),
-                                                                          ),
-                                                                          Image(
-                                                                            image: NetworkImage(
-                                                                                Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                ['question']
-                                                                                ['image']),
-                                                                            height: height * 0.25,
-                                                                            width: width * 0.25,
-                                                                            fit: BoxFit.contain,
-                                                                            alignment:
-                                                                            Alignment.center,
-                                                                          ),
-                                                                        ]
-                                                                      ],
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              SizedBox(),
+                                                                                                                      if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                                        [
+                                                                                                                                        'question']
+                                                                                                                                    [
+                                                                                                                                    'image'] !=
+                                                                                                                                null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                        1]['question']
+                                                                                                                                    [
+                                                                                                                                    'type'] ==
+                                                                                                                                'multipleChoiceQuestion')
+                                                                                                                          multipleChoiceQuestionWithImage(
+                                                                                                                              width,
+                                                                                                                              height,
+                                                                                                                              reviewProvider,
+                                                                                                                              questionIndex)
+                                                                                                                        else if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                                        [
+                                                                                                                                        'question']
+                                                                                                                                    [
+                                                                                                                                    'image'] ==
+                                                                                                                                null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                        1]['question']
+                                                                                                                                    [
+                                                                                                                                    'type'] ==
+                                                                                                                                'multipleChoiceQuestion')
+                                                                                                                          multipleChoiceQuestionWithoutImage(
+                                                                                                                              width,
+                                                                                                                              height,
+                                                                                                                              reviewProvider,
+                                                                                                                              questionIndex)
+                                                                                                                        else if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                                        [
+                                                                                                                                        'question']
+                                                                                                                                    [
+                                                                                                                                    'image'] ==
+                                                                                                                                null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                        1]['question']
+                                                                                                                                    [
+                                                                                                                                    'type'] ==
+                                                                                                                                'finalAnswerQuestion')
+                                                                                                                          finalAnswerQuestionWithoutImage(
+                                                                                                                              width,
+                                                                                                                              height,
+                                                                                                                              reviewProvider,
+                                                                                                                              questionIndex)
+                                                                                                                        else if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                                        [
+                                                                                                                                        'question']
+                                                                                                                                    [
+                                                                                                                                    'image'] !=
+                                                                                                                                null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                        1]['question']
+                                                                                                                                    [
+                                                                                                                                    'type'] ==
+                                                                                                                                'finalAnswerQuestion')
+                                                                                                                          finalAnswerQuestionWithImage(
+                                                                                                                              width,
+                                                                                                                              height,
+                                                                                                                              reviewProvider,
+                                                                                                                              questionIndex)
+                                                                                                                        else if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                        [
+                                                                                                                        'question']
+                                                                                                                        [
+                                                                                                                        'image'] ==
+                                                                                                                            null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                1]['question']
+                                                                                                                            [
+                                                                                                                            'type'] ==
+                                                                                                                                'multiSectionQuestion')
+                                                                                                                              multiSectionQuestionWithoutImage(
+                                                                                                                                  width, height, reviewProvider, questionIndex)
+                                                              else if (reviewProvider.questions[questionIndex - 1]
+                                                                                                                        [
+                                                                                                                        'question']
+                                                                                                                        [
+                                                                                                                        'image'] !=
+                                                                                                                            null &&
+                                                                                                                            reviewProvider.questions[questionIndex -
+                                                                                                                                1]['question']
+                                                                                                                            [
+                                                                                                                            'type'] ==
+                                                                                                                                'multiSectionQuestion')
+                                                                                                                              multiSectionQuestionWithImage(
+                                                                                                                                  width, height, reviewProvider, questionIndex),
+                                                              SizedBox(
+                                                                  height:
+                                                                      height *
+                                                                          0.04),
                                                               Stack(
-                                                                alignment: Alignment.center,
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
                                                                 children: [
-                                                                  if (toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[
-                                                                  questionIndex-1]
-                                                                  ['duration'])
-                                                                      .inSeconds >
-                                                                      toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[
-                                                                      questionIndex-1]['question']
-                                                                      ['idealDuration'])
+                                                                  if (toDuration(reviewProvider.questions[questionIndex - 1]
+                                                                              [
+                                                                              'duration'])
+                                                                          .inSeconds >
+                                                                      toDuration(reviewProvider.questions[questionIndex - 1]['question']
+                                                                              [
+                                                                              'idealDuration'])
                                                                           .inSeconds) ...[
                                                                     Container(
-                                                                      width: width * 0.35,
-                                                                      height: height * 0.15,
+                                                                      width: width *
+                                                                          0.35,
+                                                                      height:
+                                                                          height *
+                                                                              0.15,
                                                                     ),
                                                                     Positioned(
-                                                                      top: height * 0.075 +
-                                                                          height * 0.01,
-                                                                      child: CustomContainer(
-                                                                        width: width * 0.25,
-                                                                        height: height * 0.01,
-                                                                        buttonColor: kGreen,
-                                                                        borderRadius: width * 0.005,
-                                                                        child: Align(
+                                                                      top: height *
+                                                                              0.075 +
+                                                                          height *
+                                                                              0.01,
+                                                                      child:
+                                                                          CustomContainer(
+                                                                        width: width *
+                                                                            0.25,
+                                                                        height: height *
+                                                                            0.01,
+                                                                        buttonColor:
+                                                                            kGreen,
+                                                                        borderRadius:
+                                                                            width *
+                                                                                0.005,
+                                                                        child:
+                                                                            Align(
                                                                           alignment:
-                                                                          Alignment.centerRight,
-                                                                          child: CustomContainer(
+                                                                              Alignment.centerRight,
+                                                                          child:
+                                                                              CustomContainer(
                                                                             width: width *
                                                                                 0.25 *
-                                                                                max(
-                                                                                    0.4,
-                                                                                    (1 -
-                                                                                        (10 * toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['idealDuration']).inSeconds / toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['duration']).inSeconds)
-                                                                                            .round() /
-                                                                                            10)),
-                                                                            height: height * 0.01,
-                                                                            buttonColor: kRed,
+                                                                                max(0.4, (1 - (10 * toDuration(reviewProvider.questions[questionIndex - 1]['question']['idealDuration']).inSeconds / toDuration(reviewProvider.questions[questionIndex - 1]['duration']).inSeconds).round() / 10)),
+                                                                            height:
+                                                                                height * 0.01,
+                                                                            buttonColor:
+                                                                                kRed,
                                                                             borderRadius:
-                                                                            width * 0.005,
+                                                                                width * 0.005,
                                                                           ),
                                                                         ),
                                                                       ),
@@ -1158,155 +2030,101 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                     Positioned(
                                                                       right: 0,
                                                                       top: 0,
-                                                                      child: Row(
+                                                                      child:
+                                                                          Row(
                                                                         children: [
                                                                           CustomContainer(
-                                                                            width: width * 0.1,
-                                                                            height: height * 0.15,
-                                                                            borderRadius: 0,
-                                                                            child: Column(
-                                                                              mainAxisAlignment:
-                                                                              MainAxisAlignment
-                                                                                  .spaceBetween,
+                                                                            width:
+                                                                                width * 0.1,
+                                                                            height:
+                                                                                height * 0.15,
+                                                                            borderRadius:
+                                                                                0,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                               children: [
-                                                                                Text(
-                                                                                    'الوقت المستهلك على\nالسؤال',
-                                                                                    textAlign:
-                                                                                    TextAlign
-                                                                                        .center,
-                                                                                    style: textStyle(
-                                                                                        5,
-                                                                                        width,
-                                                                                        height,
-                                                                                        kWhite)),
+                                                                                Text('الوقت المستهلك على\nالسؤال', textAlign: TextAlign.center, style: textStyle(5, width, height, kWhite)),
                                                                                 Image(
-                                                                                  image: const AssetImage(
-                                                                                      'images/clock_imoji.png'),
-                                                                                  fit: BoxFit
-                                                                                      .contain,
-                                                                                  height:
-                                                                                  height * 0.03,
-                                                                                  width:
-                                                                                  width * 0.03,
+                                                                                  image: const AssetImage('images/clock_imoji.png'),
+                                                                                  fit: BoxFit.contain,
+                                                                                  height: height * 0.03,
+                                                                                  width: width * 0.03,
                                                                                 ),
-                                                                                CustomContainer(
-                                                                                    width: width *
-                                                                                        0.05,
-                                                                                    height: height *
-                                                                                        0.03,
-                                                                                    buttonColor:
-                                                                                    kGray,
-                                                                                    borderRadius:
-                                                                                    width *
-                                                                                        0.005,
-                                                                                    child: Text(
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1][
-                                                                                        'duration'],
-                                                                                        style: textStyle(
-                                                                                            4,
-                                                                                            width,
-                                                                                            height,
-                                                                                            kWhite)))
+                                                                                CustomContainer(width: width * 0.05, height: height * 0.03, buttonColor: kGray, borderRadius: width * 0.005, child: Text(reviewProvider.questions[questionIndex - 1]['duration'], style: textStyle(4, width, height, kWhite)))
                                                                               ],
                                                                             ),
                                                                           ),
                                                                           CustomContainer(
-                                                                            width: width *
-                                                                                0.25 *
-                                                                                max(
-                                                                                    0.4,
-                                                                                    (1 -
-                                                                                        (10 * toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['idealDuration']).inSeconds / toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['duration']).inSeconds).round() /
-                                                                                            10)) -
-                                                                                width * 0.1,
-                                                                            height: height * 0.01,
+                                                                            width:
+                                                                                width * 0.25 * max(0.4, (1 - (10 * toDuration(reviewProvider.questions[questionIndex - 1]['question']['idealDuration']).inSeconds / toDuration(reviewProvider.questions[questionIndex - 1]['duration']).inSeconds).round() / 10)) - width * 0.1,
+                                                                            height:
+                                                                                height * 0.01,
                                                                           ),
                                                                           CustomContainer(
-                                                                            width: width * 0.1,
-                                                                            height: height * 0.15,
-                                                                            borderRadius: 0,
-                                                                            child: Column(
-                                                                              mainAxisAlignment:
-                                                                              MainAxisAlignment
-                                                                                  .spaceBetween,
+                                                                            width:
+                                                                                width * 0.1,
+                                                                            height:
+                                                                                height * 0.15,
+                                                                            borderRadius:
+                                                                                0,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                               children: [
-                                                                                Text(
-                                                                                    'الوقت المقترح للإنتهاء من\nالسؤال',
-                                                                                    textAlign:
-                                                                                    TextAlign
-                                                                                        .center,
-                                                                                    style: textStyle(
-                                                                                        5,
-                                                                                        width,
-                                                                                        height,
-                                                                                        kWhite)),
+                                                                                Text('الوقت المقترح للإنتهاء من\nالسؤال', textAlign: TextAlign.center, style: textStyle(5, width, height, kWhite)),
                                                                                 Image(
-                                                                                  image: const AssetImage(
-                                                                                      'images/clock_imoji.png'),
-                                                                                  fit: BoxFit
-                                                                                      .contain,
-                                                                                  height:
-                                                                                  height * 0.03,
-                                                                                  width:
-                                                                                  width * 0.03,
+                                                                                  image: const AssetImage('images/clock_imoji.png'),
+                                                                                  fit: BoxFit.contain,
+                                                                                  height: height * 0.03,
+                                                                                  width: width * 0.03,
                                                                                 ),
-                                                                                CustomContainer(
-                                                                                    width: width *
-                                                                                        0.05,
-                                                                                    height: height *
-                                                                                        0.03,
-                                                                                    buttonColor:
-                                                                                    kGray,
-                                                                                    borderRadius:
-                                                                                    width *
-                                                                                        0.005,
-                                                                                    child: Text(
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                        [
-                                                                                        'question']
-                                                                                        [
-                                                                                        'idealDuration'],
-                                                                                        style: textStyle(
-                                                                                            4,
-                                                                                            width,
-                                                                                            height,
-                                                                                            kWhite)))
+                                                                                CustomContainer(width: width * 0.05, height: height * 0.03, buttonColor: kGray, borderRadius: width * 0.005, child: Text(reviewProvider.questions[questionIndex - 1]['question']['idealDuration'], style: textStyle(4, width, height, kWhite)))
                                                                               ],
                                                                             ),
                                                                           )
                                                                         ],
                                                                       ),
                                                                     ),
-                                                                  ]
-                                                                  else ...[
+                                                                  ] else ...[
                                                                     Container(
-                                                                      width: width * 0.35,
-                                                                      height: height * 0.15,
+                                                                      width: width *
+                                                                          0.35,
+                                                                      height:
+                                                                          height *
+                                                                              0.15,
                                                                     ),
                                                                     Positioned(
-                                                                      top: height * 0.075 +
-                                                                          height * 0.01,
-                                                                      child: CustomContainer(
-                                                                        width: width * 0.25,
-                                                                        height: height * 0.01,
-                                                                        buttonColor: kLightPurple,
-                                                                        borderRadius: width * 0.005,
-                                                                        child: Align(
+                                                                      top: height *
+                                                                              0.075 +
+                                                                          height *
+                                                                              0.01,
+                                                                      child:
+                                                                          CustomContainer(
+                                                                        width: width *
+                                                                            0.25,
+                                                                        height: height *
+                                                                            0.01,
+                                                                        buttonColor:
+                                                                            kLightPurple,
+                                                                        borderRadius:
+                                                                            width *
+                                                                                0.005,
+                                                                        child:
+                                                                            Align(
                                                                           alignment:
-                                                                          Alignment.centerRight,
-                                                                          child: CustomContainer(
+                                                                              Alignment.centerRight,
+                                                                          child:
+                                                                              CustomContainer(
                                                                             width: width *
                                                                                 0.25 *
-                                                                                max(
-                                                                                    0.4,
-                                                                                    (1 -
-                                                                                        (10 * toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['duration']).inSeconds / toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['idealDuration']).inSeconds)
-                                                                                            .round() /
-                                                                                            10)),
-                                                                            height: height * 0.01,
-                                                                            buttonColor: kGreen,
+                                                                                max(0.4, (1 - (10 * toDuration(reviewProvider.questions[questionIndex - 1]['duration']).inSeconds / toDuration(reviewProvider.questions[questionIndex - 1]['question']['idealDuration']).inSeconds).round() / 10)),
+                                                                            height:
+                                                                                height * 0.01,
+                                                                            buttonColor:
+                                                                                kGreen,
                                                                             borderRadius:
-                                                                            width * 0.005,
+                                                                                width * 0.005,
                                                                           ),
                                                                         ),
                                                                       ),
@@ -1314,119 +2132,56 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                     Positioned(
                                                                       right: 0,
                                                                       top: 0,
-                                                                      child: Row(
+                                                                      child:
+                                                                          Row(
                                                                         children: [
                                                                           CustomContainer(
-                                                                            width: width * 0.1,
-                                                                            height: height * 0.15,
-                                                                            borderRadius: 0,
-                                                                            child: Column(
-                                                                              mainAxisAlignment:
-                                                                              MainAxisAlignment
-                                                                                  .spaceBetween,
+                                                                            width:
+                                                                                width * 0.1,
+                                                                            height:
+                                                                                height * 0.15,
+                                                                            borderRadius:
+                                                                                0,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                               children: [
-                                                                                Text(
-                                                                                    'الوقت المقترح للإنتهاء من\nالسؤال',
-                                                                                    textAlign:
-                                                                                    TextAlign
-                                                                                        .center,
-                                                                                    style: textStyle(
-                                                                                        5,
-                                                                                        width,
-                                                                                        height,
-                                                                                        kWhite)),
+                                                                                Text('الوقت المقترح للإنتهاء من\nالسؤال', textAlign: TextAlign.center, style: textStyle(5, width, height, kWhite)),
                                                                                 Image(
-                                                                                  image: const AssetImage(
-                                                                                      'images/clock_imoji.png'),
-                                                                                  fit: BoxFit
-                                                                                      .contain,
-                                                                                  height:
-                                                                                  height * 0.03,
-                                                                                  width:
-                                                                                  width * 0.03,
+                                                                                  image: const AssetImage('images/clock_imoji.png'),
+                                                                                  fit: BoxFit.contain,
+                                                                                  height: height * 0.03,
+                                                                                  width: width * 0.03,
                                                                                 ),
-                                                                                CustomContainer(
-                                                                                    width: width *
-                                                                                        0.05,
-                                                                                    height: height *
-                                                                                        0.03,
-                                                                                    buttonColor:
-                                                                                    kGray,
-                                                                                    borderRadius:
-                                                                                    width *
-                                                                                        0.005,
-                                                                                    child: Text(
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]
-                                                                                        [
-                                                                                        'question']
-                                                                                        [
-                                                                                        'idealDuration'],
-                                                                                        style: textStyle(
-                                                                                            4,
-                                                                                            width,
-                                                                                            height,
-                                                                                            kWhite)))
+                                                                                CustomContainer(width: width * 0.05, height: height * 0.03, buttonColor: kGray, borderRadius: width * 0.005, child: Text(reviewProvider.questions[questionIndex - 1]['question']['idealDuration'], style: textStyle(4, width, height, kWhite)))
                                                                               ],
                                                                             ),
                                                                           ),
                                                                           CustomContainer(
-                                                                            width: width *
-                                                                                0.25 *
-                                                                                max(
-                                                                                    0.4,
-                                                                                    (1 -
-                                                                                        (10 * toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['duration']).inSeconds / toDuration(Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1]['question']['idealDuration']).inSeconds).round() /
-                                                                                            10)) -
-                                                                                width * 0.1,
-                                                                            height: height * 0.01,
+                                                                            width:
+                                                                                width * 0.25 * max(0.4, (1 - (10 * toDuration(reviewProvider.questions[questionIndex - 1]['duration']).inSeconds / toDuration(reviewProvider.questions[questionIndex - 1]['question']['idealDuration']).inSeconds).round() / 10)) - width * 0.1,
+                                                                            height:
+                                                                                height * 0.01,
                                                                           ),
                                                                           CustomContainer(
-                                                                            width: width * 0.1,
-                                                                            height: height * 0.15,
-                                                                            borderRadius: 0,
-                                                                            child: Column(
-                                                                              mainAxisAlignment:
-                                                                              MainAxisAlignment
-                                                                                  .spaceBetween,
+                                                                            width:
+                                                                                width * 0.1,
+                                                                            height:
+                                                                                height * 0.15,
+                                                                            borderRadius:
+                                                                                0,
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                               children: [
-                                                                                Text(
-                                                                                    'الوقت المستهلك على\nالسؤال',
-                                                                                    textAlign:
-                                                                                    TextAlign
-                                                                                        .center,
-                                                                                    style: textStyle(
-                                                                                        5,
-                                                                                        width,
-                                                                                        height,
-                                                                                        kWhite)),
+                                                                                Text('الوقت المستهلك على\nالسؤال', textAlign: TextAlign.center, style: textStyle(5, width, height, kWhite)),
                                                                                 Image(
-                                                                                  image: const AssetImage(
-                                                                                      'images/clock_imoji.png'),
-                                                                                  fit: BoxFit
-                                                                                      .contain,
-                                                                                  height:
-                                                                                  height * 0.03,
-                                                                                  width:
-                                                                                  width * 0.03,
+                                                                                  image: const AssetImage('images/clock_imoji.png'),
+                                                                                  fit: BoxFit.contain,
+                                                                                  height: height * 0.03,
+                                                                                  width: width * 0.03,
                                                                                 ),
-                                                                                CustomContainer(
-                                                                                    width: width *
-                                                                                        0.05,
-                                                                                    height: height *
-                                                                                        0.03,
-                                                                                    buttonColor:
-                                                                                    kGray,
-                                                                                    borderRadius:
-                                                                                    width *
-                                                                                        0.005,
-                                                                                    child: Text(
-                                                                                        Provider.of<ReviewProvider>(context, listen: true).questions[questionIndex-1][
-                                                                                        'duration'],
-                                                                                        style: textStyle(
-                                                                                            4,
-                                                                                            width,
-                                                                                            height,
-                                                                                            kWhite)))
+                                                                                CustomContainer(width: width * 0.05, height: height * 0.03, buttonColor: kGray, borderRadius: width * 0.005, child: Text(reviewProvider.questions[questionIndex - 1]['duration'], style: textStyle(4, width, height, kWhite)))
                                                                               ],
                                                                             ),
                                                                           ),
@@ -1436,83 +2191,84 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                   ]
                                                                 ],
                                                               ),
-                                                              SizedBox(),
                                                               SizedBox(
-                                                                width: width * 0.66,
-                                                                child: CustomDivider(
+                                                                  height:
+                                                                      height *
+                                                                          0.03),
+                                                              SizedBox(
+                                                                width: width *
+                                                                    0.66,
+                                                                child:
+                                                                    CustomDivider(
                                                                   dashHeight: 2,
-                                                                  dashWidth: width * 0.005,
-                                                                  dashColor:
-                                                                  kDarkGray.withOpacity(0.6),
-                                                                  direction: Axis.horizontal,
+                                                                  dashWidth:
+                                                                      width *
+                                                                          0.005,
+                                                                  dashColor: kDarkGray
+                                                                      .withOpacity(
+                                                                          0.6),
+                                                                  direction: Axis
+                                                                      .horizontal,
                                                                   fillRate: 1,
                                                                 ),
                                                               ),
-                                                              SizedBox(),
+                                                              SizedBox(
+                                                                  height:
+                                                                      height *
+                                                                          0.02),
                                                               Row(
                                                                 mainAxisAlignment:
-                                                                MainAxisAlignment.start,
+                                                                    MainAxisAlignment
+                                                                        .start,
                                                                 children: [
-                                                                  Text('طريقة الحل',
-                                                                      style: textStyle(3, width,
-                                                                          height, kWhite)),
-                                                                  SizedBox(width: width * 0.01),
+                                                                  Text(
+                                                                      'طريقة الحل',
+                                                                      style: textStyle(
+                                                                          3,
+                                                                          width,
+                                                                          height,
+                                                                          kWhite)),
+                                                                  SizedBox(
+                                                                      width: width *
+                                                                          0.01),
                                                                   CustomContainer(
                                                                     onTap: () {
                                                                       popUp(
                                                                           context,
-                                                                          width * 0.65,
-                                                                          height * 0.38,
+                                                                          width *
+                                                                              0.65,
+                                                                          height *
+                                                                              0.38,
                                                                           Column(
                                                                             crossAxisAlignment:
-                                                                            CrossAxisAlignment
-                                                                                .start,
+                                                                                CrossAxisAlignment.start,
                                                                             children: [
                                                                               Row(
-                                                                                mainAxisAlignment:
-                                                                                MainAxisAlignment
-                                                                                    .spaceBetween,
+                                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                 children: [
-                                                                                  Text(
-                                                                                      'طريقة الحل #1',
-                                                                                      style: textStyle(
-                                                                                          2,
-                                                                                          width,
-                                                                                          height,
-                                                                                          kWhite)),
+                                                                                  Text('طريقة الحل #1', style: textStyle(2, width, height, kWhite)),
                                                                                   CustomContainer(
                                                                                     onTap: () {
-                                                                                      Navigator.pop(
-                                                                                          context);
+                                                                                      Navigator.pop(context);
                                                                                     },
                                                                                     child: Icon(
                                                                                       Icons.close,
-                                                                                      size: width *
-                                                                                          0.02,
+                                                                                      size: width * 0.02,
                                                                                       color: kWhite,
                                                                                     ),
                                                                                   ),
                                                                                 ],
                                                                               ),
-                                                                              SizedBox(
-                                                                                  height: height *
-                                                                                      0.02),
+                                                                              SizedBox(height: height * 0.02),
                                                                               CustomContainer(
                                                                                 width: width * 0.65,
-                                                                                height:
-                                                                                height * 0.3,
-                                                                                verticalPadding:
-                                                                                height * 0.03,
-                                                                                horizontalPadding:
-                                                                                width * 0.02,
-                                                                                buttonColor:
-                                                                                kDarkGray,
-                                                                                borderRadius:
-                                                                                width * 0.005,
+                                                                                height: height * 0.3,
+                                                                                verticalPadding: height * 0.03,
+                                                                                horizontalPadding: width * 0.02,
+                                                                                buttonColor: kDarkGray,
+                                                                                borderRadius: width * 0.005,
                                                                                 child: Align(
-                                                                                  alignment:
-                                                                                  Alignment
-                                                                                      .topRight,
+                                                                                  alignment: Alignment.topRight,
                                                                                   child: stringWithLatex(
                                                                                       'قريبا ستتوفر الحلول',
                                                                                       // width * 0.65,
@@ -1528,31 +2284,46 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                           kTransparent,
                                                                           0);
                                                                     },
-                                                                    verticalPadding: height * 0.01,
-                                                                    horizontalPadding: width * 0.01,
-                                                                    borderRadius: width * 0.005,
-                                                                    border: null,
-                                                                    buttonColor: kLightPurple,
-                                                                    child: Center(
-                                                                      child: Text('طريقة #1',
-                                                                          style: textStyle(3, width,
-                                                                              height, kDarkBlack)),
+                                                                    verticalPadding:
+                                                                        height *
+                                                                            0.01,
+                                                                    horizontalPadding:
+                                                                        width *
+                                                                            0.01,
+                                                                    borderRadius:
+                                                                        width *
+                                                                            0.005,
+                                                                    border:
+                                                                        null,
+                                                                    buttonColor:
+                                                                        kLightPurple,
+                                                                    child:
+                                                                        Center(
+                                                                      child: Text(
+                                                                          'طريقة #1',
+                                                                          style: textStyle(
+                                                                              3,
+                                                                              width,
+                                                                              height,
+                                                                              kDarkBlack)),
                                                                     ),
                                                                   ),
                                                                 ],
                                                               ),
-                                                              SizedBox(),SizedBox(),
+                                                              SizedBox(
+                                                                  height:
+                                                                      height *
+                                                                          0.03),
                                                             ],
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                    
                                                   ]
                                                 ],
                                               ),
-                                            )),),
-                                      
+                                            )),
+                                      ),
                                       const SizedBox()
                                     ],
                                   ),
@@ -1617,7 +2388,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       vertical: height * 0.01),
                                   child: CustomContainer(
                                     onTap: () {
-                                      Provider.of<WebsiteProvider>(context, listen: false).setLoaded(false);
+                                      websiteProvider.setLoaded(false);
 
                                       Navigator.pushNamed(
                                           context, Dashboard.route);
@@ -1669,9 +2440,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                         horizontal: width * 0.01,
                                         vertical: height * 0.01),
                                     child: CustomContainer(
-                                      onTap: () {
-
-                                      },
+                                      onTap: () {},
                                       width: width *
                                           (0.032 * forwardAnimationValue +
                                               0.16 * backwardAnimationValue),
@@ -1728,9 +2497,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                         horizontal: width * 0.01,
                                         vertical: height * 0.01),
                                     child: CustomContainer(
-                                      onTap: () {
-
-                                      },
+                                      onTap: () {},
                                       width: width *
                                           (0.032 * forwardAnimationValue +
                                               0.16 * backwardAnimationValue),
@@ -1778,9 +2545,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       vertical: height * 0.01),
                                   child: CustomContainer(
                                     onTap: () {
-                                      Provider.of<WebsiteProvider>(context,
-                                          listen: false)
-                                          .setLoaded(false);
+                                      websiteProvider.setLoaded(false);
                                       Navigator.pushNamed(
                                           context, QuizSetting.route);
                                     },
@@ -1831,9 +2596,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       horizontal: width * 0.01,
                                       vertical: height * 0.01),
                                   child: CustomContainer(
-                                    onTap: () {
-
-                                    },
+                                    onTap: () {},
                                     width: width *
                                         (0.032 * forwardAnimationValue +
                                             0.16 * backwardAnimationValue),
@@ -1881,9 +2644,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       horizontal: width * 0.01,
                                       vertical: height * 0.01),
                                   child: CustomContainer(
-                                    onTap: () {
-
-                                    },
+                                    onTap: () {},
                                     width: width *
                                         (0.032 * forwardAnimationValue +
                                             0.16 * backwardAnimationValue),
@@ -1931,9 +2692,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       horizontal: width * 0.01,
                                       vertical: height * 0.01),
                                   child: CustomContainer(
-                                    onTap: () {
-
-                                    },
+                                    onTap: () {},
                                     width: width *
                                         (0.032 * forwardAnimationValue +
                                             0.16 * backwardAnimationValue),
@@ -1991,9 +2750,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       horizontal: width * 0.01,
                                       vertical: height * 0.01),
                                   child: CustomContainer(
-                                    onTap: () {
-
-                                    },
+                                    onTap: () {},
                                     width: width *
                                         (0.032 * forwardAnimationValue +
                                             0.16 * backwardAnimationValue),
@@ -2041,9 +2798,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                       horizontal: width * 0.01,
                                       vertical: height * 0.01),
                                   child: CustomContainer(
-                                    onTap: () {
-
-                                    },
+                                    onTap: () {},
                                     width: width *
                                         (0.032 * forwardAnimationValue +
                                             0.16 * backwardAnimationValue),

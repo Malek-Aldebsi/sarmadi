@@ -691,7 +691,6 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                               horizontalPadding: width * 0.008,
                                               verticalPadding: width * 0.004,
                                               isDense: null,
-                                              innerText: null,
                                               errorText: null,
                                               hintText: '05',
                                               hintTextColor:
@@ -738,7 +737,6 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                               horizontalPadding: width * 0.008,
                                               verticalPadding: width * 0.004,
                                               isDense: null,
-                                              innerText: null,
                                               errorText: null,
                                               hintText: '00',
                                               hintTextColor:

@@ -251,7 +251,6 @@ class _LogInState extends State<LogIn> {
                             verticalPadding: width * 0.01,
                             horizontalPadding: width * 0.02,
                             isDense: null,
-                            innerText: null,
                             errorText: null,
                             hintText: loginMethod == 0
                                 ? 'البريد الإلكتروني'
@@ -292,7 +291,6 @@ class _LogInState extends State<LogIn> {
                             verticalPadding: width * 0.01,
                             horizontalPadding: width * 0.02,
                             isDense: null,
-                            innerText: null,
                             errorText: null,
                             hintText: 'كلمة السر',
                             hintTextColor: kWhite.withOpacity(0.5),

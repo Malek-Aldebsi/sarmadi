@@ -33,8 +33,6 @@ class CustomTextField extends StatefulWidget {
 
   final bool? isDense;
 
-  final String? innerText;
-
   final String? errorText;
   final String? hintText;
   final Color? hintTextColor;
@@ -65,7 +63,6 @@ class CustomTextField extends StatefulWidget {
     this.horizontalPadding,
     this.verticalPadding,
     this.isDense,
-    this.innerText,
     this.errorText,
     this.hintText,
     this.hintTextColor,
@@ -82,8 +79,8 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   @override
   void initState() {
-    super.initState(); //TODO: check without
-    widget.controller!.text = widget.innerText ?? '';
+    super.initState();
+    // widget.controller!.text = widget.innerText ?? '';
   }
 
   @override

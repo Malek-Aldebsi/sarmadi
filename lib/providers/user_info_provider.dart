@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
-
 import '../utils/session.dart';
 
 class UserInfoProvider with ChangeNotifier {
-  String _userName = '';
-  String _userPhone = '';
-  String _userEmail = '';
-  String _userPassword = '';
+  TextEditingController _firstName = TextEditingController();
+  TextEditingController _lastName = TextEditingController();
+  TextEditingController _userPhone = TextEditingController();
+  TextEditingController _userEmail = TextEditingController();
+  TextEditingController _userPassword = TextEditingController();
+  TextEditingController _userConfirmPassword = TextEditingController();
 
-  String get userName => _userName;
-  String get userPhone => _userPhone;
-  String get userEmail => _userEmail;
-  String get userPassword => _userPassword;
+  TextEditingController get firstName => _firstName;
+  TextEditingController get lastName => _lastName;
+  TextEditingController get userPhone => _userPhone;
+  TextEditingController get userEmail => _userEmail;
+  TextEditingController get userPassword => _userPassword;
+  TextEditingController get userConfirmPassword => _userConfirmPassword;
 
-  void setUserName(String name) {
-    _userName = name;
+  void setUserFirstName(String firstName) {
+    _firstName.text = firstName;
     notifyListeners();
   }
 
-  void setUserPhone(String phone) {
-    setSession('sessionKey1', phone);
-    _userPhone = phone;
+  void setUserLastName(String lastName) {
+    _lastName.text = lastName;
     notifyListeners();
   }
 
-  void setUserEmail(String email) {
-    setSession('sessionKey0', email);
-    _userEmail = email;
+  void setUserPhone() {
+    setSession('sessionKey1', _userPhone.text);
     notifyListeners();
   }
 
-  void setUserPassword(String password) {
-    setSession('sessionValue', password);
-    _userPassword = password;
+  void setUserEmail() {
+    setSession('sessionKey0', _userEmail.text);
+    notifyListeners();
+  }
+
+  void setUserPassword() {
+    setSession('sessionValue', _userPassword.text);
     notifyListeners();
   }
 }

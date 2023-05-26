@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/providers/user_info_provider.dart';
-import 'package:sarmadi/screens/quiz_history.dart';
 import '../components/custom_divider.dart';
 import '../const/borders.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/tasks_provider.dart';
 import '../providers/website_provider.dart';
-import 'quiz_setting.dart';
-import 'welcome.dart';
 import '../components/custom_circular_chart.dart';
 import '../components/custom_container.dart';
 import '../const/fonts.dart';
@@ -18,7 +16,6 @@ import '../utils/http_requests.dart';
 import '../utils/session.dart';
 
 class Dashboard extends StatefulWidget {
-  static const String route = '/Dashboard/';
   const Dashboard({Key? key}) : super(key: key);
 
   @override
@@ -58,10 +55,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ?                                   context.go('/Welcome')
           : {
               Provider.of<UserInfoProvider>(context, listen: false)
-                  .setUserName(result['user_name']),
+                  .setUserFirstName(result['user_name']),
               Provider.of<DashboardProvider>(context, listen: false)
                   .setQuote(result['quote']),
               Provider.of<DashboardProvider>(context, listen: false)
@@ -207,7 +204,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                           Row(
                                             children: [
                                               Text(
-                                                  'أهلا ${Provider.of<UserInfoProvider>(context, listen: true).userName}، صباح الخير',
+                                                  'أهلا ${Provider.of<UserInfoProvider>(context, listen: true).firstName.text}، صباح الخير',
                                                   style: textStyle(2, width,
                                                       height, kWhite)),
                                               SizedBox(width: width * 0.02),
@@ -1221,8 +1218,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                           Provider.of<WebsiteProvider>(context,
                                                   listen: false)
                                               .setLoaded(false);
-                                          Navigator.pushNamed(
-                                              context, Dashboard.route);
+                                          context.go('/Dashboard');
                                         },
                                         width: width *
                                             (0.032 * forwardAnimationValue +
@@ -1334,8 +1330,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                                     context,
                                                     listen: false)
                                                 .setLoaded(false);
-                                            Navigator.pushNamed(
-                                                context, QuizHistory.route);
+                                            context.go('/QuizHistory');
                                           },
                                           width: width *
                                               (0.032 * forwardAnimationValue +
@@ -1389,8 +1384,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                           Provider.of<WebsiteProvider>(context,
                                                   listen: false)
                                               .setLoaded(false);
-                                          Navigator.pushNamed(
-                                              context, QuizSetting.route);
+                                          context.go('/QuizSetting');
                                         },
                                         width: width *
                                             (0.032 * forwardAnimationValue +

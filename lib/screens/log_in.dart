@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
@@ -11,11 +12,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import '../utils/session.dart';
 import '../utils/http_requests.dart';
 
-import 'dashboard.dart';
-
 class LogIn extends StatefulWidget {
-  static const String route = '/LogIn/';
-
   const LogIn({Key? key}) : super(key: key);
 
   @override
@@ -25,68 +22,38 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   final CarouselController controller = CarouselController();
 
-  TextEditingController email = TextEditingController();
-
-  TextEditingController phone = TextEditingController();
-
-  TextEditingController password = TextEditingController();
-
   bool obscurePassword = true;
 
   int current = 0;
   int loginMethod = 0; // 0 email 1 phone
 
-  void logIn(password, [email, phone]) {
-    UserInfoProvider userInfoProvider =
-        Provider.of<UserInfoProvider>(context, listen: false);
-    email == ''
-        ? post('log_in/', {
-            'phone': phone,
-            'password': password,
-          }).then((value) {
-            dynamic result = decode(value);
-            switch (result) {
-              case 0:
-                //TODO:
-                userInfoProvider.setUserPhone(phone);
-                userInfoProvider.setUserPassword(password);
-                Navigator.pushNamed(context, Dashboard.route);
-                break;
-              case 1:
-                print('phone or password are wrong');
-                break;
-              case 404:
-                print('check your connection');
-                break;
-              default:
-                print('sth goes wrong, try later');
-                break;
-            }
-          })
-        : post('log_in/', {
-            'email': email,
-            'password': password,
-          }).then((value) {
-            dynamic result = decode(value);
-            switch (result) {
-              case 0:
-                //TODO:
-                userInfoProvider.setUserEmail(email);
-                userInfoProvider.setUserPassword(password);
-                Navigator.pushNamed(context, Dashboard.route);
-
-                break;
-              case 1:
-                print('email or password are wrong');
-                break;
-              case 404:
-                print('check your connection');
-                break;
-              default:
-                print('sth goes wrong, try later');
-                break;
-            }
-          });
+  void logIn(UserInfoProvider userInfoProvider) {
+    // String passwordSha256 = hashCode(password.text);
+    post('log_in/', {
+      if (loginMethod == 0) 'email': userInfoProvider.userEmail.text,
+      if (loginMethod == 1) 'phone': userInfoProvider.userPhone.text,
+      'password': userInfoProvider.userPassword.text,
+    }).then((value) {
+      dynamic result = decode(value);
+      switch (result) {
+        case 0:
+          userInfoProvider.userPhone.text.isEmpty
+              ? userInfoProvider.setUserEmail()
+              : userInfoProvider.setUserPhone();
+          userInfoProvider.setUserPassword();
+          context.go('/Dashboard');
+          break;
+        case 1:
+          print('phone or password are wrong');
+          break;
+        case 404:
+          print('check your connection');
+          break;
+        default:
+          print('sth goes wrong, try later');
+          break;
+      }
+    });
   }
 
   void checkSession() async {
@@ -95,27 +62,23 @@ class _LogInState extends State<LogIn> {
     String? value = await getSession('sessionValue');
 
     if ((key0 != null || key1 != null) && (value != null)) {
-      Navigator.pushNamed(context, Dashboard.route);
+      context.go('/Dashboard');
     }
   }
 
   @override
   void initState() {
-    // checkSession();
-
-    // delSession('sessionKey0');
-    // delSession('sessionKey1');
-    // delSession('sessionValue');
     super.initState();
+    checkSession();
   }
 
   @override
   Widget build(BuildContext context) {
-    // checkSession();
-
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
+    UserInfoProvider userInfoProvider =
+        Provider.of<UserInfoProvider>(context, listen: false);
     return Scaffold(
         body: Directionality(
       textDirection: TextDirection.rtl,
@@ -164,8 +127,8 @@ class _LogInState extends State<LogIn> {
                               CustomContainer(
                                 onTap: () {
                                   setState(() {
-                                    phone.text = '';
-                                    password.text = '';
+                                    userInfoProvider.userPhone.text = '';
+                                    userInfoProvider.userPassword.text = '';
                                     loginMethod = 0;
                                   });
                                 },
@@ -193,8 +156,8 @@ class _LogInState extends State<LogIn> {
                               CustomContainer(
                                 onTap: () {
                                   setState(() {
-                                    email.text = '';
-                                    password.text = '';
+                                    userInfoProvider.userEmail.text = '';
+                                    userInfoProvider.userPassword.text = '';
                                     loginMethod = 1;
                                   });
                                 },
@@ -225,7 +188,9 @@ class _LogInState extends State<LogIn> {
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: height / 64),
                           child: CustomTextField(
-                            controller: loginMethod == 0 ? email : phone,
+                            controller: loginMethod == 0
+                                ? userInfoProvider.userEmail
+                                : userInfoProvider.userPhone,
                             width: width / 2.42,
                             fontOption: 3,
                             fontColor: kWhite,
@@ -240,11 +205,10 @@ class _LogInState extends State<LogIn> {
                                 : TextInputType.phone,
                             onChanged: (String text) {},
                             onSubmitted: (value) {
-                              if ((email.text != '' || phone.text != '') &&
-                                  password.text != '') {
-                                //TODO:
-                                // String passwordSha256 = hashCode(password.text);
-                                logIn(password.text, email.text, phone.text);
+                              if ((userInfoProvider.userEmail.text != '' ||
+                                      userInfoProvider.userPhone.text != '') &&
+                                  userInfoProvider.userPassword.text != '') {
+                                logIn(userInfoProvider);
                               }
                             },
                             backgroundColor: kDarkGray,
@@ -267,7 +231,7 @@ class _LogInState extends State<LogIn> {
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: height / 64),
                           child: CustomTextField(
-                            controller: password,
+                            controller: userInfoProvider.userPassword,
                             width: width / 2.42,
                             fontOption: 3,
                             fontColor: kWhite,
@@ -280,11 +244,10 @@ class _LogInState extends State<LogIn> {
                             keyboardType: null,
                             onChanged: (String text) {},
                             onSubmitted: (value) {
-                              if ((email.text != '' || phone.text != '') &&
-                                  password.text != '') {
-                                //TODO:
-                                // String passwordSha256 = hashCode(password.text);
-                                logIn(password.text, email.text, phone.text);
+                              if ((userInfoProvider.userEmail.text != '' ||
+                                      userInfoProvider.userPhone.text != '') &&
+                                  userInfoProvider.userPassword.text != '') {
+                                logIn(userInfoProvider);
                               }
                             },
                             backgroundColor: kDarkGray,
@@ -322,11 +285,10 @@ class _LogInState extends State<LogIn> {
                               top: height / 32, bottom: height / 64),
                           child: CustomContainer(
                             onTap: () {
-                              if ((email.text != '' || phone.text != '') &&
-                                  password.text != '') {
-                                //TODO:
-                                // String passwordSha256 = hashCode(password.text);
-                                logIn(password.text, email.text, phone.text);
+                              if ((userInfoProvider.userEmail.text != '' ||
+                                      userInfoProvider.userPhone.text != '') &&
+                                  userInfoProvider.userPassword.text != '') {
+                                logIn(userInfoProvider);
                               }
                             },
                             width: width / 2.42,
@@ -345,7 +307,7 @@ class _LogInState extends State<LogIn> {
                         ),
                         InkWell(
                           onTap: () {
-                            // Navigator.pushNamed(context, SignUp.route);
+                            context.go('/SignUp');
                           },
                           child: Padding(
                             padding:

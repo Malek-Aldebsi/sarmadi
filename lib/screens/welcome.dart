@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../utils/session.dart';
 import 'dashboard.dart';
@@ -26,7 +27,7 @@ class _WelcomeState extends State<Welcome> {
     String? value = await getSession('sessionValue');
 
     if ((key0 != null || key1 != null) && (value != null)) {
-      Navigator.pushNamed(context, Dashboard.route);
+      context.go('/Dashboard');
     }
   }
 
@@ -154,7 +155,7 @@ class _WelcomeState extends State<Welcome> {
 //                         horizontalPadding: 0,
 //                         borderRadius: 8,
 //                         onTap: () {
-//                           Navigator.pushNamed(context, SignUp.route);
+//                           context.go('/SignUp');
 //                         },
 //                         child: Center(
 //                           child: Text(
@@ -188,10 +189,10 @@ class _WelcomeState extends State<Welcome> {
 //                             dynamic result = decode(value);
 //                             switch (result) {
 //                               case 0:
-//                                 Navigator.pushNamed(context, Dashboard.route);
+//                                 context.go('/Dashboard');
 //                                 break;
 //                               default:
-//                                 Navigator.pushNamed(context, LogIn.route);
+//                                 context.go('/LogIn');
 //                                 break;
 //                             }
 //                           });

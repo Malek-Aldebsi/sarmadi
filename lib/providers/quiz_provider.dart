@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_keyboard/math_keyboard.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/providers/quiz_setting_provider.dart';
 
@@ -139,14 +140,19 @@ class QuizProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setDuration(String minutes, String hours) {
+  void setDurationFromString(String minutes, String hours) {
     _duration = int.parse(hours == '' ? '00' : hours) * 3600 +
         int.parse(minutes == '' ? '05' : minutes) * 60;
     notifyListeners();
   }
 
-  void setWithTime() {
-    _withTime = !withTime;
+  void setDurationFromSecond(int seconds) {
+    _duration = seconds;
+    notifyListeners();
+  }
+
+  void setWithTime(bool withTime) {
+    _withTime = withTime;
     notifyListeners();
   }
 
@@ -166,19 +172,24 @@ class QuizProvider with ChangeNotifier {
             question['choices'].add(choice);
           }
         }
-      }
-      _answers[question['id']] = {'duration': 0, 'saved': false};
-      if (question['type'] == 'finalAnswerQuestion') {
-        question['controller'] = TextEditingController();
-      }
-
-      if (question['type'] == 'multiSectionQuestion') {
+      } else if (question['type'] == 'finalAnswerQuestion') {
+        if (_subjectID == 'ee25ba19-a309-4010-a8ca-e6ea242faa96') {
+          question['controller'] = MathFieldEditingController();
+        } else {
+          question['controller'] = TextEditingController();
+        }
+      } else if (question['type'] == 'multiSectionQuestion') {
         for (Map subQuestion in question['sub_questions']) {
           if (subQuestion['type'] == 'finalAnswerQuestion') {
-            subQuestion['controller'] = TextEditingController();
+            if (_subjectID == 'ee25ba19-a309-4010-a8ca-e6ea242faa96') {
+              subQuestion['controller'] = MathFieldEditingController();
+            } else {
+              subQuestion['controller'] = TextEditingController();
+            }
           }
         }
       }
+      _answers[question['id']] = {'duration': 0, 'saved': false};
     }
     notifyListeners();
   }

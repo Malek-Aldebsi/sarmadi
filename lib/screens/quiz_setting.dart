@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
@@ -6,14 +7,10 @@ import '../const/fonts.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/website_provider.dart';
 import '../utils/http_requests.dart';
-import 'advance_quiz_setting.dart';
-import 'welcome.dart';
 import '../components/custom_container.dart';
 import '../utils/session.dart';
-import 'dashboard.dart';
 
 class QuizSetting extends StatefulWidget {
-  static const String route = '/QuizSetting/';
 
   const QuizSetting({Key? key}) : super(key: key);
 
@@ -41,7 +38,7 @@ class _QuizSettingState extends State<QuizSetting>
       }).then((value) {
         dynamic result = decode(value);
         result == 0
-            ? Navigator.pushNamed(context, Welcome.route)
+            ? context.go('/Welcome')
             : {
                 Provider.of<WebsiteProvider>(context, listen: false)
                     .setSubjects(result),
@@ -161,10 +158,8 @@ class _QuizSettingState extends State<QuizSetting>
 
                                                   websiteProvider
                                                       .setLoaded(false);
-                                                  Navigator.pushNamed(
-                                                    context,
-                                                    AdvanceQuizSetting.route,
-                                                  );
+                                                  context.go(
+                                                      '/AdvanceQuizSetting');
                                                 },
                                                 width: width * 0.21,
                                                 height: height * 0.16,
@@ -280,7 +275,7 @@ class _QuizSettingState extends State<QuizSetting>
                               child: CustomContainer(
                                 onTap: () {
                                   websiteProvider.setLoaded(false);
-                                  Navigator.pushNamed(context, Dashboard.route);
+                                  context.go('/Dashboard');
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
@@ -435,8 +430,7 @@ class _QuizSettingState extends State<QuizSetting>
                               child: CustomContainer(
                                 onTap: () {
                                   websiteProvider.setLoaded(false);
-                                  Navigator.pushNamed(
-                                      context, QuizSetting.route);
+                                  context.go('/QuizSetting');
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/const/borders.dart';
 
@@ -37,7 +38,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                Navigator.pushNamed(context, MultipleChoiceQuestion.route);
+                context.go('/MultipleChoiceQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -55,7 +56,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                Navigator.pushNamed(context, FinalAnswerQuestion.route);
+                context.go('/FinalAnswerQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -73,7 +74,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                Navigator.pushNamed(context, MultiSectionQuestion.route);
+                context.go('/MultiSectionQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -91,7 +92,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                Navigator.pushNamed(context, EditQuestion.route);
+                context.go('/EditQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,

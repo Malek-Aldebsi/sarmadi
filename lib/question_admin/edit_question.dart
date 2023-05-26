@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/const/borders.dart';
 
@@ -36,7 +37,7 @@ class _EditQuestionState extends State<EditQuestion> {
     adminProvider.setHeadlines(result['headlines']);
     adminProvider.setQuestionSource(result['author']);
     adminProvider.setQuestionLevel(result['level']);
-    Navigator.pushNamed(context, MultipleChoiceQuestion.route);
+    context.go('/MultipleChoiceQuestion');
   }
 
   editFinalAnswerQuestion(Map result, AdminProvider adminProvider) {
@@ -45,13 +46,13 @@ class _EditQuestionState extends State<EditQuestion> {
     adminProvider.setHeadlines(result['headlines']);
     adminProvider.setQuestionSource(result['author']);
     adminProvider.setQuestionLevel(result['level']);
-    Navigator.pushNamed(context, FinalAnswerQuestion.route);
+    context.go('/FinalAnswerQuestion');
   }
 
   editMultiSectionQuestion(Map result, AdminProvider adminProvider) {
     adminProvider.setQuestion(result['body']);
     List subQuestions = [];
-    print(result);
+
     for (Map question in result['sub_questions']) {
       if (question['type'] == 'multipleChoiceQuestion') {
         subQuestions.add({
@@ -99,8 +100,7 @@ class _EditQuestionState extends State<EditQuestion> {
     }
     adminProvider.setSubQuestion(subQuestions);
     adminProvider.setQuestionSource(result['author']);
-
-    Navigator.pushNamed(context, MultiSectionQuestion.route);
+    context.go('/MultiSectionQuestion');
   }
 
   @override

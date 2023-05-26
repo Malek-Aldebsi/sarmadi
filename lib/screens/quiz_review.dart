@@ -1,9 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../const/borders.dart';
-import '../screens/question.dart';
+import '../providers/quiz_provider.dart';
 import '../components/custom_divider.dart';
 import '../components/string_with_latex.dart';
 import '../const/colors.dart';
@@ -11,9 +12,6 @@ import '../const/fonts.dart';
 import '../providers/question_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/website_provider.dart';
-import 'dashboard.dart';
-import 'quiz_setting.dart';
-import 'welcome.dart';
 import '../components/custom_circular_chart.dart';
 import '../components/custom_container.dart';
 import '../components/custom_pop_up.dart';
@@ -21,7 +19,6 @@ import '../utils/http_requests.dart';
 import '../utils/session.dart';
 
 class QuizReview extends StatefulWidget {
-  static const String route = '/QuizReview/';
   const QuizReview({Key? key}) : super(key: key);
 
   @override
@@ -44,12 +41,18 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? context.go('/Welcome')
           : {
               Provider.of<ReviewProvider>(context, listen: false)
-                  .setQuizSubject(result['quiz_subject']),
+                  .setQuizSubjectName(result['quiz_subject']['name']),
+        Provider.of<ReviewProvider>(context, listen: false)
+            .setQuizSubjectID(result['quiz_subject']['id']),
               Provider.of<ReviewProvider>(context, listen: false)
-                  .setQuizTime(result['quiz_duration']),
+                  .setQuizTime(result['quiz_duration'].toString()),
+        Provider.of<ReviewProvider>(context, listen: false)
+                  .setQuizIdealTime(result['ideal_duration'].toString()),
+        Provider.of<ReviewProvider>(context, listen: false)
+            .setQuizAttemptTime(result['attempt_duration'].toString()),
 
               Provider.of<ReviewProvider>(context, listen: false)
                   .setQuestions(result['answers']),
@@ -132,6 +135,62 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
   AnimationController? backwardAnimationController;
   CurvedAnimation? backwardAnimationCurve;
   dynamic backwardAnimationValue = 0;
+
+  void similarQuiz(QuizProvider quizProvider, ReviewProvider reviewProvider) async {
+    Provider.of<WebsiteProvider>(context, listen: false)
+        .setLoaded(false);
+
+    String? key0 = await getSession('sessionKey0');
+    String? key1 = await getSession('sessionKey1');
+    String? value = await getSession('sessionValue');
+    post('similar_questions/', {
+      if (key0 != null) 'email': key0,
+      if (key1 != null) 'phone': key1,
+      'password': value,
+      'quiz_id': reviewProvider.quizID,
+      'by_author': true,
+      'by_headlines': true,
+      'by_level': true,
+    }).then((value) {
+      dynamic result = decode(value);
+      result == 0
+          ? context.go('/Welcome')
+          : {
+        quizProvider.setSubject(reviewProvider.quizSubjectID, reviewProvider.quizSubjectName),
+        quizProvider.setQuestions(result),
+        reviewProvider.quizTime == '' ? quizProvider.setWithTime(false) : {
+          quizProvider.setDurationFromSecond(double.parse(reviewProvider.quizTime).toInt()),
+          quizProvider.setWithTime(true)
+        },
+      context.go('/Quiz')
+      };
+    });
+  }
+
+  void retakeQuiz(QuizProvider quizProvider, ReviewProvider reviewProvider) async {
+    String? key0 = await getSession('sessionKey0');
+    String? key1 = await getSession('sessionKey1');
+    String? value = await getSession('sessionValue');
+    post('retake_quiz/', {
+      if (key0 != null) 'email': key0,
+      if (key1 != null) 'phone': key1,
+      'password': value,
+      'quiz_id': reviewProvider.quizID,
+    }).then((value) {
+      dynamic result = decode(value);
+      result == 0
+          ? context.go('/Welcome')
+          : {
+        quizProvider.setSubject(reviewProvider.quizSubjectID, reviewProvider.quizSubjectName),
+        quizProvider.setQuestions(result),
+        reviewProvider.quizTime == '' ? quizProvider.setWithTime(false) : {
+          quizProvider.setDurationFromSecond(double.parse(reviewProvider.quizTime).toInt()),
+          quizProvider.setWithTime(true)
+        },
+      context.go('/Quiz')
+      };
+    });
+  }
 
   Duration toDuration(String time) {
     int hours = 0;
@@ -233,7 +292,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
               child: stringWithLatex(
                   reviewProvider.questions[questionIndex - 1]['question']
                       ['body'],
-                  // width * 0.61,
                   3,
                   width,
                   height,
@@ -354,7 +412,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
               child: stringWithLatex(
                   reviewProvider.questions[questionIndex - 1]['question']
                       ['body'],
-                  // width * 0.61,
+
                   3,
                   width,
                   height,
@@ -450,7 +508,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
               child: stringWithLatex(
                   reviewProvider.questions[questionIndex - 1]['question']
                       ['body'],
-                  // width * 0.61,
+
                   3,
                   width,
                   height,
@@ -572,7 +630,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
               child: stringWithLatex(
                   reviewProvider.questions[questionIndex - 1]['question']
                       ['body'],
-                  // width * 0.61,
                   3,
                   width,
                   height,
@@ -680,7 +737,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                     child: stringWithLatex(
                         reviewProvider.questions[questionIndex - 1]['question']
                         ['body'],
-                        // width * 0.61,
                         3,
                         width,
                         height,
@@ -695,7 +751,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                       width: width * 0.61,
                       child: stringWithLatex(
                           subQuestion['body'],
-                          // width * 0.61,
                           3,
                           width,
                           height,
@@ -871,7 +926,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                         child: stringWithLatex(
                             reviewProvider.questions[questionIndex - 1]['question']
                                 ['body'],
-                            // width * 0.61,
                             3,
                             width,
                             height,
@@ -894,7 +948,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                     width: width * 0.3,
                                     child: stringWithLatex(
                                         subQuestion['body'],
-                                        // width * 0.61,
                                         3,
                                         width,
                                         height,
@@ -1079,8 +1132,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-
-    QuestionProvider quizProvider = Provider.of<QuestionProvider>(context);
+    QuizProvider quizProvider = Provider.of<QuizProvider>(context);
+    QuestionProvider questionProvider = Provider.of<QuestionProvider>(context);
     WebsiteProvider websiteProvider = Provider.of<WebsiteProvider>(context);
     ReviewProvider reviewProvider = Provider.of<ReviewProvider>(context);
 
@@ -1123,7 +1176,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            Text(reviewProvider.quizSubject,
+                                            Text(reviewProvider.quizSubjectName,
                                                 style: textStyle(
                                                     1, width, height, kWhite)),
                                             Row(
@@ -1215,13 +1268,38 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                         SizedBox(
                                                             height:
                                                                 height * 0.01),
+
                                                         Row(
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
                                                                   .spaceBetween,
-                                                          children: [
+                                                          children:reviewProvider.quizTime=='null'?[
                                                             Text(
-                                                                'أنهيت الامتحان ب${Duration(seconds: reviewProvider.questions.fold(0, (prev, curr) => prev + toDuration(curr['duration']).inSeconds)).inMinutes} دقائق\nمن أصل ${toDuration(reviewProvider.quizTime == null ? '00:00:00' : reviewProvider.quizTime).inMinutes}',
+                                                                'أنهيت الامتحان ب${toDuration(reviewProvider.quizAttemptTime).inMinutes} دقائق\nمن أصل ${toDuration(reviewProvider.quizIdealTime).inMinutes} دقائق كوقت مثالي',
+                                                                style: textStyle(
+                                                                    4,
+                                                                    width,
+                                                                    height,
+                                                                    kWhite)),
+                                                            CircularChart(
+                                                              width:
+                                                              width * 0.035,
+                                                              label: double.parse((100 *
+                                                                  toDuration(reviewProvider.quizAttemptTime).inSeconds /
+                                                                  toDuration(reviewProvider
+                                                                      .quizIdealTime)
+                                                                      .inSeconds)
+                                                                  .toStringAsFixed(
+                                                                  1)),
+                                                              inActiveColor:
+                                                              kWhite,
+                                                              labelColor:
+                                                              kWhite,
+                                                            )
+
+                                                          ]: [
+                                                            Text(
+                                                                'أنهيت الامتحان ب${toDuration(reviewProvider.quizAttemptTime).inMinutes} دقائق\nمن أصل ${toDuration(reviewProvider.quizTime).inMinutes} دقائق',
                                                                 style: textStyle(
                                                                     4,
                                                                     width,
@@ -1231,15 +1309,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                               width:
                                                                   width * 0.035,
                                                               label: double.parse((100 *
-                                                                      reviewProvider.questions.fold(
-                                                                          0,
-                                                                          (prev, curr) =>
-                                                                              prev +
-                                                                              toDuration(curr['duration'])
-                                                                                  .inSeconds) /
-                                                                      toDuration(reviewProvider.quizTime == null
-                                                                              ? '00:00:00'
-                                                                              : reviewProvider
+                                                                  toDuration(reviewProvider.quizAttemptTime).inSeconds /
+                                                                      toDuration(reviewProvider
                                                                                   .quizTime)
                                                                           .inSeconds)
                                                                   .toStringAsFixed(
@@ -1264,7 +1335,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     mainScrollController
                                                         .position
                                                         .maxScrollExtent,
-                                                    duration: Duration(
+                                                    duration: const Duration(
                                                         milliseconds: 500),
                                                     curve: Curves.easeOut,
                                                   );
@@ -1318,7 +1389,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            SizedBox(),
+                                            const SizedBox(),
                                             Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -1441,7 +1512,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     ),
                                                   ),
                                                 ]),
-                                            SizedBox(),
+                                            const SizedBox(),
                                           ],
                                         ),
                                       ),
@@ -1456,25 +1527,190 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                     Stack(
                                       children: [
                                         CustomContainer(
-                                            width: width * 0.88,
+                                            width: width * 0.9,
                                             height: height * 0.4),
                                         CustomContainer(
                                             width: width * 0.7,
                                             height: height * 0.4,
                                             onTap: null,
-                                            verticalPadding: 0,
-                                            horizontalPadding: 0,
+                                          verticalPadding:
+                                          height *
+                                              0.02,
+                                          horizontalPadding:
+                                          width *
+                                              0.02,
                                             borderRadius: width * 0.005,
                                             border: null,
                                             buttonColor: kDarkGray,
-                                            child: SizedBox()),
+                                            child: Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                              const SizedBox(),
+                                                    Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('تحليل اداءك:',
+                                                      style: textStyle(
+                                                          2,
+                                                          width,
+                                                          height,
+                                                          kWhite),), SizedBox(height:height*0.01),for (String statement in reviewProvider.statements) Padding(
+                                                      padding: EdgeInsets.only(right:width *
+                                                          0.01),
+                                                      child: Text('• $statement',
+                                                        style: textStyle(
+                                                            4,
+                                                            width,
+                                                            height,
+                                                            kWhite),),
+                                                    )]),
+                                              Row(children:[
+                                                Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                              Text('لتزيد سرعتك في الحل مرن نفس أكثر من خلال حل اسئلة أو امتحانات شبيهة',
+                                                style: textStyle(
+                                                    3,
+                                                    width,
+                                                    height,
+                                                    kWhite),),
+                                              Text('يمكنك دراسة ما اخطأت من مهارات من أدرس',
+                                                style: textStyle(
+                                                    3,
+                                                    width,
+                                                    height,
+                                                    kWhite),),
+                                              Text('ابق على اطلاع دائم بالتحليلات المتعلقة بالمادة لترصد نتائجك دائما',
+                                                style: textStyle(
+                                                    3,
+                                                    width,
+                                                    height,
+                                                    kWhite),)
+                                            ]), 
+                                                Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                              Row(children:[
+                                                SizedBox(width:width*0.01),
+                                                CustomContainer(
+                                              onTap: () {
+                                                retakeQuiz(quizProvider, reviewProvider);
+                                              },
+                                                width:width*0.08,
+                                              verticalPadding:
+                                              height *
+                                                  0.01,
+                                              horizontalPadding:
+                                              width *
+                                                  0.01,
+                                              borderRadius:
+                                              width *
+                                                  0.005,
+                                              border:
+                                              null,
+                                              buttonColor:
+                                              kLightPurple,
+                                              child:
+                                              Center(
+                                                child: Text(
+                                                    'اعادة الامتحان',
+                                                    style: textStyle(
+                                                        3,
+                                                        width,
+                                                        height,
+                                                        kDarkBlack)),
+                                              ),
+                                            ),
+                                                SizedBox(width:width*0.01),
+                                                CustomContainer(
+                                                onTap: () {
+                                                  similarQuiz(quizProvider, reviewProvider);
+                                                },
+                                                  width:width*0.08,
+                                                verticalPadding:
+                                                height *
+                                                    0.01,
+                                                horizontalPadding:
+                                                width *
+                                                    0.01,
+                                                borderRadius:
+                                                width *
+                                                    0.005,
+                                                border:
+                                                null,
+                                                buttonColor:
+                                                kLightPurple,
+                                                child:
+                                                Center(
+                                                  child: Text(
+                                                      'امتحان شبيه',
+                                                      style: textStyle(
+                                                          3,
+                                                          width,
+                                                          height,
+                                                          kDarkBlack)),
+                                                ),
+                                              ),]),
+                                              SizedBox(height:height*0.02),
+                                              Row(children:[
+                                                SizedBox(width:width*0.01),
+                                                CustomContainer(
+                                                  onTap: () {
+
+                                                  },
+                                                  width:width*0.08,
+                                                  verticalPadding:
+                                                  height *
+                                                      0.01,
+                                                  horizontalPadding:
+                                                  width *
+                                                      0.01,
+                                                  borderRadius:
+                                                  width *
+                                                      0.005,
+                                                  border:
+                                                  null,
+                                                  buttonColor:
+                                                  kLightPurple,
+                                                  child:
+                                                  Center(
+                                                    child: Text(
+                                                        'أدرس',
+                                                        style: textStyle(
+                                                            3,
+                                                            width,
+                                                            height,
+                                                            kDarkBlack)),
+                                                  ),
+                                                ),
+                                                SizedBox(width:width*0.01),
+                                                CustomContainer(
+                                                  onTap: () {
+
+                                                  },
+                                                  width:width*0.08,
+                                                  verticalPadding:
+                                                  height *
+                                                      0.01,
+                                                  horizontalPadding:
+                                                  width *
+                                                      0.01,
+                                                  borderRadius:
+                                                  width *
+                                                      0.005,
+                                                  border:
+                                                  null,
+                                                  buttonColor:
+                                                  kLightPurple,
+                                                  child:
+                                                  Center(
+                                                    child: Text(
+                                                        'تقرير المادة',
+                                                        style: textStyle(
+                                                            3,
+                                                            width,
+                                                            height,
+                                                            kDarkBlack)),
+                                                  ),
+                                                ),]),]),]),const SizedBox(),]),),
                                         Positioned(
                                           left: 0,
                                           bottom: 0,
                                           child: Image(
                                             image: const AssetImage(
                                                 'images/advises.png'),
-                                            width: width * 0.4,
+                                            width: width * 0.35,
                                             height: height * 0.38,
                                             fit: BoxFit.contain,
                                             alignment: Alignment.bottomLeft,
@@ -1789,8 +2025,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                               child: ListView(
                                                 physics: reviewProvider
                                                         .questionScrollState
-                                                    ? ScrollPhysics()
-                                                    : NeverScrollableScrollPhysics(),
+                                                    ? const ScrollPhysics()
+                                                    : const NeverScrollableScrollPhysics(),
                                                 controller:
                                                     questionsScrollController,
                                                 children: [
@@ -1834,18 +2070,14 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                           kWhite)),
                                                                   CustomContainer(
                                                                     onTap: () {
-                                                                      quizProvider.setQuestionId(reviewProvider
+                                                                      questionProvider.setQuestionId(reviewProvider
                                                                               .questions[
                                                                           questionIndex -
                                                                               1]['question']['id']);
                                                                       websiteProvider
                                                                           .setLoaded(
                                                                               false);
-
-                                                                      Navigator.pushNamed(
-                                                                          context,
-                                                                          Question
-                                                                              .route);
+                                                                      context.go('/Question');
                                                                     },
                                                                     verticalPadding:
                                                                         height *
@@ -1985,7 +2217,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                               [
                                                                               'idealDuration'])
                                                                           .inSeconds) ...[
-                                                                    Container(
+                                                                    SizedBox(
                                                                       width: width *
                                                                           0.35,
                                                                       height:
@@ -2087,7 +2319,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                       ),
                                                                     ),
                                                                   ] else ...[
-                                                                    Container(
+                                                                    SizedBox(
                                                                       width: width *
                                                                           0.35,
                                                                       height:
@@ -2249,7 +2481,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                                   Text('طريقة الحل #1', style: textStyle(2, width, height, kWhite)),
                                                                                   CustomContainer(
                                                                                     onTap: () {
-                                                                                      Navigator.pop(context);
+                                                                                      context.pop();
                                                                                     },
                                                                                     child: Icon(
                                                                                       Icons.close,
@@ -2271,7 +2503,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                                   alignment: Alignment.topRight,
                                                                                   child: stringWithLatex(
                                                                                       'قريبا ستتوفر الحلول',
-                                                                                      // width * 0.65,
                                                                                       3,
                                                                                       width,
                                                                                       height,
@@ -2390,8 +2621,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                     onTap: () {
                                       websiteProvider.setLoaded(false);
 
-                                      Navigator.pushNamed(
-                                          context, Dashboard.route);
+                                      context.go('/Dashboard');
                                     },
                                     width: width *
                                         (0.032 * forwardAnimationValue +
@@ -2417,7 +2647,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2430,7 +2660,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2465,7 +2695,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                       height, kWhite)),
                                             ),
                                           if (backwardAnimationValue != 1)
-                                            SizedBox(),
+                                            const SizedBox(),
                                           Padding(
                                             padding: EdgeInsets.only(
                                                 left: width *
@@ -2478,7 +2708,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                             ),
                                           ),
                                           if (backwardAnimationValue != 1)
-                                            SizedBox(),
+                                            const SizedBox(),
                                         ],
                                       ),
                                     )),
@@ -2522,7 +2752,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                       height, kWhite)),
                                             ),
                                           if (backwardAnimationValue != 1)
-                                            SizedBox(),
+                                            const SizedBox(),
                                           Padding(
                                             padding: EdgeInsets.only(
                                                 left: width *
@@ -2535,7 +2765,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                             ),
                                           ),
                                           if (backwardAnimationValue != 1)
-                                            SizedBox(),
+                                            const SizedBox(),
                                         ],
                                       ),
                                     )),
@@ -2546,8 +2776,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                   child: CustomContainer(
                                     onTap: () {
                                       websiteProvider.setLoaded(false);
-                                      Navigator.pushNamed(
-                                          context, QuizSetting.route);
+                                      context.go('/QuizSetting');
                                     },
                                     width: width *
                                         (0.032 * forwardAnimationValue +
@@ -2573,7 +2802,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2586,7 +2815,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2621,7 +2850,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2634,7 +2863,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2669,7 +2898,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2682,7 +2911,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2717,7 +2946,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2730,7 +2959,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2775,7 +3004,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2788,7 +3017,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),
@@ -2823,7 +3052,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                     3, width, height, kWhite)),
                                           ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                         Padding(
                                           padding: EdgeInsets.only(
                                               left: width *
@@ -2836,7 +3065,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         if (backwardAnimationValue != 1)
-                                          SizedBox(),
+                                          const SizedBox(),
                                       ],
                                     ),
                                   ),

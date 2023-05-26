@@ -1,17 +1,13 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../components/custom_container.dart';
-import '../components/custom_pop_up.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
 import '../providers/review_provider.dart';
-import '../screens/dashboard.dart';
-import '../screens/quiz_review.dart';
-import '../screens/quiz_setting.dart';
-import '../screens/welcome.dart';
 
 import '../components/custom_circular_chart.dart';
 import '../components/custom_divider.dart';
@@ -22,7 +18,6 @@ import '../utils/http_requests.dart';
 import '../utils/session.dart';
 
 class QuizHistory extends StatefulWidget {
-  static const String route = '/QuizHistory/';
 
   const QuizHistory({Key? key}) : super(key: key);
 
@@ -47,7 +42,7 @@ class _QuizHistoryState extends State<QuizHistory>
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? context.go('/Welcome')
           : {
               Provider.of<HistoryProvider>(context, listen: false)
                   .setQuizzes(result),
@@ -78,7 +73,7 @@ class _QuizHistoryState extends State<QuizHistory>
       }).then((value) {
         dynamic result = decode(value);
         result == 0
-            ? Navigator.pushNamed(context, Welcome.route)
+            ? context.go('/Welcome')
             : {
                 if (result == [])
                   {
@@ -379,12 +374,12 @@ class _QuizHistoryState extends State<QuizHistory>
                                                                               historyProvider.quizzes[i + j]["subject"],
                                                                               style: textStyle(2, width, height, kWhite),
                                                                             ),
-                                                                            SizedBox(),
-                                                                            SizedBox(),
-                                                                            SizedBox(),
-                                                                            SizedBox(),
-                                                                            SizedBox(),
-                                                                            SizedBox(),
+                                                                            const SizedBox(),
+                                                                            const SizedBox(),
+                                                                            const SizedBox(),
+                                                                            const SizedBox(),
+                                                                            const SizedBox(),
+                                                                            const SizedBox(),
                                                                             Text(
                                                                               historyProvider.quizzes[i + j]["date"],
                                                                               textDirection: TextDirection.ltr,
@@ -508,18 +503,31 @@ class _QuizHistoryState extends State<QuizHistory>
                                                                                   horizontalPadding: width * 0.015,
                                                                                   child: Row(
                                                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                                    children: [
-                                                                                      Text(
-                                                                                        'أنهيت الامتحان ب${Duration(seconds: historyProvider.quizzes[i + j]["attempt_duration"]).inMinutes} دقائق\nمن أصل ${Duration(seconds: historyProvider.quizzes[i + j]["quiz_duration"]).inMinutes} دقائق',
-                                                                                        style: textStyle(4, width, height, kWhite),
-                                                                                      ),
-                                                                                      CircularChart(
-                                                                                        width: width * 0.035,
-                                                                                        label: historyProvider.quizzes[i + j]["attempt_duration"] / historyProvider.quizzes[i + j]["quiz_duration"] * 100,
-                                                                                        inActiveColor: kWhite,
-                                                                                        labelColor: kWhite,
-                                                                                      ),
-                                                                                    ],
+                                                                                    children: historyProvider.quizzes[i + j]["quiz_duration"] == null
+                                                                                        ? [
+                                                                                            Text(
+                                                                                              'أنهيت الامتحان ب${Duration(seconds: historyProvider.quizzes[i + j]["attempt_duration"]).inMinutes} دقائق\nمن أصل ${Duration(seconds: historyProvider.quizzes[i + j]["ideal_duration"].toInt()).inMinutes} دقائق كوقت مثالي',
+                                                                                              style: textStyle(4, width, height, kWhite),
+                                                                                            ),
+                                                                                            CircularChart(
+                                                                                              width: width * 0.035,
+                                                                                              label: historyProvider.quizzes[i + j]["attempt_duration"] / historyProvider.quizzes[i + j]["ideal_duration"] * 100,
+                                                                                              inActiveColor: kWhite,
+                                                                                              labelColor: kWhite,
+                                                                                            ),
+                                                                                          ]
+                                                                                        : [
+                                                                                            Text(
+                                                                                              'أنهيت الامتحان ب${Duration(seconds: historyProvider.quizzes[i + j]["attempt_duration"]).inMinutes} دقائق\nمن أصل ${Duration(seconds: historyProvider.quizzes[i + j]["quiz_duration"]).inMinutes} دقائق',
+                                                                                              style: textStyle(4, width, height, kWhite),
+                                                                                            ),
+                                                                                            CircularChart(
+                                                                                              width: width * 0.035,
+                                                                                              label: historyProvider.quizzes[i + j]["attempt_duration"] / historyProvider.quizzes[i + j]["quiz_duration"] * 100,
+                                                                                              inActiveColor: kWhite,
+                                                                                              labelColor: kWhite,
+                                                                                            ),
+                                                                                          ],
                                                                                   ),
                                                                                 ),
                                                                               ],
@@ -553,9 +561,8 @@ class _QuizHistoryState extends State<QuizHistory>
                                                                                 j]
                                                                             [
                                                                             'id']);
-                                                                        Navigator.pushNamed(
-                                                                            context,
-                                                                            QuizReview.route);
+                                                                        context.go(
+                                                                            '/QuizReview');
                                                                       },
                                                                       buttonColor:
                                                                           kDarkPurple
@@ -675,8 +682,7 @@ class _QuizHistoryState extends State<QuizHistory>
                                   child: CustomContainer(
                                     onTap: () {
                                       websiteProvider.setLoaded(false);
-                                      Navigator.pushNamed(
-                                          context, Dashboard.route);
+                                      context.go('/Dashboard');
                                     },
                                     width: width *
                                         (0.032 * forwardAnimationValue +
@@ -831,8 +837,7 @@ class _QuizHistoryState extends State<QuizHistory>
                                   child: CustomContainer(
                                     onTap: () {
                                       websiteProvider.setLoaded(false);
-                                      Navigator.pushNamed(
-                                          context, QuizSetting.route);
+                                      context.go('/QuizSetting');
                                     },
                                     width: width *
                                         (0.032 * forwardAnimationValue +

@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:math_keyboard/math_keyboard.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/providers/admin_provider.dart';
 import 'package:sarmadi/providers/dashboard_provider.dart';
@@ -17,112 +21,174 @@ import 'package:sarmadi/question_admin/multi_section_question.dart';
 import 'package:sarmadi/question_admin/multiple_choice_question.dart';
 import 'package:sarmadi/question_admin/question_admin.dart';
 import 'package:sarmadi/screens/log_in.dart';
-import 'package:sarmadi/screens/question.dart';
+import 'package:sarmadi/screens/similar_questions.dart';
 import 'package:sarmadi/screens/quiz_review.dart';
+import 'package:sarmadi/screens/sign_up.dart';
+import 'package:sarmadi/utils/authentication.dart';
+import 'auth/firebase_options.dart';
 import 'screens/advance_quiz_setting.dart';
 import 'screens/quiz_history.dart';
 import 'screens/dashboard.dart';
 import 'screens/quiz.dart';
 import 'screens/quiz_setting.dart';
-import 'screens/welcome.dart';
 
 // flutter build web --web-renderer canvaskit
 // firebase deploy --only hosting
-void main() {
-  runApp(MaterialApp(
-    home: Test(),
-  )
-      // MultiProvider(
-      //   providers: [
-      //     ChangeNotifierProvider(create: (_) => UserInfoProvider()),
-      //     ChangeNotifierProvider(create: (_) => WebsiteProvider()),
-      //     ChangeNotifierProvider(create: (_) => TasksProvider()),
-      //     ChangeNotifierProvider(create: (_) => AdminProvider()),
-      //     ChangeNotifierProvider(create: (_) => QuizProvider()),
-      //     ChangeNotifierProvider(create: (_) => ReviewProvider()),
-      //     ChangeNotifierProvider(create: (_) => DashboardProvider()),
-      //     ChangeNotifierProvider(create: (_) => QuizSettingProvider()),
-      //     ChangeNotifierProvider(create: (_) => QuestionProvider()),
-      //     ChangeNotifierProvider(create: (_) => HistoryProvider()),
-      //   ],
-      //   child: const Sarmadi(),
-      // ),
-      );
-}
-
-class Test extends StatefulWidget {
-  const Test({Key? key}) : super(key: key);
-
-  @override
-  State<Test> createState() => _TestState();
-}
-
-class _TestState extends State<Test> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Container(
-          color: Colors.blue,
-          child: Column(
-            children: [
-              Container(color: Colors.red, height: 500, width: 500),
-              MathField(
-                keyboardType: MathKeyboardType.expression,
-                variables: const [
-                  'x',
-                  'y',
-                  'z'
-                ], // Specify the variables the user can use (only in expression mode).
-                decoration:
-                    const InputDecoration(), // Decorate the input field using the familiar InputDecoration.
-                onChanged:
-                    (String value) {}, // Respond to changes in the input field.
-                onSubmitted: (String value) {
-                  // final mathExpression = TeXParser(value).parse();
-                  // print(mathExpression);
-                  // final texNode = convertMathExpressionToTeXNode(mathExpression);
-                  // print(texNode);
-                  //
-                  // final texString = texNode.buildTeXString();
-                  // print(texString);
-                }, // Respond to the user submitting their input.
-              ),
-            ],
-          ),
-        ),
-      ),
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    FacebookAuth.i.webAndDesktopInitialize(
+      appId: "919316019445873", // Replace with your app id
+      cookie: true,
+      xfbml: true,
+      version: "v13.0",
     );
   }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(MultiProvider(
+    providers: [
+      Provider<FirebaseAuthMethods>(
+        create: (_) => FirebaseAuthMethods(FirebaseAuth.instance),
+      ),
+      StreamProvider(
+        create: (context) => context.read<FirebaseAuthMethods>().authState,
+        initialData: null,
+      ),
+      ChangeNotifierProvider(create: (_) => UserInfoProvider()),
+      ChangeNotifierProvider(create: (_) => WebsiteProvider()),
+      ChangeNotifierProvider(create: (_) => TasksProvider()),
+      ChangeNotifierProvider(create: (_) => AdminProvider()),
+      ChangeNotifierProvider(create: (_) => QuizProvider()),
+      ChangeNotifierProvider(create: (_) => ReviewProvider()),
+      ChangeNotifierProvider(create: (_) => DashboardProvider()),
+      ChangeNotifierProvider(create: (_) => QuizSettingProvider()),
+      ChangeNotifierProvider(create: (_) => QuestionProvider()),
+      ChangeNotifierProvider(create: (_) => HistoryProvider()),
+    ],
+    child: Sarmadi(),
+  ));
 }
 
 class Sarmadi extends StatelessWidget {
-  const Sarmadi({super.key});
+  Sarmadi({super.key});
+
+  final GoRouter _router = GoRouter(
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        builder: (BuildContext context, GoRouterState state) {
+          return const LogIn();
+        },
+        routes: <RouteBase>[
+          GoRoute(
+              path: 'test/:userid',
+              builder: (BuildContext context, GoRouterState state) {
+                print(state.pathParameters['userid']);
+                return const LogIn();
+              }),
+          GoRoute(
+            path: 'QuestionAdmin',
+            builder: (BuildContext context, GoRouterState state) {
+              return const QuestionAdmin();
+            },
+          ),
+          GoRoute(
+            path: 'MultipleChoiceQuestion',
+            builder: (BuildContext context, GoRouterState state) {
+              return const MultipleChoiceQuestion();
+            },
+          ),
+          GoRoute(
+            path: 'FinalAnswerQuestion',
+            builder: (BuildContext context, GoRouterState state) {
+              return const FinalAnswerQuestion();
+            },
+          ),
+          GoRoute(
+            path: 'MultiSectionQuestion',
+            builder: (BuildContext context, GoRouterState state) {
+              return const MultiSectionQuestion();
+            },
+          ),
+          GoRoute(
+            path: 'EditQuestion',
+            builder: (BuildContext context, GoRouterState state) {
+              return const EditQuestion();
+            },
+          ),
+          // GoRoute(
+          //   path: 'Welcome',
+          //   builder: (BuildContext context, GoRouterState state) {
+          //     return const Welcome();
+          //   },
+          // ),
+          GoRoute(
+            path: 'SignUp',
+            builder: (BuildContext context, GoRouterState state) {
+              return const SignUp();
+            },
+          ),
+          GoRoute(
+            path: 'LogIn',
+            builder: (BuildContext context, GoRouterState state) {
+              return const LogIn();
+            },
+          ),
+          GoRoute(
+            path: 'Dashboard',
+            builder: (BuildContext context, GoRouterState state) {
+              return const Dashboard();
+            },
+          ),
+          GoRoute(
+            path: 'QuizSetting',
+            builder: (BuildContext context, GoRouterState state) {
+              return const QuizSetting();
+            },
+          ),
+          GoRoute(
+            path: 'QuizReview',
+            builder: (BuildContext context, GoRouterState state) {
+              return const QuizReview();
+            },
+          ),
+          GoRoute(
+            path: 'QuizHistory',
+            builder: (BuildContext context, GoRouterState state) {
+              return const QuizHistory();
+            },
+          ),
+          GoRoute(
+            path: 'AdvanceQuizSetting',
+            builder: (BuildContext context, GoRouterState state) {
+              return const AdvanceQuizSetting();
+            },
+          ),
+          GoRoute(
+            path: 'Quiz',
+            builder: (BuildContext context, GoRouterState state) {
+              return const Quiz();
+            },
+          ),
+          GoRoute(
+            path: 'Question',
+            builder: (BuildContext context, GoRouterState state) {
+              return const SimilarQuestions();
+            },
+          ),
+        ],
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      initialRoute: LogIn.route,
-      routes: {
-        QuestionAdmin.route: (context) => const QuestionAdmin(),
-        MultipleChoiceQuestion.route: (context) =>
-            const MultipleChoiceQuestion(),
-        FinalAnswerQuestion.route: (context) => const FinalAnswerQuestion(),
-        MultiSectionQuestion.route: (context) => const MultiSectionQuestion(),
-        EditQuestion.route: (context) => const EditQuestion(),
-        Welcome.route: (context) => const Welcome(),
-        // SignUp.route: (context) => const SignUp(),
-        LogIn.route: (context) => const LogIn(),
-        Dashboard.route: (context) => const Dashboard(),
-        QuizSetting.route: (context) => const QuizSetting(),
-        QuizReview.route: (context) => const QuizReview(),
-        QuizHistory.route: (context) => const QuizHistory(),
-        AdvanceQuizSetting.route: (context) => const AdvanceQuizSetting(),
-        Quiz.route: (context) => const Quiz(),
-        Question.route: (context) => const Question(),
-      },
+      routerConfig: _router,
     );
   }
 }

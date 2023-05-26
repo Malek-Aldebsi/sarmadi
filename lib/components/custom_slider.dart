@@ -10,6 +10,19 @@ import '../const/colors.dart';
 class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
   const RoundedTrackShape();
 
+  // @override
+  // void paint(PaintingContext context, Offset offset,
+  //     {required RenderBox parentBox,
+  //     required SliderThemeData sliderTheme,
+  //     required Animation<double> enableAnimation,
+  //     required Offset thumbCenter,
+  //     Offset? secondaryOffset,
+  //     bool isEnabled = false,
+  //     bool isDiscrete = false,
+  //     required TextDirection textDirection}) {
+  //   // TODO: implement paint
+  // }
+
   @override
   void paint(
     PaintingContext context,
@@ -21,7 +34,7 @@ class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
     required Offset thumbCenter,
     bool isDiscrete = false,
     bool isEnabled = false,
-    double additionalActiveTrackHeight = 2,
+    Offset? secondaryOffset,
   }) {
     assert(context != null);
     assert(offset != null);
@@ -72,17 +85,17 @@ class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
     );
     final Radius trackRadius = Radius.circular(trackRect.height * 0.1);
     final Radius activeTrackRadius =
-        Radius.circular((trackRect.height + additionalActiveTrackHeight) / 8);
+        Radius.circular((trackRect.height + 2) / 8);
 
     context.canvas.drawRRect(
       RRect.fromLTRBAndCorners(
         trackRect.left,
         (textDirection == TextDirection.ltr)
-            ? trackRect.top - (additionalActiveTrackHeight / 2)
+            ? trackRect.top - (2 / 2)
             : trackRect.top,
         thumbCenter.dx,
         (textDirection == TextDirection.ltr)
-            ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+            ? trackRect.bottom + (2 / 2)
             : trackRect.bottom,
         topLeft: (textDirection == TextDirection.ltr)
             ? activeTrackRadius
@@ -97,11 +110,11 @@ class RoundedTrackShape extends SliderTrackShape with BaseSliderTrackShape {
       RRect.fromLTRBAndCorners(
         thumbCenter.dx,
         (textDirection == TextDirection.rtl)
-            ? trackRect.top - (additionalActiveTrackHeight / 2)
+            ? trackRect.top - (2 / 2)
             : trackRect.top,
         trackRect.right,
         (textDirection == TextDirection.rtl)
-            ? trackRect.bottom + (additionalActiveTrackHeight / 2)
+            ? trackRect.bottom + (2 / 2)
             : trackRect.bottom,
         topRight: (textDirection == TextDirection.rtl)
             ? activeTrackRadius

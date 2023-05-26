@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
@@ -6,19 +7,14 @@ import '../const/fonts.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/quiz_setting_provider.dart';
 import '../providers/website_provider.dart';
-import 'quiz.dart';
-import 'quiz_setting.dart';
-import 'welcome.dart';
 import '../components/custom_container.dart';
 import '../components/custom_slider.dart';
 import '../components/custom_text_field.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
-import 'dashboard.dart';
+
 
 class AdvanceQuizSetting extends StatefulWidget {
-  static const String route = '/AdvanceQuizSetting/';
-
   const AdvanceQuizSetting({super.key});
 
   @override
@@ -44,7 +40,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
       }).then((value) {
         dynamic result = decode(value);
         result == 0
-            ? Navigator.pushNamed(context, Welcome.route)
+            ? context.go('/Welcome')
             : {
                 Provider.of<QuizSettingProvider>(context, listen: false)
                     .setModuleSet(result['modules']),
@@ -55,8 +51,34 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
               };
       });
     } else {
-      Navigator.pushNamed(context, QuizSetting.route);
+      context.go('/QuizSetting');
     }
+  }
+
+  void getQuiz() async {
+    String? key0 = await getSession('sessionKey0');
+    String? key1 = await getSession('sessionKey1');
+    String? value = await getSession('sessionValue');
+    post('build_quiz/', {
+      if (key0 != null) 'email': key0,
+      if (key1 != null) 'phone': key1,
+      'password': value,
+      'headlines': Provider.of<QuizProvider>(context, listen: false)
+          .selectedHeadlines
+          .toList(),
+      'question_num':
+          Provider.of<QuizProvider>(context, listen: false).questionNum,
+      'quiz_level': Provider.of<QuizProvider>(context, listen: false).quizLevel,
+    }).then((value) {
+      dynamic result = decode(value);
+      result == 0
+          ? context.go('/Welcome')
+          : {
+              Provider.of<QuizProvider>(context, listen: false)
+                  .setQuestions(result),
+              context.go('/Quiz')
+            };
+    });
   }
 
   @override
@@ -639,7 +661,8 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                   ? kPurple
                                                   : kGray,
                                               onPressed: () {
-                                                quizProvider.setWithTime();
+                                                quizProvider.setWithTime(
+                                                    !quizProvider.withTime);
                                               },
                                               shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.only(
@@ -683,8 +706,10 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                 } else if (text.length > 2) {
                                                   minutes.text = '00';
                                                 }
-                                                quizProvider.setDuration(
-                                                    minutes.text, hours.text);
+                                                quizProvider
+                                                    .setDurationFromString(
+                                                        minutes.text,
+                                                        hours.text);
                                               },
                                               onSubmitted: null,
                                               backgroundColor: kGray,
@@ -729,8 +754,10 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                 } else if (text.length > 2) {
                                                   hours.text = '00';
                                                 }
-                                                quizProvider.setDuration(
-                                                    minutes.text, hours.text);
+                                                quizProvider
+                                                    .setDurationFromString(
+                                                        minutes.text,
+                                                        hours.text);
                                               },
                                               onSubmitted: null,
                                               backgroundColor: kGray,
@@ -836,9 +863,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         if (quizProvider
                                             .selectedHeadlines.isNotEmpty) {
                                           websiteProvider.setLoaded(false);
-
-                                          Navigator.pushNamed(
-                                              context, Quiz.route);
+                                          getQuiz();
                                         }
                                       },
                                       width: width * 0.3,
@@ -915,7 +940,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                               child: CustomContainer(
                                 onTap: () {
                                   websiteProvider.setLoaded(false);
-                                  Navigator.pushNamed(context, Dashboard.route);
+                                  context.go('/Dashboard');
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
@@ -940,7 +965,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -952,7 +977,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -987,7 +1012,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                   3, width, height, kWhite)),
                                         ),
                                       if (backwardAnimationValue != 1)
-                                        SizedBox(),
+                                        const SizedBox(),
                                       Padding(
                                         padding: EdgeInsets.only(
                                             left: width *
@@ -1000,7 +1025,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         ),
                                       ),
                                       if (backwardAnimationValue != 1)
-                                        SizedBox(),
+                                        const SizedBox(),
                                     ],
                                   ),
                                 )),
@@ -1044,7 +1069,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                   3, width, height, kWhite)),
                                         ),
                                       if (backwardAnimationValue != 1)
-                                        SizedBox(),
+                                        const SizedBox(),
                                       Padding(
                                         padding: EdgeInsets.only(
                                             left: width *
@@ -1057,7 +1082,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         ),
                                       ),
                                       if (backwardAnimationValue != 1)
-                                        SizedBox(),
+                                        const SizedBox(),
                                     ],
                                   ),
                                 )),
@@ -1068,8 +1093,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                               child: CustomContainer(
                                 onTap: () {
                                   websiteProvider.setLoaded(false);
-                                  Navigator.pushNamed(
-                                      context, QuizSetting.route);
+                                  context.go('/QuizSetting');
                                 },
                                 width: width *
                                     (0.032 * forwardAnimationValue +
@@ -1094,7 +1118,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1106,7 +1130,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -1140,7 +1164,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1152,7 +1176,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -1186,7 +1210,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1198,7 +1222,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -1232,7 +1256,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1244,7 +1268,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -1288,7 +1312,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1300,7 +1324,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -1334,7 +1358,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                             style: textStyle(
                                                 3, width, height, kWhite)),
                                       ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                     Padding(
                                       padding: EdgeInsets.only(
                                           left: width *
@@ -1346,7 +1370,7 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                         color: kWhite,
                                       ),
                                     ),
-                                    if (backwardAnimationValue != 1) SizedBox(),
+                                    if (backwardAnimationValue != 1) const SizedBox(),
                                   ],
                                 ),
                               ),

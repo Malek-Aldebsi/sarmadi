@@ -83,7 +83,6 @@ void latexString(str) {
 
   for (String line in lines) {
     widgets += latexLineProcess(line);
-    print(1);
     // widgets.add('\n');
   }
   print(widgets);

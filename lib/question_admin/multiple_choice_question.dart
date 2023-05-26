@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/question_admin/question_admin.dart';
@@ -69,8 +70,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                             CustomContainer(
                               onTap: () {
                                 adminProvider.reset();
-                                Navigator.pushNamed(
-                                    context, QuestionAdmin.route);
+                                context.go('/QuestionAdmin');
                               },
                               buttonColor: kLightPurple,
                               border: null,

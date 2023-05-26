@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:math_keyboard/math_keyboard.dart';
 import 'package:provider/provider.dart';
 import '../providers/review_provider.dart';
-import '../screens/dashboard.dart';
-import '../screens/quiz_review.dart';
-import '../screens/welcome.dart';
 import '../components/custom_container.dart';
 import '../components/custom_divider.dart';
 import '../components/custom_pop_up.dart';
@@ -25,8 +24,6 @@ import 'dart:core';
 import 'package:flutter/services.dart';
 
 class Quiz extends StatefulWidget {
-  static const String route = '/Quiz/';
-
   const Quiz({super.key});
 
   @override
@@ -38,52 +35,38 @@ class _QuizState extends State<Quiz> {
   Stopwatch stopwatch = Stopwatch();
   TextEditingController reportController = TextEditingController();
 
-  void getQuiz() async {
-    String? key0 = await getSession('sessionKey0');
-    String? key1 = await getSession('sessionKey1');
-    String? value = await getSession('sessionValue');
-    post('build_quiz/', {
-      if (key0 != null) 'email': key0,
-      if (key1 != null) 'phone': key1,
-      'password': value,
-      'headlines': Provider.of<QuizProvider>(context, listen: false)
-          .selectedHeadlines
-          .toList(),
-      'question_num':
-          Provider.of<QuizProvider>(context, listen: false).questionNum,
-      'quiz_level': Provider.of<QuizProvider>(context, listen: false).quizLevel,
-    }).then((value) {
-      dynamic result = decode(value);
-      result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+  void startQuiz() async {
+    {
+      Provider.of<QuizProvider>(context, listen: false).questions.isEmpty
+          ? context.go('/Welcome')
           : {
-              if (Provider.of<QuizProvider>(context, listen: false).withTime)
-                {
-                  quizTimer = StopWatchTimer(
-                    mode: StopWatchMode.countDown,
-                    onEnded: endQuiz,
-                  ),
-                  quizTimer!.setPresetTime(
-                      mSec: Provider.of<QuizProvider>(context, listen: false)
-                              .duration *
-                          1000),
-                }
-              else
-                {
-                  quizTimer = StopWatchTimer(
-                    mode: StopWatchMode.countUp,
-                    onEnded: () {},
-                  ),
-                  quizTimer!.setPresetTime(mSec: 0),
-                },
-              Provider.of<QuizProvider>(context, listen: false)
-                  .setQuestions(result),
-              quizTimer!.onStartTimer(),
-              stopwatch.start(),
-              Provider.of<WebsiteProvider>(context, listen: false)
-                  .setLoaded(true)
-            };
-    });
+        if (Provider.of<QuizProvider>(context, listen: false).withTime)
+          {
+            quizTimer = StopWatchTimer(
+              mode: StopWatchMode.countDown,
+              onEnded: endQuiz,
+            ),
+            quizTimer!.setPresetTime(
+                mSec: Provider.of<QuizProvider>(context, listen: false)
+                    .duration *
+                    1000),
+          }
+        else
+          {
+            quizTimer = StopWatchTimer(
+              mode: StopWatchMode.countUp,
+              onEnded: () {},
+            ),
+            quizTimer!.setPresetTime(mSec: 0),
+          },
+
+        quizTimer!.onStartTimer(),
+        stopwatch.reset(),
+        stopwatch.start(),
+        Provider.of<WebsiteProvider>(context, listen: false)
+            .setLoaded(true)
+      };
+    }
   }
 
   void saveQuestion(quizProvider, questionID) async {
@@ -103,7 +86,7 @@ class _QuizState extends State<Quiz> {
         }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? context.go('/Welcome')
           : {
               quizProvider.setSaveQuestion(
                   quizProvider.questions[quizProvider.questionIndex - 1]['id'])
@@ -124,8 +107,8 @@ class _QuizState extends State<Quiz> {
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
-          : {Navigator.pop(context)};
+          ? context.go('/Welcome')
+          : context.pop();
     });
   }
 
@@ -151,13 +134,13 @@ class _QuizState extends State<Quiz> {
       'subject': Provider.of<QuizProvider>(context, listen: false).subjectID,
       'answers': Provider.of<QuizProvider>(context, listen: false).answers,
       'quiz_duration':
-          Provider.of<QuizProvider>(context, listen: false).duration,
+      Provider.of<QuizProvider>(context, listen: false).withTime?Provider.of<QuizProvider>(context, listen: false).duration:null,
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? context.go('/Welcome')
           : {
-        print(result),
+
               Provider.of<QuizProvider>(context, listen: false).setQuizResult(
                   '${result['correct_questions']}/${result['total_question_num']}'),
               Provider.of<QuizProvider>(context, listen: false)
@@ -191,28 +174,10 @@ class _QuizState extends State<Quiz> {
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
+          ? context.go('/Welcome')
           : {
-              if (quizProvider.withTime)
-                {
-                  quizTimer = StopWatchTimer(
-                    mode: StopWatchMode.countDown,
-                    onEnded: endQuiz,
-                  ),
-                  quizTimer!.setPresetTime(mSec: quizProvider.duration * 1000),
-                }
-              else
-                {
-                  quizTimer = StopWatchTimer(
-                    mode: StopWatchMode.countUp,
-                    onEnded: () {},
-                  ),
-                  quizTimer!.setPresetTime(mSec: 0),
-                },
               quizProvider.setQuestions(result),
-              quizTimer!.onStartTimer(),
-              stopwatch.reset(),
-              stopwatch.start(),
+              startQuiz(),
             };
     });
   }
@@ -228,51 +193,28 @@ class _QuizState extends State<Quiz> {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
-      'questions_id': [
-        for (Map question in quizProvider.questions) question['id']
-      ],
+      'quiz_id': quizProvider.quizID,
       'by_author': true,
       'by_headlines': true,
       'by_level': true,
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? Navigator.pushNamed(context, Welcome.route)
-          : result.isEmpty
-              ? quizProvider.setNoQuestion(true)
-              : {
-                  if (quizProvider.withTime)
-                    {
-                      quizTimer = StopWatchTimer(
-                        mode: StopWatchMode.countDown,
-                        onEnded: endQuiz,
-                      ),
-                      quizTimer!
-                          .setPresetTime(mSec: quizProvider.duration * 1000),
-                    }
-                  else
-                    {
-                      quizTimer = StopWatchTimer(
-                        mode: StopWatchMode.countUp,
-                        onEnded: () {},
-                      ),
-                      quizTimer!.setPresetTime(mSec: 0),
-                    },
+          ? context.go('/Welcome')
+          : {
                   quizProvider.setQuestions(result),
-                  quizTimer!.onStartTimer(),
-                  stopwatch.reset(),
-                  stopwatch.start(),
+        startQuiz(),
                 };
     });
   }
 
   @override
   void initState() {
-    getQuiz();
     super.initState();
+    startQuiz();
   }
 
-  Widget multipleChoiceQuestionWithoutImage(quizProvider, width, height) {
+  Widget multipleChoiceQuestionWithoutImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
     Map answer = quizProvider.answers[question['id']];
@@ -286,7 +228,6 @@ class _QuizState extends State<Quiz> {
             width: width * 0.84,
             child: stringWithLatex(
                 question['body'],
-                // width * 0.84,
                 3,
                 width,
                 height,
@@ -327,7 +268,7 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget multipleChoiceQuestionWithImage(quizProvider, width, height) {
+  Widget multipleChoiceQuestionWithImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
     Map answer = quizProvider.answers[question['id']];
@@ -402,10 +343,9 @@ class _QuizState extends State<Quiz> {
     ]);
   }
 
-  Widget finalAnswerQuestionWithoutImage(quizProvider, width, height) {
+  Widget finalAnswerQuestionWithoutImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
-    Map answer = quizProvider.answers[question['id']];
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
@@ -415,6 +355,46 @@ class _QuizState extends State<Quiz> {
           child: stringWithLatex(question['body'], 3, width, height, kWhite),
         ),
       ),
+      if(quizProvider.subjectID== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: width * 0.84,
+            child: MathField(
+              controller: question['controller'],
+              keyboardType: MathKeyboardType.expression,
+              variables: const [
+                'x',
+                'y',
+                'z'
+              ],
+              decoration: InputDecoration(
+                isDense: true,
+
+                counterStyle: textStyle(3, width, height, kWhite),
+                filled: true,
+                fillColor: kDarkGray,
+                border: outlineInputBorder(width * 0.005, kTransparent),
+                focusedBorder:
+                outlineInputBorder(width * 0.005, kLightPurple),
+              ),
+              onChanged: (String
+              text) {},
+              onSubmitted: (String text) {
+                if (text == '') {
+                  quizProvider.removeQuestionAnswer(question['id']);
+                } else {
+                  final mathExpression = TeXParser(text).parse();
+                  final texNode =
+                  convertMathExpressionToTeXNode(mathExpression);
+
+                  quizProvider.editQuestionAnswer(question['id'], r'$'+texNode.buildTeXString()+r'$');
+                }
+              },
+            ),
+          ),
+        )
+        else
       CustomTextField(
         controller: question['controller'],
         width: width * 0.84,
@@ -446,14 +426,13 @@ class _QuizState extends State<Quiz> {
         prefixIcon: null,
         border: outlineInputBorder(width * 0.005, kTransparent),
         focusedBorder: outlineInputBorder(width * 0.005, kLightPurple),
-      ),
+      )
     ]);
   }
 
-  Widget finalAnswerQuestionWithImage(quizProvider, width, height) {
+  Widget finalAnswerQuestionWithImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
-    Map answer = quizProvider.answers[question['id']];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,6 +448,49 @@ class _QuizState extends State<Quiz> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            if(quizProvider.subjectID== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: SizedBox(
+                  width: width * 0.42,
+                  child: MathField(
+                    controller: question['controller'],
+                    keyboardType: MathKeyboardType.expression,
+                    variables: const [
+                      'x',
+                      'y',
+                      'z'
+                    ],
+                    // Specify the variables the user can use (only in expression mode).
+                    decoration: InputDecoration(
+                      isDense: true,
+
+                      counterStyle: textStyle(3, width, height, kWhite),
+                      filled: true,
+                      fillColor: kDarkGray,
+                      border: outlineInputBorder(width * 0.005, kTransparent),
+                      focusedBorder:
+                      outlineInputBorder(width * 0.005, kLightPurple),
+                    ),
+
+                    onChanged: (String
+                    text) {
+                    },
+                    onSubmitted: (String text) {
+                      if (text == '') {
+                        quizProvider.removeQuestionAnswer(question['id']);
+                      } else {
+                        final mathExpression = TeXParser(text).parse();
+                        final texNode =
+                        convertMathExpressionToTeXNode(mathExpression);
+
+                        quizProvider.editQuestionAnswer(question['id'], r'$'+texNode.buildTeXString()+r'$');
+                      }
+                    },
+                  ),
+                ),
+              )
+            else
             CustomTextField(
               controller: question['controller'],
               width: width * 0.42,
@@ -530,7 +552,7 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget multiSectionQuestionWithoutImage(quizProvider, width, height) {
+  Widget multiSectionQuestionWithoutImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
     Map answer = quizProvider.answers[question['id']];
@@ -567,154 +589,168 @@ class _QuizState extends State<Quiz> {
                 textDirection: TextDirection.ltr,
                 child: ListView(
                   children: [
-                    SizedBox(height: height * 0.01),
-                    for (Map subQuestion in question['sub_questions']) ...[
-                      Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: width * 0.02),
-                            child: Padding(
-                              padding: EdgeInsets.only(right: width * 0.015),
-                              child: SizedBox(
-                                width: width * 0.84,
-                                child: stringWithLatex(subQuestion['body'], 3,
-                                    width, height, kWhite),
-                              ),
-                            ),
-                          )),
-                      SizedBox(height: height * 0.02),
-                      if (subQuestion['type'] == 'finalAnswerQuestion')
-                        Directionality(
-                          textDirection: TextDirection.rtl,
-                          child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: width * 0.02),
-                              child: Padding(
-                                padding: EdgeInsets.only(right: width * 0.015, bottom: height*0.02),
-                                child: CustomTextField(
-                                  controller: subQuestion['controller'],
+                    Directionality(textDirection: TextDirection.rtl,child: Padding(
+                      padding: EdgeInsets.only(left: width * 0.02, right: width * 0.035),
+                      child: Column(children: [
+                        SizedBox(height: height * 0.01),
+                        for (Map subQuestion in question['sub_questions']) ...[
+                          SizedBox(
+                            width: width * 0.84,
+                            child: stringWithLatex(subQuestion['body'], 3,
+                                width, height, kWhite),
+                          ),
+                          SizedBox(height: height * 0.02),
+                          if (subQuestion['type'] == 'finalAnswerQuestion')
+                            ...[if(quizProvider.subjectID== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
+                              Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: SizedBox(
                                   width: width * 0.79,
-                                  fontOption: 3,
-                                  fontColor: kWhite,
-                                  textAlign: null,
-                                  obscure: false,
-                                  readOnly: false,
-                                  focusNode: null,
-                                  maxLines: null,
-                                  maxLength: null,
-                                  keyboardType: null,
-                                  onChanged: (String text) {
-                                    if (text == '') {
+                                  child: MathField(
+                                    controller: subQuestion['controller'],
+                                    keyboardType: MathKeyboardType.expression,
+                                    variables: const [
+                                      'x',
+                                      'y',
+                                      'z'
+                                    ],
+                                    decoration: InputDecoration(
+                                      isDense: true,
+
+                                      counterStyle: textStyle(3, width, height, kWhite),
+                                      filled: true,
+                                      fillColor: kDarkGray,
+                                      border: outlineInputBorder(width * 0.005, kTransparent),
+                                      focusedBorder:
+                                      outlineInputBorder(width * 0.005, kLightPurple),
+                                    ),
+                                    onChanged: (String
+                                    text) {},
+                                    onSubmitted: (String text) {if (text == '') {
                                       Provider.of<QuizProvider>(context,
-                                              listen: false)
+                                          listen: false)
                                           .removeSubQuestionAnswer(
-                                              question['id'],
-                                              subQuestion['id']);
+                                          question['id'],
+                                          subQuestion['id']);
                                     } else {
+                                      final mathExpression = TeXParser(text).parse();
+                                      final texNode =
+                                      convertMathExpressionToTeXNode(mathExpression);
+
                                       Provider.of<QuizProvider>(context,
-                                              listen: false)
+                                          listen: false)
                                           .editSubQuestionAnswer(question['id'],
-                                              subQuestion['id'], text);
+                                          subQuestion['id'], r'$'+texNode.buildTeXString()+r'$');
+                                    }},
+                                  ),
+                                ),
+                              )
+                              else CustomTextField(
+                              controller: subQuestion['controller'],
+                              width: width * 0.79,
+                              fontOption: 3,
+                              fontColor: kWhite,
+                              textAlign: null,
+                              obscure: false,
+                              readOnly: false,
+                              focusNode: null,
+                              maxLines: null,
+                              maxLength: null,
+                              keyboardType: null,
+                              onChanged: (String text) {
+                                if (text == '') {
+                                  Provider.of<QuizProvider>(context,
+                                      listen: false)
+                                      .removeSubQuestionAnswer(
+                                      question['id'],
+                                      subQuestion['id']);
+                                } else {
+                                  Provider.of<QuizProvider>(context,
+                                      listen: false)
+                                      .editSubQuestionAnswer(question['id'],
+                                      subQuestion['id'], text);
+                                }
+                              },
+                              onSubmitted: null,
+                              backgroundColor: kDarkGray,
+                              verticalPadding: width * 0.01,
+                              horizontalPadding: width * 0.02,
+                              isDense: null,
+                              errorText: null,
+                              hintText: 'اكتب الجواب النهائي',
+                              hintTextColor: kWhite.withOpacity(0.5),
+                              suffixIcon: null,
+                              prefixIcon: null,
+                              border: outlineInputBorder(
+                                  width * 0.005, kTransparent),
+                              focusedBorder: outlineInputBorder(
+                                  width * 0.005, kLightPurple),
+                            ),SizedBox(height: height * 0.02),]
+                          else if (subQuestion['type'] == 'multipleChoiceQuestion')
+                            for (int i = 0;
+                            i < subQuestion['choices'].length;
+                            i++)
+                              ...[CustomContainer(
+                                  onTap: () {
+                                    if (answer
+                                        .containsKey('answer') &&
+                                        answer['answer'].containsKey(
+                                            subQuestion['id']) &&
+                                        answer['answer']
+                                        [subQuestion['id']] ==
+                                            subQuestion['choices'][i]
+                                            ['id']) {
+                                      Provider.of<QuizProvider>(
+                                          context,
+                                          listen: false)
+                                          .removeSubQuestionAnswer(
+                                          question['id'],
+                                          subQuestion['id']);
+                                    } else {
+                                      Provider.of<QuizProvider>(
+                                          context,
+                                          listen: false)
+                                          .editSubQuestionAnswer(
+                                          question['id'],
+                                          subQuestion['id'],
+                                          subQuestion['choices']
+                                          [i]['id']);
                                     }
                                   },
-                                  onSubmitted: null,
-                                  backgroundColor: kDarkGray,
                                   verticalPadding: width * 0.01,
                                   horizontalPadding: width * 0.02,
-                                  isDense: null,
-                                  errorText: null,
-                                  hintText: 'اكتب الجواب النهائي',
-                                  hintTextColor: kWhite.withOpacity(0.5),
-                                  suffixIcon: null,
-                                  prefixIcon: null,
-                                  border: outlineInputBorder(
-                                      width * 0.005, kTransparent),
-                                  focusedBorder: outlineInputBorder(
-                                      width * 0.005, kLightPurple),
-                                ),
-                              )),
-                        )
-                      else if (subQuestion['type'] == 'multipleChoiceQuestion')
-                        Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: width * 0.02),
-                              child: Padding(
-                                padding: EdgeInsets.only(right: width * 0.015),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (int i = 0;
-                                        i < subQuestion['choices'].length;
-                                        i++)
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                            bottom: height *0.02),
-                                        child: CustomContainer(
-                                            onTap: () {
-                                              if (answer
-                                                      .containsKey('answer') &&
-                                                  answer['answer'].containsKey(
-                                                      subQuestion['id']) &&
-                                                  answer['answer']
-                                                          [subQuestion['id']] ==
-                                                      subQuestion['choices'][i]
-                                                          ['id']) {
-                                                Provider.of<QuizProvider>(
-                                                        context,
-                                                        listen: false)
-                                                    .removeSubQuestionAnswer(
-                                                        question['id'],
-                                                        subQuestion['id']);
-                                              } else {
-                                                Provider.of<QuizProvider>(
-                                                        context,
-                                                        listen: false)
-                                                    .editSubQuestionAnswer(
-                                                        question['id'],
-                                                        subQuestion['id'],
-                                                        subQuestion['choices']
-                                                            [i]['id']);
-                                              }
-                                            },
-                                            verticalPadding: width * 0.01,
-                                            horizontalPadding: width * 0.02,
-                                            width: width * 0.79,
-                                            borderRadius: width * 0.005,
-                                            border: null,
-                                            buttonColor: answer.containsKey(
-                                                        'answer') &&
-                                                    answer['answer']
-                                                        .containsKey(
-                                                            subQuestion[
-                                                                'id']) &&
-                                                    answer['answer'][
-                                                            subQuestion[
-                                                                'id']] ==
-                                                        subQuestion['choices']
-                                                            [i]['id']
-                                                ? kLightPurple
-                                                : kDarkGray,
-                                            child: Align(
-                                              alignment: Alignment.centerRight,
-                                              child: stringWithLatex(
-                                                  subQuestion['choices'][i]
-                                                      ['body'],
-                                                  3,
-                                                  width,
-                                                  height,
-                                                  kWhite),
-                                            )),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            )),
-                      SizedBox(height: height * 0.03),
+                                  width: width * 0.79,
+                                  borderRadius: width * 0.005,
+                                  border: null,
+                                  buttonColor: answer.containsKey(
+                                      'answer') &&
+                                      answer['answer']
+                                          .containsKey(
+                                          subQuestion[
+                                          'id']) &&
+                                      answer['answer'][
+                                      subQuestion[
+                                      'id']] ==
+                                          subQuestion['choices']
+                                          [i]['id']
+                                      ? kLightPurple
+                                      : kDarkGray,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: stringWithLatex(
+                                        subQuestion['choices'][i]
+                                        ['body'],
+                                        3,
+                                        width,
+                                        height,
+                                        kWhite),
+                                  )),SizedBox(height: height * 0.02)],
+                          SizedBox(height: height * 0.03),
 
-                    ],
+                        ],
+                      ]),
+                    )),
+
                   ],
                 ),
               ),
@@ -723,7 +759,7 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget multiSectionQuestionWithImage(quizProvider, width, height) {
+  Widget multiSectionQuestionWithImage(QuizProvider quizProvider, width, height) {
     int questionIndex = quizProvider.questionIndex - 1;
     Map question = quizProvider.questions[questionIndex];
     Map answer = quizProvider.answers[question['id']];
@@ -781,6 +817,56 @@ class _QuizState extends State<Quiz> {
                                 ),
                                 SizedBox(height: height * 0.02),
                                 if (subQuestion['type'] == 'finalAnswerQuestion')
+    if(quizProvider.subjectID== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
+    Directionality(
+    textDirection: TextDirection.ltr,
+    child: SizedBox(
+    width: width * 0.42,
+    child: MathField(
+      controller: subQuestion['controller'],
+    keyboardType: MathKeyboardType.expression,
+    variables: const [
+    'x',
+    'y',
+    'z'
+    ],
+    // Specify the variables the user can use (only in expression mode).
+    decoration: InputDecoration(
+    isDense: true,
+
+    counterStyle: textStyle(3, width, height, kWhite),
+    filled: true,
+    fillColor: kDarkGray,
+    border: outlineInputBorder(width * 0.005, kTransparent),
+    focusedBorder:
+    outlineInputBorder(width * 0.005, kLightPurple),
+    ),
+
+    onChanged: (String
+    text) {
+
+    },
+    onSubmitted: (String text) {
+      if (text == '') {
+        Provider.of<QuizProvider>(context,
+            listen: false)
+            .removeSubQuestionAnswer(
+            question['id'],
+            subQuestion['id']);
+      } else {
+        final mathExpression = TeXParser(text).parse();
+        final texNode =
+        convertMathExpressionToTeXNode(mathExpression);
+
+        Provider.of<QuizProvider>(context,
+            listen: false)
+            .editSubQuestionAnswer(question['id'],
+            subQuestion['id'], r'$'+texNode.buildTeXString()+r'$');
+      }
+    },
+    ),
+    ),
+    )else
                                   CustomTextField(
                                     controller: subQuestion['controller'],
                                     width: width * 0.42,
@@ -951,70 +1037,8 @@ class _QuizState extends State<Quiz> {
     TasksProvider tasksProvider = Provider.of<TasksProvider>(context);
     ReviewProvider reviewProvider = Provider.of<ReviewProvider>(context);
 
-    return WillPopScope(
-        onWillPop: () async {
-          bool confirm = await showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return Directionality(
-                textDirection: TextDirection.rtl,
-                child: AlertDialog(
-                  titlePadding: EdgeInsets.symmetric(
-                      vertical: height * 0.03, horizontal: width * 0.02),
-                  actionsPadding: EdgeInsets.symmetric(
-                      vertical: height * 0.03, horizontal: width * 0.02),
-                  backgroundColor: kLightBlack,
-                  title: Text(Provider.of<QuizProvider>(context, listen: false).showResult?"هل تريد العودة للصفحة الرئيسية":"هل تريد إنهاء الإمتحان؟",
-                      style: textStyle(3, width, height, kLightPurple)),
-                  // content: Text("Do you want to exit the app?"),
-                  actions: <Widget>[
-                    CustomContainer(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      width: width * 0.08,
-                      verticalPadding: height * 0.005,
-                      horizontalPadding: 0,
-                      borderRadius: width * 0.005,
-                      buttonColor: kDarkBlack,
-                      border: fullBorder(kLightPurple),
-                      child: Center(
-                        child: Text(
-                          'لا',
-                          style: textStyle(3, width, height, kLightPurple),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: width * 0.01),
-                    CustomContainer(
-                      onTap: () {
-                        Navigator.pop(context);
-                        Provider.of<QuizProvider>(context, listen: false).showResult?{websiteProvider.setLoaded(false),
-                        Navigator.pushNamed(context, Dashboard.route)}:
-                        endQuiz();
-                      },
-                      width: width * 0.08,
-                      verticalPadding: height * 0.005,
-                      horizontalPadding: 0,
-                      borderRadius: width * 0.005,
-                      buttonColor: kLightPurple,
-                      border: null,
-                      child: Center(
-                        child: Text(
-                          'نعم',
-                          style: textStyle(3, width, height, kDarkBlack),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-          // return true if user confirms action, false otherwise
-          return confirm ?? false;
-        },
-        child: websiteProvider.loaded
+    return
+        websiteProvider.loaded
             ? quizProvider.questions.isEmpty
                 ? Scaffold(
                     backgroundColor: kDarkGray,
@@ -1040,7 +1064,7 @@ class _QuizState extends State<Quiz> {
                           CustomContainer(
                             onTap: () {
                               websiteProvider.setLoaded(false);
-                              Navigator.pushNamed(context, Dashboard.route);
+                              context.go('/Dashboard');
                             },
                             width: width * 0.18,
                             verticalPadding: height * 0.005,
@@ -1097,12 +1121,7 @@ class _QuizState extends State<Quiz> {
                                                 height * 0.25,
                                                 Center(
                                                   child: Text(
-                                                    quizProvider.questions[quizProvider
-                                                                    .questionIndex -
-                                                                1]['writer'] ==
-                                                            'نمط اسئلة الكتاب'
-                                                        ? 'هذا السؤال على نمط اسئلة الكتاب'
-                                                        : 'هذا السؤال من اسئلة الاستاذ ${quizProvider.questions[quizProvider.questionIndex - 1]['writer']}',
+                                                     'هذا السؤال من اسئلة ${quizProvider.questions[quizProvider.questionIndex - 1]['writer']}',
                                                     style: textStyle(3, width,
                                                         height, kLightPurple),
                                                   ),
@@ -1214,7 +1233,7 @@ class _QuizState extends State<Quiz> {
                                                                 quizProvider
                                                                         .questionIndex -
                                                                     1]['id']));
-                                                    Timer(Duration(seconds: 2),
+                                                    Timer(const Duration(seconds: 2),
                                                         () {
                                                       quizProvider
                                                           .setCopied(false);
@@ -1462,8 +1481,7 @@ class _QuizState extends State<Quiz> {
                                                       children: [
                                                         CustomContainer(
                                                           onTap: () {
-                                                            Navigator.pop(
-                                                                context);
+                                                            context.pop();
                                                           },
                                                           width: width * 0.08,
                                                           verticalPadding:
@@ -1491,8 +1509,7 @@ class _QuizState extends State<Quiz> {
                                                                 width * 0.02),
                                                         CustomContainer(
                                                           onTap: () {
-                                                            Navigator.pop(
-                                                                context);
+                                                            context.pop();
                                                             endQuiz();
                                                           },
                                                           width: width * 0.08,
@@ -1547,7 +1564,7 @@ class _QuizState extends State<Quiz> {
                                     MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  SizedBox(),
+                                  const SizedBox(),
                                   if (quizProvider.questions[
                                               quizProvider.questionIndex -
                                                   1]['type'] ==
@@ -1752,8 +1769,7 @@ class _QuizState extends State<Quiz> {
                                         CustomContainer(
                                           onTap: () {
                                             websiteProvider.setLoaded(false);
-                                            Navigator.pushNamed(
-                                                context, Dashboard.route);
+                                            context.go('/Dashboard');
                                           },
                                           buttonColor: kTransparent,
                                           border: fullBorder(kLightPurple),
@@ -2004,9 +2020,7 @@ class _QuizState extends State<Quiz> {
                                                             .setQuizID(
                                                                 quizProvider
                                                                     .quizID);
-                                                        Navigator.pushNamed(
-                                                            context,
-                                                            QuizReview.route);
+                                                        context.go('/QuizReview');
                                                       },
                                                       verticalPadding:
                                                           height * 0.01,
@@ -2126,8 +2140,7 @@ class _QuizState extends State<Quiz> {
                                                       .setLoaded(false);
                                                   reviewProvider.setQuizID(
                                                       quizProvider.quizID);
-                                                  Navigator.pushNamed(context,
-                                                      QuizReview.route);
+                                                  context.go('/QuizReview');
                                                 },
                                                 width: width * 0.13,
                                                 height: height * 0.06,
@@ -2279,6 +2292,6 @@ class _QuizState extends State<Quiz> {
                 backgroundColor: kDarkGray,
                 body: Center(
                     child: CircularProgressIndicator(
-                        color: kPurple, strokeWidth: width * 0.05))));
+                        color: kPurple, strokeWidth: width * 0.05)));
   }
 }

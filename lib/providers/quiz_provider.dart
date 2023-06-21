@@ -268,7 +268,7 @@ class QuizProvider with ChangeNotifier {
 
   void setQuizID(String quizID) {
     _quizID = quizID;
-    notifyListeners();
+    // notifyListeners();
   }
 
   void setQuizResult(String quizResult) {

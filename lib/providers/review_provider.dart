@@ -14,6 +14,7 @@ class ReviewProvider with ChangeNotifier {
   int _questionsNum = 0;
   Map _skills = {};
   List _statements = [];
+  bool _copied = false;
 
   String get quizID => _quizID;
   int get questionIndex => _questionIndex;
@@ -25,6 +26,7 @@ class ReviewProvider with ChangeNotifier {
   List get questions => _questions;
   List get statements => _statements;
   bool get questionScrollState => _questionScrollState;
+  bool get copied => _copied;
   int get correctQuestionsNum => _correctQuestionsNum;
   int get questionsNum => _questionsNum;
   Map get skills => _skills;
@@ -76,6 +78,7 @@ class ReviewProvider with ChangeNotifier {
     _quizIdealTime = quizIdealTime;
     notifyListeners();
   }
+
   void setQuizAttemptTime(String quizAttemptTime) {
     _quizAttemptTime = quizAttemptTime;
     notifyListeners();
@@ -88,6 +91,11 @@ class ReviewProvider with ChangeNotifier {
 
   void setQuestionScrollState(bool questionScrollState) {
     _questionScrollState = questionScrollState;
+    notifyListeners();
+  }
+
+  void setCopied(bool copied) {
+    _copied = copied;
     notifyListeners();
   }
 

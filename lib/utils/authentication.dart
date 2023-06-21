@@ -99,26 +99,46 @@ class FirebaseAuthMethods {
   Future<bool> signUpWithGoogle(
       BuildContext context, UserInfoProvider userInfoProvider) async {
     try {
-      if (kIsWeb) {
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      GoogleAuthProvider googleProvider = GoogleAuthProvider();
 
-        googleProvider
-            .addScope('https://www.googleapis.com/auth/contacts.readonly');
+      googleProvider
+          .addScope('https://www.googleapis.com/auth/contacts.readonly');
 
-        UserCredential userCredential =
-            await _auth.signInWithPopup(googleProvider);
+      UserCredential userCredential =
+          await _auth.signInWithPopup(googleProvider);
 
-        userInfoProvider.userEmail.text =
-            userCredential.additionalUserInfo?.profile?['email'];
-        userInfoProvider.userPassword.text =
-            userCredential.additionalUserInfo?.profile?['id'];
-        userInfoProvider.firstName.text =
-            userCredential.additionalUserInfo?.profile?['given_name'];
-        userInfoProvider.lastName.text =
-            userCredential.additionalUserInfo?.profile?['family_name'];
+      userInfoProvider.userEmail.text =
+          userCredential.additionalUserInfo?.profile?['email'];
+      userInfoProvider.userPassword.text =
+          userCredential.additionalUserInfo?.profile?['id'];
+      userInfoProvider.firstName.text =
+          userCredential.additionalUserInfo?.profile?['given_name'];
+      userInfoProvider.lastName.text =
+          userCredential.additionalUserInfo?.profile?['family_name'];
 
-        return true;
-      }
+      return true;
+    } on FirebaseAuthException catch (e) {
+      showSnackBar(context, e.message!); // Displaying the error message
+    }
+    return false;
+  }
+
+  Future<bool> logInWithGoogle(
+      BuildContext context, UserInfoProvider userInfoProvider) async {
+    try {
+      GoogleAuthProvider googleProvider = GoogleAuthProvider();
+
+      googleProvider
+          .addScope('https://www.googleapis.com/auth/contacts.readonly');
+
+      UserCredential userCredential =
+          await _auth.signInWithPopup(googleProvider);
+
+      userInfoProvider.userEmail.text =
+          userCredential.additionalUserInfo?.profile?['email'];
+      userInfoProvider.userPassword.text =
+          userCredential.additionalUserInfo?.profile?['id'];
+      return true;
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!); // Displaying the error message
     }
@@ -145,6 +165,29 @@ class FirebaseAuthMethods {
           userCredential.additionalUserInfo?.profile?['first_name'];
       userInfoProvider.lastName.text =
           userCredential.additionalUserInfo?.profile?['last_name'];
+      return true;
+    } on FirebaseAuthException catch (e) {
+      showSnackBar(context, e.message!); // Displaying the error message
+    }
+    return false;
+  }
+
+  Future<bool> logInWithFacebook(
+      BuildContext context, UserInfoProvider userInfoProvider) async {
+    try {
+      final LoginResult loginResult = await FacebookAuth.instance.login();
+
+      final OAuthCredential facebookAuthCredential =
+          FacebookAuthProvider.credential(loginResult.accessToken!.token);
+
+      UserCredential userCredential =
+          await _auth.signInWithCredential(facebookAuthCredential);
+      userInfoProvider.userEmail.text =
+          userCredential.additionalUserInfo?.profile?['email'] ?? '';
+      userInfoProvider.userPhone.text =
+          userCredential.additionalUserInfo?.profile?['phone'] ?? '';
+      userInfoProvider.userPassword.text =
+          userCredential.additionalUserInfo?.profile?['id'];
       return true;
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!); // Displaying the error message

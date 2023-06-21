@@ -37,7 +37,7 @@ class _EditQuestionState extends State<EditQuestion> {
     adminProvider.setHeadlines(result['headlines']);
     adminProvider.setQuestionSource(result['author']);
     adminProvider.setQuestionLevel(result['level']);
-    context.go('/MultipleChoiceQuestion');
+    context.pushReplacement('/MultipleChoiceQuestion');
   }
 
   editFinalAnswerQuestion(Map result, AdminProvider adminProvider) {
@@ -46,7 +46,7 @@ class _EditQuestionState extends State<EditQuestion> {
     adminProvider.setHeadlines(result['headlines']);
     adminProvider.setQuestionSource(result['author']);
     adminProvider.setQuestionLevel(result['level']);
-    context.go('/FinalAnswerQuestion');
+    context.pushReplacement('/FinalAnswerQuestion');
   }
 
   editMultiSectionQuestion(Map result, AdminProvider adminProvider) {
@@ -100,7 +100,7 @@ class _EditQuestionState extends State<EditQuestion> {
     }
     adminProvider.setSubQuestion(subQuestions);
     adminProvider.setQuestionSource(result['author']);
-    context.go('/MultiSectionQuestion');
+    context.pushReplacement('/MultiSectionQuestion');
   }
 
   @override

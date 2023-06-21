@@ -38,7 +38,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                context.go('/MultipleChoiceQuestion');
+                context.pushReplacement('/MultipleChoiceQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -56,7 +56,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                context.go('/FinalAnswerQuestion');
+                context.pushReplacement('/FinalAnswerQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -74,7 +74,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                context.go('/MultiSectionQuestion');
+                context.pushReplacement('/MultiSectionQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,
@@ -92,7 +92,7 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
-                context.go('/EditQuestion');
+                context.pushReplacement('/EditQuestion');
               },
               width: width * 0.3,
               height: height * 0.1,

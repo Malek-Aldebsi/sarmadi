@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import 'package:provider/provider.dart';
+import 'package:sarmadi/screens/rotate_your_phone.dart';
 import '../components/custom_container.dart';
 import '../components/custom_divider.dart';
 import '../components/custom_pop_up.dart';
@@ -12,7 +13,7 @@ import 'package:stop_watch_timer/stop_watch_timer.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
-import '../providers/question_provider.dart';
+import '../providers/similar_questions_provider.dart';
 import '../providers/website_provider.dart';
 import '../utils/http_requests.dart';
 import '../utils/session.dart';
@@ -40,7 +41,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
       if (key0 != null) 'email': key0,
       if (key1 != null) 'phone': key1,
       'password': value,
-      'question_id': Provider.of<QuestionProvider>(context, listen: false).questionId,
+      'question_id': Provider.of<SimilarQuestionsProvider>(context, listen: false).questionId,
       'is_single_question':true,
       'by_headlines':true,
       'by_author':true,
@@ -48,15 +49,15 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? context.go('/Welcome')
+          ? context.pushReplacement('/Welcome')
           : {
         quizTimer = StopWatchTimer(
           mode: StopWatchMode.countUp,
           onEnded: () {},
         ),
         quizTimer!.setPresetTime(mSec: 0),
-        Provider.of<QuestionProvider>(context, listen: false).setSubjectId(result['subject']),
-        Provider.of<QuestionProvider>(context, listen: false).setQuestions(result['questions']),
+        Provider.of<SimilarQuestionsProvider>(context, listen: false).setSubjectId(result['subject']),
+        Provider.of<SimilarQuestionsProvider>(context, listen: false).setQuestions(result['questions']),
         quizTimer!.onStartTimer(),
         stopwatch.start(),
         Provider.of<WebsiteProvider>(context, listen: false).setLoaded(true)
@@ -64,7 +65,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     });
   }
 
-  void endTraining(QuestionProvider questionProvider, WebsiteProvider websiteProvider) async {
+  void endTraining(SimilarQuestionsProvider questionProvider, WebsiteProvider websiteProvider) async {
     stopwatch.stop();
     quizTimer!.onStopTimer();
 
@@ -73,10 +74,10 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
 
     websiteProvider.setLoaded(false);
 
-    context.go('/Dashboard');
+    context.pushReplacement('/QuizSetting');
   }
 
-  void endQuestion(QuestionProvider questionProvider) async {
+  void endQuestion(SimilarQuestionsProvider questionProvider) async {
     stopwatch.stop();
     quizTimer!.onStopTimer();
 
@@ -101,7 +102,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
         }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? context.go('/Welcome')
+          ? context.pushReplacement('/Welcome')
           :
       {
         questionProvider.setQuestionResult(result),
@@ -111,7 +112,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
 
   }
 
-  void saveQuestion(QuestionProvider questionProvider, questionID) async {
+  void saveQuestion(SimilarQuestionsProvider questionProvider, questionID) async {
     String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
     String? value = await getSession('sessionValue');
@@ -127,10 +128,10 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
         }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? context.go('/Welcome')
+          ? context.pushReplacement('/Welcome')
           : {
-        questionProvider.answers[questionProvider.questions[questionProvider.questionIndex - 1]['id']]!['saved'] =
-        !questionProvider.answers[questionProvider.questions[questionProvider.questionIndex - 1]['id']]!['saved']
+        questionProvider.setSaveQuestion(questionProvider
+            .questions[questionProvider.questionIndex - 1]['id'])
       };
     });
   }
@@ -150,7 +151,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
         }).then((value) {
       dynamic result = decode(value);
       result == 0
-          ? context.go('/Welcome')
+          ? context.pushReplacement('/Welcome')
           : {
         context.pop()
       };
@@ -163,7 +164,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     super.initState();
   }
 
-  Widget multipleChoiceQuestionWithoutImage(QuestionProvider questionProvider, width, height) {
+  Widget multipleChoiceQuestionWithoutImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -197,14 +198,15 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                           : questionProvider.editQuestionAnswer(
                           question['id'], question['choices'][i]['id']);
                     },
-                    verticalPadding: height * 0.02,
+                    verticalPadding: 0,
                     horizontalPadding: width * 0.02,
+                    height: height*0.08,
                     width: width * 0.84,
                     borderRadius: width * 0.005,
-                    border: questionProvider.showResult?
-                    fullBorder(question['choices'][i]['id']==question['correct_answer']['id']?
+                    border:
+                    fullBorder(questionProvider.showResult?question['choices'][i]['id']==question['correct_answer']['id']?
                     kGreen:
-                    question['choices'][i]['id'] ==answer['answer']?kRed:kTransparent):null,
+                    question['choices'][i]['id'] ==answer['answer']?kRed:kTransparent:kTransparent),
                     buttonColor:
                     answer['answer'] == question['choices'][i]['id']
                         ? kLightPurple
@@ -221,7 +223,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     );
   }
 
-  Widget multipleChoiceQuestionWithImage(QuestionProvider questionProvider, width, height) {
+  Widget multipleChoiceQuestionWithImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -252,14 +254,15 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                             : questionProvider.editQuestionAnswer(
                             question['id'], question['choices'][i]['id']);
                       },
-                      verticalPadding: height * 0.02,
+                      verticalPadding: 0,
                       horizontalPadding: width * 0.02,
                       width: width * 0.4,
+                      height: height*0.08,
                       borderRadius: width * 0.005,
-                      border: questionProvider.showResult?
-                      fullBorder(question['choices'][i]['id']==question['correct_answer']['id']?
+                      border:
+                      fullBorder(questionProvider.showResult?question['choices'][i]['id']==question['correct_answer']['id']?
                       kGreen:
-                      question['choices'][i]['id'] ==answer['answer']?kRed:kTransparent):null,
+                      question['choices'][i]['id'] ==answer['answer']?kRed:kTransparent:kTransparent),
                       buttonColor:
                       answer['answer'] == question['choices'][i]['id']
                           ? kLightPurple
@@ -277,7 +280,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                height: height * 0.3,
+                height: height * 0.35,
                 child: CustomDivider(
                   dashHeight: 2,
                   dashWidth: width * 0.005,
@@ -291,8 +294,8 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
           SizedBox(width: width * 0.02),
           Image(
             image: NetworkImage(question['image']),
-            height: height * 0.3,
-            width: width * 0.3,
+            height: height * 0.35,
+            width: width * 0.35,
             fit: BoxFit.contain,
           ),
         ],
@@ -300,7 +303,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     ]);
   }
 
-  Widget finalAnswerQuestionWithoutImage(QuestionProvider questionProvider, width, height) {
+  Widget finalAnswerQuestionWithoutImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -313,123 +316,129 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
           child: stringWithLatex(question['body'], 3, width, height, kWhite),
         ),
       ),
-      if (questionProvider.showResult)
-        ...[CustomContainer(
-            onTap: null,
-            verticalPadding: height * 0.02,
-            horizontalPadding: width * 0.02,
-            width: width * 0.84,
-            borderRadius: width * 0.005,
-            border: fullBorder(questionProvider.questionResult ? kGreen : kRed),
-            buttonColor: kDarkGray,
-            child: Align(
-              alignment:
-              Alignment.centerRight,
-              child: stringWithLatex(
-                  answer['answer'],
-    3,
-    width,
-    height,
-    kWhite)
+      SizedBox(height: height*0.3,
+        child: Column(mainAxisAlignment:MainAxisAlignment.start,
+            children: [
+          if (questionProvider.showResult)
+            ...[CustomContainer(
+                onTap: null,
+                verticalPadding: height * 0.02,
+                horizontalPadding: width * 0.02,
+                width: width * 0.84,
+                borderRadius: width * 0.005,
+                border: fullBorder(questionProvider.questionResult ? kGreen : kRed),
+                buttonColor: kDarkGray,
+                child: Align(
+                    alignment:
+                    Alignment.centerRight,
+                    child: stringWithLatex(
+                        answer['answer'],
+                        3,
+                        width,
+                        height,
+                        kWhite)
 
-            )),
-        if(!questionProvider.questionResult)
-          ...[SizedBox(height: height*0.01),CustomContainer(
-              onTap: null,
-              verticalPadding: height * 0.02,
-              horizontalPadding: width * 0.02,
-              width: width * 0.84,
-              borderRadius: width * 0.005,
-              border: fullBorder(kGreen),
-              buttonColor: kDarkGray,
-              child: Align(
-                  alignment:
-                  Alignment.centerRight,
-                  child: stringWithLatex(
-                      question['correct_answer']['body'],
-                      3,
-                      width,
-                      height,
-                      kWhite)
+                )),
+              if(!questionProvider.questionResult)
+                ...[SizedBox(height: height*0.01),CustomContainer(
+                    onTap: null,
+                    verticalPadding: height * 0.02,
+                    horizontalPadding: width * 0.02,
+                    width: width * 0.84,
+                    borderRadius: width * 0.005,
+                    border: fullBorder(kGreen),
+                    buttonColor: kDarkGray,
+                    child: Align(
+                        alignment:
+                        Alignment.centerRight,
+                        child: stringWithLatex(
+                            question['correct_answer']['body'],
+                            3,
+                            width,
+                            height,
+                            kWhite)
 
-              ))]
-        ]
-      else if(questionProvider.subjectId== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: SizedBox(
-            width: width * 0.84,
-            child: MathField(
-              controller: question['controller'],
-              keyboardType: MathKeyboardType.expression,
-              variables: const [
-                'x',
-                'y',
-                'z'
-              ],
-              decoration: InputDecoration(
-                isDense: true,
+                    ))]
+            ]
+          else if(questionProvider.subjectId== 'ee25ba19-a309-4010-a8ca-e6ea242faa96')
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: SizedBox(
+                width: width * 0.84,
+                child: MathField(
+                  controller: question['controller'],
+                  keyboardType: MathKeyboardType.expression,
+                  variables: const [
+                    'x',
+                    'y',
+                    'z',
+                    'C',
+                    't'
+                  ],
+                  decoration: InputDecoration(
+                    isDense: true,
 
-                counterStyle: textStyle(3, width, height, kWhite),
-                filled: true,
-                fillColor: kDarkGray,
-                border: outlineInputBorder(width * 0.005, kTransparent),
-                focusedBorder:
-                outlineInputBorder(width * 0.005, kLightPurple),
+                    counterStyle: textStyle(3, width, height, kWhite),
+                    filled: true,
+                    fillColor: kDarkGray,
+                    border: outlineInputBorder(width * 0.005, kTransparent),
+                    focusedBorder:
+                    outlineInputBorder(width * 0.005, kLightPurple),
+                  ),
+                  onChanged: (String
+                  text) {
+                    if (text == '') {
+                      questionProvider.removeQuestionAnswer(question['id']);
+                    } else {
+                      questionProvider.editQuestionAnswer(question['id'], r'$'+text+r'$');
+                    }
+                  },
+                  onSubmitted: (String text) {
+
+                  },
+                ),
               ),
-              onChanged: (String
-              text) {},
-              onSubmitted: (String text) {
+            )
+          else
+            CustomTextField(
+              controller: question['controller'],
+              width: width * 0.84,
+              fontOption: 3,
+              fontColor: kWhite,
+              textAlign: null,
+              obscure: false,
+              readOnly: false,
+              focusNode: null,
+              maxLines: null,
+              maxLength: null,
+              keyboardType: null,
+              onChanged: (String text) {
                 if (text == '') {
                   questionProvider.removeQuestionAnswer(question['id']);
                 } else {
-                  final mathExpression = TeXParser(text).parse();
-                  final texNode =
-                  convertMathExpressionToTeXNode(mathExpression);
-
-                  questionProvider.editQuestionAnswer(question['id'], r'$'+texNode.buildTeXString()+r'$');
+                  questionProvider.editQuestionAnswer(question['id'], text);
                 }
               },
-            ),
-          ),
-        )
-      else
-        CustomTextField(
-          controller: question['controller'],
-          width: width * 0.84,
-          fontOption: 3,
-          fontColor: kWhite,
-          textAlign: null,
-          obscure: false,
-          readOnly: false,
-          focusNode: null,
-          maxLines: null,
-          maxLength: null,
-          keyboardType: null,
-          onChanged: (String text) {
-            if (text == '') {
-              questionProvider.removeQuestionAnswer(question['id']);
-            } else {
-              questionProvider.editQuestionAnswer(question['id'], text);
-            }
-          },
-          onSubmitted: null,
-          backgroundColor: kDarkGray,
-          verticalPadding: height * 0.02,
-          horizontalPadding: width * 0.02,
-          isDense: null,
-          errorText: null,
-          hintText: 'اكتب الجواب النهائي',
-          hintTextColor: kWhite.withOpacity(0.5),
-          suffixIcon: null,
-          prefixIcon: null,
-          border: outlineInputBorder(width * 0.005, kTransparent),
-          focusedBorder: outlineInputBorder(width * 0.005, kLightPurple),
-        )
+              onSubmitted: null,
+              backgroundColor: kDarkGray,
+              verticalPadding: height * 0.02,
+              horizontalPadding: width * 0.02,
+              isDense: true,
+              errorText: null,
+              hintText: 'اكتب الجواب النهائي',
+              hintTextColor: kWhite.withOpacity(0.5),
+              suffixIcon: null,
+              prefixIcon: null,
+              border: outlineInputBorder(width * 0.005, kTransparent),
+              focusedBorder: outlineInputBorder(width * 0.005, kLightPurple),
+            )
+        ]),
+      )
+
     ]);
   }
 
-  Widget finalAnswerQuestionWithImage(QuestionProvider questionProvider, width, height) {
+  Widget finalAnswerQuestionWithImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -448,6 +457,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            SizedBox(height: height*0.3,
+              child: Column(mainAxisAlignment:MainAxisAlignment.start,
+                  children: [
             if (questionProvider.showResult)
               ...[CustomContainer(
                   onTap: null,
@@ -499,9 +511,10 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                     variables: const [
                       'x',
                       'y',
-                      'z'
+                      'z',
+                      'C',
+                      't'
                     ],
-                    // Specify the variables the user can use (only in expression mode).
                     decoration: InputDecoration(
                       isDense: true,
 
@@ -515,17 +528,14 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
 
                     onChanged: (String
                     text) {
-                    },
-                    onSubmitted: (String text) {
                       if (text == '') {
                         questionProvider.removeQuestionAnswer(question['id']);
                       } else {
-                        final mathExpression = TeXParser(text).parse();
-                        final texNode =
-                        convertMathExpressionToTeXNode(mathExpression);
-
-                        questionProvider.editQuestionAnswer(question['id'], r'$'+texNode.buildTeXString()+r'$');
+                        questionProvider.editQuestionAnswer(question['id'], r'$'+text+r'$');
                       }
+                    },
+                    onSubmitted: (String text) {
+
                     },
                   ),
                 ),
@@ -554,7 +564,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                 backgroundColor: kDarkGray,
                 verticalPadding: height * 0.02,
                 horizontalPadding: width * 0.02,
-                isDense: null,
+                isDense: true,
                 errorText: null,
                 hintText: 'اكتب الجواب النهائي',
                 hintTextColor: kWhite.withOpacity(0.5),
@@ -563,6 +573,8 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                 border: outlineInputBorder(width * 0.005, kTransparent),
                 focusedBorder: outlineInputBorder(width * 0.005, kLightPurple),
               ),
+    ]),
+    ),
             SizedBox(width: width * 0.02),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -592,7 +604,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     );
   }
 
-  Widget multiSectionQuestionWithoutImage(QuestionProvider questionProvider, width, height) {
+  Widget multiSectionQuestionWithoutImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -650,7 +662,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                     horizontalPadding: width * 0.02,
                                     width: width * 0.79,
                                     borderRadius: width * 0.005,
-                                    border: fullBorder(questionProvider.questionResult[subQuestion.key - 1] ? kGreen : kRed),
+                                    border: fullBorder(questionProvider.questionResult[subQuestion.key] ? kGreen : kRed),
                                     buttonColor: kDarkGray,
                                     child: Align(
                                         alignment:
@@ -670,7 +682,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                             height,
                                             kWhite)
                                     )),
-                                  if(!questionProvider.questionResult[subQuestion.key-1])
+                                  if(!questionProvider.questionResult[subQuestion.key])
                                     ...[SizedBox(height: height*0.01),CustomContainer(
                                         onTap: null,
                                         verticalPadding: height * 0.02,
@@ -701,7 +713,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                     variables: const [
                                       'x',
                                       'y',
-                                      'z'
+                                      'z',
+                                      'C',
+                                      't'
                                     ],
                                     decoration: InputDecoration(
                                       isDense: true,
@@ -714,19 +728,18 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                       outlineInputBorder(width * 0.005, kLightPurple),
                                     ),
                                     onChanged: (String
-                                    text) {},
-                                    onSubmitted: (String text) {if (text == '') {
-                                      questionProvider.removeSubQuestionAnswer(
-                                          question['id'],
-                                          subQuestion.value['id']);
-                                    } else {
-                                      final mathExpression = TeXParser(text).parse();
-                                      final texNode =
-                                      convertMathExpressionToTeXNode(mathExpression);
-
-                                      questionProvider.editSubQuestionAnswer(question['id'],
-                                          subQuestion.value['id'], r'$'+texNode.buildTeXString()+r'$');
-                                    }},
+                                    text) {
+                                      if (text == '') {
+                                        questionProvider.removeSubQuestionAnswer(
+                                            question['id'],
+                                            subQuestion.value['id']);
+                                      } else {
+                                        questionProvider.editSubQuestionAnswer(question['id'],
+                                            subQuestion.value['id'], r'$'+text+r'$');
+                                      }
+                                    },
+                                    onSubmitted: (String text) {
+                                    },
                                   ),
                                 ),
                               )
@@ -756,7 +769,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                 backgroundColor: kDarkGray,
                                 verticalPadding: width * 0.01,
                                 horizontalPadding: width * 0.02,
-                                isDense: null,
+                                isDense: true,
                                 errorText: null,
                                 hintText: 'اكتب الجواب النهائي',
                                 hintTextColor: kWhite.withOpacity(0.5),
@@ -792,14 +805,16 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                           [i]['id']);
                                     }
                                   },
-                                  verticalPadding: width * 0.01,
+                                  verticalPadding: 0,
                                   horizontalPadding: width * 0.02,
                                   width: width * 0.79,
+                                  height: height*0.08,
                                   borderRadius: width * 0.005,
-                                  border: questionProvider.showResult?
-                                          fullBorder(subQuestion.value['choices'][i]['id']==subQuestion.value['correct_answer']['id']? kGreen:
+
+                                  border:
+                                          fullBorder(questionProvider.showResult?subQuestion.value['choices'][i]['id']==subQuestion.value['correct_answer']['id']? kGreen:
                                           answer.containsKey('answer') && answer['answer'].containsKey(subQuestion.value['id']) &&
-                                              answer['answer'][subQuestion.value['id']] == subQuestion.value['choices'][i]['id']?kRed:kTransparent):null,
+                                              answer['answer'][subQuestion.value['id']] == subQuestion.value['choices'][i]['id']?kRed:kTransparent:kTransparent),
                                   buttonColor: answer.containsKey(
                                       'answer') &&
                                       answer['answer']
@@ -837,7 +852,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     );
   }
 
-  Widget multiSectionQuestionWithImage(QuestionProvider questionProvider, width, height) {
+  Widget multiSectionQuestionWithImage(SimilarQuestionsProvider questionProvider, width, height) {
     int questionIndex = questionProvider.questionIndex - 1;
     Map question = questionProvider.questions[questionIndex];
     Map answer = questionProvider.answers[question['id']];
@@ -902,7 +917,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                           horizontalPadding: width * 0.02,
                                           width: width * 0.42,
                                           borderRadius: width * 0.005,
-                                          border: fullBorder(questionProvider.questionResult[subQuestion.key - 1] ? kGreen : kRed),
+                                          border: fullBorder(questionProvider.questionResult[subQuestion.key] ? kGreen : kRed),
                                           buttonColor: kDarkGray,
                                           child: Align(
                                               alignment:
@@ -922,7 +937,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                   height,
                                                   kWhite)
                                           )),
-                                      if(!questionProvider.questionResult[subQuestion.key-1])
+                                      if(!questionProvider.questionResult[subQuestion.key])
                                         ...[SizedBox(height: height*0.01),CustomContainer(
                                             onTap: null,
                                             verticalPadding: height * 0.02,
@@ -953,7 +968,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                           variables: const [
                                             'x',
                                             'y',
-                                            'z'
+                                            'z',
+                                            'C',
+                                            't'
                                           ],
                                           // Specify the variables the user can use (only in expression mode).
                                           decoration: InputDecoration(
@@ -968,21 +985,17 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                           ),
 
                                           onChanged: (String
-                                          text) {},
-                                          onSubmitted: (String text) {
+                                          text) {
                                             if (text == '') {
                                               questionProvider.removeSubQuestionAnswer(
                                                   question['id'],
                                                   subQuestion.value['id']);
                                             } else {
-                                              final mathExpression = TeXParser(text).parse();
-                                              final texNode =
-                                              convertMathExpressionToTeXNode(mathExpression);
-
                                               questionProvider.editSubQuestionAnswer(question['id'],
-                                                  subQuestion.value['id'], r'$'+texNode.buildTeXString()+r'$');
+                                                  subQuestion.value['id'], r'$'+text+r'$');
                                             }
                                           },
+                                          onSubmitted: (String text) {},
                                         ),
                                       ),
                                     )else
@@ -1014,7 +1027,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                       backgroundColor: kDarkGray,
                                       verticalPadding: width * 0.01,
                                       horizontalPadding: width * 0.02,
-                                      isDense: null,
+                                      isDense: true,
                                       errorText: null,
                                       hintText: 'اكتب الجواب النهائي',
                                       hintTextColor: kWhite.withOpacity(0.5),
@@ -1057,15 +1070,15 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                 [i]['id']);
                                           }
                                         },
-                                        verticalPadding: width * 0.01,
+                                        verticalPadding: 0,
                                         horizontalPadding: width * 0.02,
                                         width: width * 0.42,
+                                        height: height*0.08,
                                         borderRadius: width * 0.005,
-                                        border: questionProvider.showResult?
-                                        fullBorder(subQuestion.value['choices'][i]['id']==subQuestion.value['correct_answer']['id']? kGreen:
+                                        border:
+                                        fullBorder(questionProvider.showResult?subQuestion.value['choices'][i]['id']==subQuestion.value['correct_answer']['id']? kGreen:
                                         answer.containsKey('answer') && answer['answer'].containsKey(subQuestion.value['id']) &&
-                                            answer['answer'][subQuestion.value['id']] == subQuestion.value['choices'][i]['id']?kRed:kTransparent):null,
-
+                                            answer['answer'][subQuestion.value['id']] == subQuestion.value['choices'][i]['id']?kRed:kTransparent:kTransparent),
                                         buttonColor: answer
                                             .containsKey(
                                             'answer') &&
@@ -1135,12 +1148,14 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
-    QuestionProvider questionProvider = Provider.of<QuestionProvider>(context);
+    SimilarQuestionsProvider questionProvider = Provider.of<SimilarQuestionsProvider>(context);
     WebsiteProvider websiteProvider = Provider.of<WebsiteProvider>(context);
 
-    return
+    return width < height
+        ? const RotateYourPhone()
+        :
         Provider.of<WebsiteProvider>(context, listen: true).loaded
-        ? Provider.of<QuestionProvider>(context, listen: true).questions.isEmpty?Scaffold(
+        ? Provider.of<SimilarQuestionsProvider>(context, listen: true).questions.isEmpty?Scaffold(
           backgroundColor: kDarkGray,
           body: Center(
               child: CustomContainer(
@@ -1165,7 +1180,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                       onTap: () {
                         Provider.of<WebsiteProvider>(context, listen: false)
                             .setLoaded(false);
-                        context.go('/Dashboard');
+                        context.pushReplacement('/QuizSetting');
                       },
                       width: width * 0.18,
                       verticalPadding: height * 0.005,
@@ -1191,7 +1206,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
             height: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("images/single_question_background.png"),
+                image: AssetImage("images/single_question_background.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -1218,7 +1233,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                       height * 0.25,
                                       Center(
                                         child: Text(
-                                          'هذا السؤال من اسئلة ${Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]['writer']}',
+                                          'هذا السؤال من اسئلة ${Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['writer']}',
                                           style: textStyle(
                                               3, width, height, kLightPurple),
                                         ),
@@ -1276,9 +1291,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                       style: textStyle(
                                           3, width, height, kDarkBlack)),
                                   Text('${Provider
-                                      .of<QuestionProvider>(
+                                      .of<SimilarQuestionsProvider>(
                                       context, listen: true)
-                                      .questionIndex}/${Provider.of<QuestionProvider>(context, listen: true).questions.length}',
+                                      .questionIndex}/${Provider.of<SimilarQuestionsProvider>(context, listen: true).questions.length}',
                                       style: textStyle(
                                           3, width, height, kDarkBlack)),
                                 ],
@@ -1307,24 +1322,24 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                 children: [
                                   Column(
                                     children: [
-                                      Text('رمز السؤال',
+                                      Text('شارك السؤال',
                                           textAlign: TextAlign.center,
                                           style: textStyle(
                                               3, width, height, kDarkBlack)),
                                       CustomContainer(
                                         onTap: () async {
-                                          Provider.of<QuestionProvider>(context, listen: false).setCopied(true);
+                                          Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(true);
                                           await Clipboard.setData(
                                               ClipboardData(
-                                                  text: Provider.of<QuestionProvider>(context, listen: false).questions[
-                                                  Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]
-                                                  ['id']));
+                                                  text: 'https://kawka-b.com/#/SharedQuestion/${Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[
+                                                  Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]
+                                                  ['id']}'));
                                           Timer(const Duration(seconds: 2), () {
-                                            Provider.of<QuestionProvider>(context, listen: false).setCopied(false);
+                                            Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(false);
                                           });
                                         },
                                         child: Text(
-                                            Provider.of<QuestionProvider>(context, listen: true).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]['id']
+                                            Provider.of<SimilarQuestionsProvider>(context, listen: true).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['id']
                                                 .substring(0, 8),
                                             style: textStyle(3, width, height,
                                                 kDarkBlack)),
@@ -1332,7 +1347,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                     ],
                                   ),
                                   Visibility(
-                                    visible: Provider.of<QuestionProvider>(context, listen: true).copied,
+                                    visible: Provider.of<SimilarQuestionsProvider>(context, listen: true).copied,
                                     child: CustomContainer(
                                       borderRadius: width * 0.05,
                                       buttonColor: kDarkBlack,
@@ -1388,12 +1403,12 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                 onChanged: (String text) {},
                                                 onSubmitted: (value) {
                                                   report(
-                                                      Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]['id']);
+                                                      Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['id']);
                                                 },
                                                 backgroundColor: kDarkBlack,
                                                 verticalPadding: height * 0.02,
                                                 horizontalPadding: width * 0.02,
-                                                isDense: null,
+                                                isDense: true,
                                                 errorText: null,
                                                 hintText: 'ادخل ملاحظاتك',
                                                 hintTextColor: kLightPurple.withOpacity(0.5),
@@ -1407,11 +1422,11 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                               CustomContainer(
                                                 onTap: () {
                                                   report(
-                                                      Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]['id']);
+                                                      Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['id']);
                                                 },
                                                 width: width * 0.38,
-                                                verticalPadding:
-                                                height * 0.02,
+                                                height: height*0.06,
+                                                verticalPadding:0,
                                                 horizontalPadding: width*0.02,
                                                 borderRadius: width * 0.005,
                                                 buttonColor: kLightPurple,
@@ -1461,14 +1476,14 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                           height * 0.25,
                                           Center(
                                             child: Text(
-                                              Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex - 1]
+                                              Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]
                                               ['hint'] ==
                                                   '' ||
-                                                  Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex -
+                                                  Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex -
                                                       1]['hint'] ==
                                                       null
                                                   ? 'لا توجد اي معلومة اضافية لهذا السؤال'
-                                                  : Provider.of<QuestionProvider>(context, listen: false).questions[Provider.of<QuestionProvider>(context, listen: false).questionIndex -
+                                                  : Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex -
                                                   1]['hint'],
                                               style: textStyle(3, width,
                                                   height, kLightPurple),
@@ -1518,8 +1533,8 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                   context.pop();
                                                 },
                                                 width: width * 0.08,
-                                                verticalPadding:
-                                                height * 0.005,
+                                                height: height*0.06,
+                                                verticalPadding:0,
                                                 horizontalPadding: 0,
                                                 borderRadius: width * 0.005,
                                                 buttonColor: kDarkBlack,
@@ -1540,8 +1555,8 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                   endTraining(questionProvider, websiteProvider);
                                                 },
                                                 width: width * 0.08,
-                                                verticalPadding:
-                                                height * 0.005,
+                                                verticalPadding:0,
+                                                height: height*0.06,
                                                 horizontalPadding: 0,
                                                 borderRadius: width * 0.005,
                                                 buttonColor: kLightPurple,
@@ -1655,8 +1670,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                               CustomContainer(
                                   onTap: null,
                                   width: width * 0.19,
-                                  verticalPadding: width * 0.005,
-                                  horizontalPadding: 0,
+                                  verticalPadding: 0,
+                                height: height * 0.08,
+                                horizontalPadding: 0,
                                   borderRadius: width * 0.005,
                                   border: null,
                                   buttonColor: kTransparent,
@@ -1674,14 +1690,15 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                   }:endQuestion(questionProvider);
                                 },
                                 width: width * 0.19,
-                                verticalPadding: width * 0.005,
+                                height: height * 0.08,
+                                verticalPadding: 0,
                                 horizontalPadding: 0,
                                 borderRadius: width * 0.005,
                                 border: null,
                                 buttonColor: kLightPurple,
                                 child: Center(
                                   child: Text(questionProvider.showResult?
-                                  questionProvider.questionIndex == questionProvider.questions.length?'انهاء التدرييب':'السؤال التالي': 'تأكيد الجواب',
+                                  questionProvider.questionIndex == questionProvider.questions.length?'انهاء التدريب':'السؤال التالي': 'تأكيد الجواب',
                                       style: textStyle(
                                           2, width, height, kDarkBlack)),
                                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/session.dart';
+import '../utils/encrypt.dart';
 
 class UserInfoProvider with ChangeNotifier {
   TextEditingController _firstName = TextEditingController();
@@ -26,18 +27,28 @@ class UserInfoProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setUserPhone() {
-    setSession('sessionKey1', _userPhone.text);
+  void setUserEmail([email]) {
+    setSession('sessionKey0', email ?? _userEmail.text);
     notifyListeners();
   }
 
-  void setUserEmail() {
-    setSession('sessionKey0', _userEmail.text);
+  void setUserPhone([phone]) {
+    setSession('sessionKey1', phone ?? _userPhone.text);
     notifyListeners();
   }
 
-  void setUserPassword() {
-    setSession('sessionValue', _userPassword.text);
+  void setUserPassword([password]) {
+    setSession('sessionValue', password ?? encrypt(_userPassword.text));
+    notifyListeners();
+  }
+
+  void reset() {
+    _firstName = TextEditingController();
+    _lastName = TextEditingController();
+    _userPhone = TextEditingController();
+    _userEmail = TextEditingController();
+    _userPassword = TextEditingController();
+    _userConfirmPassword = TextEditingController();
     notifyListeners();
   }
 }

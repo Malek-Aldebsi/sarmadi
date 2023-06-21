@@ -59,7 +59,7 @@
 //                       fontSize: fontSize, color: hintTextColor),
 //                 ),
 //                 value: controller,
-//                 isDense: false,
+//                 isDense: true,
 //                 icon: icon,
 //                 onChanged: (text) {
 //                   onChanged!(text!);

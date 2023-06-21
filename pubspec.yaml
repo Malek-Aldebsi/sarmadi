@@ -72,6 +72,9 @@ dependencies:
 #  dotted_border: ^2.0.0
 
 #  flutter_dash: ^1.0.0
+  url_launcher: ^6.1.11
+  device_preview: ^1.1.0
+
 
 dev_dependencies:
   flutter_test:
@@ -122,8 +125,10 @@ flutter:
           weight: 600
         - asset: assets/fonts/Dubai-Bold.ttf
           weight: 800
-    - family: Testicon
+
+    - family: SarmadiIcons
       fonts:
-        - asset: assets/fonts/Testicon.ttf
+        - asset: assets/fonts/SarmadiIcons.ttf
+
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

@@ -7,7 +7,7 @@
 
 
     <application
-        android:label="sarmadi"
+        android:label="لحق حالك"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>

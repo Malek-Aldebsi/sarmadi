@@ -77,7 +77,7 @@ class _MultiSectionQuestionState extends State<MultiSectionQuestion> {
                             CustomContainer(
                               onTap: () {
                                 adminProvider.reset();
-                                context.go('/QuestionAdmin');
+                                context.pushReplacement('/QuestionAdmin');
                               },
                               buttonColor: kTransparent,
                               border: fullBorder(kLightPurple),

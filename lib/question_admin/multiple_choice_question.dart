@@ -70,7 +70,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                             CustomContainer(
                               onTap: () {
                                 adminProvider.reset();
-                                context.go('/QuestionAdmin');
+                                context.pushReplacement('/QuestionAdmin');
                               },
                               buttonColor: kLightPurple,
                               border: null,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../auth/utils/showSnackbar.dart';
+import 'package:sarmadi/providers/website_provider.dart';
+import 'package:sarmadi/screens/rotate_your_phone.dart';
+import '../components/snack_bar.dart';
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
@@ -13,6 +15,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import '../utils/authentication.dart';
 import '../utils/session.dart';
 import '../utils/http_requests.dart';
+import '../utils/encrypt.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -38,19 +41,18 @@ class _SignUpState extends State<SignUp> {
     FocusNode(),
   ];
 
-  List<int> validator = [0, 0, 0, 0, 0, 0, 0, 0];
+  List<int> validator = [0, 0, 0, 0, 0, 0];
 
   // String? section;
   // List<String> sectionList = ['العلمي', 'الأدبي', 'الصناعي'];
 
-  Future<bool> checkInfo(UserInfoProvider userInfoProvider) async {
+  Future<bool> checkInfoForEmailOrPhone(
+      UserInfoProvider userInfoProvider) async {
     bool acceptedInfo = false;
     await post('check_new_account_info/', {
-      if (userInfoProvider.userEmail.text != '')
-        'email': userInfoProvider.userEmail.text,
-      if (userInfoProvider.userPhone.text != '')
-        'phone': userInfoProvider.userPhone.text,
-      'password': userInfoProvider.userPassword.text,
+      if (signUpMethod == 0) 'email': userInfoProvider.userEmail.text,
+      if (signUpMethod == 1) 'phone': userInfoProvider.userPhone.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
     }).then((value) {
       dynamic result = decode(value);
       switch (result) {
@@ -85,6 +87,78 @@ class _SignUpState extends State<SignUp> {
     return acceptedInfo;
   }
 
+  Future<bool> checkInfoForFacebook(UserInfoProvider userInfoProvider) async {
+    bool acceptedInfo = false;
+    await post('check_new_account_info/', {
+      if (userInfoProvider.userEmail.text != '')
+        'email': userInfoProvider.userEmail.text,
+      if (userInfoProvider.userPhone.text != '')
+        'phone': userInfoProvider.userPhone.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
+    }).then((value) {
+      dynamic result = decode(value);
+      switch (result) {
+        case 0:
+          acceptedInfo = true;
+          break;
+        case 1:
+          showSnackBar(context,
+              'يوجد حساب مربوط بحساب الفيسبوك المدخل قم بتسجيل الدخول');
+          break;
+        case 2:
+          showSnackBar(context,
+              'يوجد حساب مربوط بالبريد الإلكتروني الخاص بالفيسبوك المدخل قم بتسجيل الدخول به او جرب حساباً اخر');
+          break;
+        case 3:
+          showSnackBar(context,
+              'يوجد حساب مربوط برقم الهاتف الخاص بالفيسبوك المدخل قم بتسجيل الدخول به او جرب حساباً اخر');
+          break;
+        case 404:
+          showSnackBar(
+              context, 'تأكد من اتصالك بالإنترنت ثم قم بالمحاولة مجدداً');
+          break;
+        default:
+          showSnackBar(context, 'لقد حصل خطأ غير متوقع قم بالمحاولة لاحقاً');
+          break;
+      }
+    });
+    return acceptedInfo;
+  }
+
+  Future<bool> checkInfoForGoogle(UserInfoProvider userInfoProvider) async {
+    bool acceptedInfo = false;
+    await post('check_new_account_info/', {
+      'email': userInfoProvider.userEmail.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
+    }).then((value) {
+      dynamic result = decode(value);
+      switch (result) {
+        case 0:
+          acceptedInfo = true;
+          break;
+        case 1:
+          showSnackBar(
+              context, 'يوجد حساب مربوط بحساب جوجل المدخل قم بتسجيل الدخول');
+          break;
+        case 2:
+          showSnackBar(context,
+              'يوجد حساب مربوط بالبريد الإلكتروني الخاص بحساب جوجل المدخل قم بتسجيل الدخول به او جرب حساباً اخر');
+          break;
+        case 3:
+          showSnackBar(context, 'لقد حصل خطأ غير متوقع قم بالمحاولة لاحقاً');
+          break;
+        case 404:
+          showSnackBar(
+              context, 'تأكد من اتصالك بالإنترنت ثم قم بالمحاولة مجدداً');
+          break;
+        default:
+          showSnackBar(context, 'لقد حصل خطأ غير متوقع قم بالمحاولة لاحقاً');
+          break;
+      }
+    });
+    return acceptedInfo;
+  }
+
   Future<bool> signUpWithEmail(UserInfoProvider userInfoProvider) async {
     bool verified = false;
     await context
@@ -94,28 +168,6 @@ class _SignUpState extends State<SignUp> {
           userInfoProvider.userEmail.text,
           userInfoProvider.userPassword.text,
         )
-        .then((value) {
-      verified = value;
-    });
-    return verified;
-  }
-
-  Future<bool> signUpWithFacebook(UserInfoProvider userInfoProvider) async {
-    bool verified = false;
-    await context
-        .read<FirebaseAuthMethods>()
-        .signUpWithFacebook(context, userInfoProvider)
-        .then((value) {
-      verified = value;
-    });
-    return verified;
-  }
-
-  Future<bool> signUpWithGoogle(UserInfoProvider userInfoProvider) async {
-    bool verified = false;
-    await context
-        .read<FirebaseAuthMethods>()
-        .signUpWithGoogle(context, userInfoProvider)
         .then((value) {
       verified = value;
     });
@@ -141,11 +193,34 @@ class _SignUpState extends State<SignUp> {
     return verified;
   }
 
-  void completeSignUpWithEmailOrPhone(UserInfoProvider userInfoProvider) async {
+  Future<bool> signUpWithGoogle(UserInfoProvider userInfoProvider) async {
+    bool verified = false;
+    await context
+        .read<FirebaseAuthMethods>()
+        .signUpWithGoogle(context, userInfoProvider)
+        .then((value) {
+      verified = value;
+    });
+    return verified;
+  }
+
+  Future<bool> signUpWithFacebook(UserInfoProvider userInfoProvider) async {
+    bool verified = false;
+    await context
+        .read<FirebaseAuthMethods>()
+        .signUpWithFacebook(context, userInfoProvider)
+        .then((value) {
+      verified = value;
+    });
+    return verified;
+  }
+
+  void completeSignUpWithEmailOrPhone(UserInfoProvider userInfoProvider,
+      WebsiteProvider websiteProvider) async {
     post('sign_up/', {
       if (signUpMethod == 0) 'email': userInfoProvider.userEmail.text,
       if (signUpMethod == 1) 'phone': userInfoProvider.userPhone.text,
-      'password': userInfoProvider.userPassword.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
       'auth_method': signUpMethod == 0 ? 2 : 1,
       'firstName': userInfoProvider.firstName.text,
       'lastName': userInfoProvider.lastName.text
@@ -156,7 +231,7 @@ class _SignUpState extends State<SignUp> {
           if (signUpMethod == 0) userInfoProvider.setUserEmail();
           if (signUpMethod == 1) userInfoProvider.setUserPhone();
           userInfoProvider.setUserPassword();
-          context.go('/Dashboard');
+          context.pushReplacement(websiteProvider.lastRoot);
           break;
         case 404:
           showSnackBar(
@@ -169,13 +244,41 @@ class _SignUpState extends State<SignUp> {
     });
   }
 
-  void completeSignUpWithFacebook(UserInfoProvider userInfoProvider) async {
+  void completeSignUpWithGoogle(UserInfoProvider userInfoProvider,
+      WebsiteProvider websiteProvider) async {
+    post('sign_up/', {
+      'email': userInfoProvider.userEmail.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
+      'auth_method': 3,
+      'firstName': userInfoProvider.firstName.text,
+      'lastName': userInfoProvider.lastName.text
+    }).then((value) {
+      dynamic result = decode(value);
+      switch (result) {
+        case 0:
+          userInfoProvider.setUserEmail();
+          userInfoProvider.setUserPassword();
+          context.pushReplacement(websiteProvider.lastRoot);
+          break;
+        case 404:
+          showSnackBar(
+              context, 'تأكد من اتصالك بالإنترنت ثم قم بالمحاولة مجدداً');
+          break;
+        default:
+          showSnackBar(context, 'لقد حصل خطأ غير متوقع قم بالمحاولة لاحقاً');
+          break;
+      }
+    });
+  }
+
+  void completeSignUpWithFacebook(UserInfoProvider userInfoProvider,
+      WebsiteProvider websiteProvider) async {
     post('sign_up/', {
       if (userInfoProvider.userEmail.text != '')
         'email': userInfoProvider.userEmail.text,
       if (userInfoProvider.userPhone.text != '')
         'phone': userInfoProvider.userPhone.text,
-      'password': userInfoProvider.userPassword.text,
+      'password': encrypt(userInfoProvider.userPassword.text),
       'auth_method': 4,
       'firstName': userInfoProvider.firstName.text,
       'lastName': userInfoProvider.lastName.text
@@ -190,7 +293,7 @@ class _SignUpState extends State<SignUp> {
             userInfoProvider.setUserPhone();
           }
           userInfoProvider.setUserPassword();
-          context.go('/Dashboard');
+          context.pushReplacement(websiteProvider.lastRoot);
           break;
         case 404:
           showSnackBar(
@@ -203,46 +306,37 @@ class _SignUpState extends State<SignUp> {
     });
   }
 
-  void completeSignUpWithGoogle(UserInfoProvider userInfoProvider) async {
-    post('sign_up/', {
-      'email': userInfoProvider.userEmail.text,
-      'password': userInfoProvider.userPassword.text,
-      'auth_method': 3,
-      'firstName': userInfoProvider.firstName.text,
-      'lastName': userInfoProvider.lastName.text
-    }).then((value) {
-      dynamic result = decode(value);
-      switch (result) {
-        case 0:
-          userInfoProvider.setUserEmail();
-          userInfoProvider.setUserPassword();
-          context.go('/Dashboard');
-          break;
-        case 404:
-          showSnackBar(
-              context, 'تأكد من اتصالك بالإنترنت ثم قم بالمحاولة مجدداً');
-          break;
-        default:
-          showSnackBar(context, 'لقد حصل خطأ غير متوقع قم بالمحاولة لاحقاً');
-          break;
-      }
-    });
-  }
-
-  void checkSession() async {
+  void checkSession(UserInfoProvider userInfoProvider,
+      WebsiteProvider websiteProvider) async {
     String? key0 = await getSession('sessionKey0');
     String? key1 = await getSession('sessionKey1');
     String? value = await getSession('sessionValue');
-
     if ((key0 != null || key1 != null) && (value != null)) {
-      context.go('/Dashboard');
+      delSession('sessionKey0');
+      delSession('sessionKey1');
+      delSession('sessionValue');
+
+      await post('log_in/', {
+        if (key0 != null) 'email': key0,
+        if (key1 != null) 'phone': key1,
+        'password': value,
+      }).then((result) {
+        dynamic authenticated = decode(result);
+        if (authenticated == 0) {
+          if (key0 != null) userInfoProvider.setUserEmail(key0);
+          if (key1 != null) userInfoProvider.setUserPhone(key1);
+          userInfoProvider.setUserPassword(value);
+          context.pushReplacement(websiteProvider.lastRoot);
+        }
+      });
     }
   }
 
   @override
   void initState() {
     super.initState();
-    // checkSession();
+    checkSession(Provider.of<UserInfoProvider>(context, listen: false),
+        Provider.of<WebsiteProvider>(context, listen: false));
   }
 
   @override
@@ -252,7 +346,11 @@ class _SignUpState extends State<SignUp> {
 
     UserInfoProvider userInfoProvider =
         Provider.of<UserInfoProvider>(context, listen: false);
-    return Scaffold(
+    WebsiteProvider websiteProvider =
+        Provider.of<WebsiteProvider>(context, listen: false);
+    return width < height
+        ? const RotateYourPhone()
+        : Scaffold(
         body: Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
@@ -260,7 +358,7 @@ class _SignUpState extends State<SignUp> {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("images/signup_background.png"),
+            image: AssetImage("images/signup_background.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -273,609 +371,699 @@ class _SignUpState extends State<SignUp> {
                 padding: EdgeInsets.symmetric(horizontal: width * 0.04),
                 child: Row(
                   children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Text(
-                            'إنشاء حساب',
-                            style: textStyle(3, width, height, kLightPurple),
-                          ),
-                        ),
-                        Padding(
-                          padding:
-                              EdgeInsets.only(bottom: height / 32, right: 12),
-                          child: Text(
-                            'أهـلا فيـك!',
-                            style: textStyle(2, width, height, kWhite),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              top: height / 32, bottom: height / 32),
-                          child: Row(
+                    SizedBox(
+                      height: height * 0.72,
+                      width: width * 0.42,
+                      child: ListView(
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CustomContainer(
-                                onTap: () {
-                                  setState(() {
-                                    userInfoProvider.userPhone.text = '';
-                                    signUpMethod = 0;
-                                  });
-                                },
-                                width: width * 0.21,
-                                verticalPadding: height * 0.01,
-                                buttonColor: kTransparent,
-                                horizontalPadding: 0,
-                                borderRadius: null,
-                                border: singleBottomBorder(signUpMethod == 0
-                                    ? kLightPurple
-                                    : kDarkGray),
-                                child: Center(
-                                  child: Text(
-                                    'البريد الإلكتروني',
-                                    style: textStyle(
-                                        3,
-                                        width,
-                                        height,
-                                        signUpMethod == 0
-                                            ? kLightPurple
-                                            : kDarkGray),
-                                  ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Text(
+                                  'إنشاء حساب',
+                                  style:
+                                      textStyle(3, width, height, kLightPurple),
                                 ),
                               ),
-                              CustomContainer(
-                                onTap: () {
-                                  setState(() {
-                                    userInfoProvider.userEmail.text = '';
-                                    signUpMethod = 1;
-                                  });
-                                },
-                                width: width * 0.21,
-                                verticalPadding: height * 0.01,
-                                horizontalPadding: 0,
-                                buttonColor: kTransparent,
-                                borderRadius: null,
-                                border: singleBottomBorder(signUpMethod == 1
-                                    ? kLightPurple
-                                    : kDarkGray),
-                                child: Center(
-                                  child: Text(
-                                    'رقم الهاتف',
-                                    style: textStyle(
-                                        3,
-                                        width,
-                                        height,
-                                        signUpMethod == 1
-                                            ? kLightPurple
-                                            : kDarkGray),
-                                  ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: height / 64, right: 12),
+                                child: Text(
+                                  'أهـلا فيـك!',
+                                  style: textStyle(2, width, height, kWhite),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: height / 64),
-                          child: Row(
-                            children: [
-                              CustomTextField(
-                                controller: userInfoProvider.firstName,
-                                width: width * 0.2,
-                                fontOption: 3,
-                                fontColor: kWhite,
-                                textAlign: null,
-                                obscure: false,
-                                readOnly: false,
-                                focusNode: focusNodes[0],
-                                maxLines: 1,
-                                maxLength: null,
-                                keyboardType: null,
-                                onChanged: (String text) {},
-                                onSubmitted: (value) {
-                                  if (userInfoProvider.firstName.text.isEmpty) {
-                                    setState(() {
-                                      validator[0] = 1;
-                                      focusNodes[0].requestFocus();
-                                    });
-                                  } else {
-                                    setState(() {
-                                      validator[0] = 0;
-                                      FocusScope.of(context)
-                                          .requestFocus(focusNodes[1]);
-                                    });
-                                  }
-                                },
-                                backgroundColor: kDarkGray,
-                                verticalPadding: width * 0.01,
-                                horizontalPadding: width * 0.02,
-                                isDense: null,
-                                errorText: validator[0] == 0
-                                    ? null
-                                    : 'لا يجب أن يكون فارغاً',
-                                hintText: 'الاسم الاول',
-                                hintTextColor: kWhite.withOpacity(0.5),
-                                suffixIcon: null,
-                                prefixIcon: null,
-                                border: outlineInputBorder(
-                                    width * 0.005, kTransparent),
-                                focusedBorder: outlineInputBorder(
-                                    width * 0.005, kLightPurple),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    top: height / 32, bottom: height / 32),
+                                child: Row(
+                                  children: [
+                                    CustomContainer(
+                                      onTap: () {
+                                        setState(() {
+                                          userInfoProvider.userPhone.text = '';
+                                          signUpMethod = 0;
+                                        });
+                                      },
+                                      width: width * 0.21,
+                                      verticalPadding: height * 0.01,
+                                      buttonColor: kTransparent,
+                                      horizontalPadding: 0,
+                                      borderRadius: null,
+                                      border: singleBottomBorder(
+                                          signUpMethod == 0
+                                              ? kLightPurple
+                                              : kWhite.withOpacity(0.2)),
+                                      child: Center(
+                                        child: Text(
+                                          'البريد الإلكتروني',
+                                          style: textStyle(
+                                              3,
+                                              width,
+                                              height,
+                                              signUpMethod == 0
+                                                  ? kLightPurple
+                                                  : kWhite.withOpacity(0.2)),
+                                        ),
+                                      ),
+                                    ),
+                                    CustomContainer(
+                                      onTap: () {
+                                        setState(() {
+                                          userInfoProvider.userEmail.text = '';
+                                          signUpMethod = 1;
+                                        });
+                                      },
+                                      width: width * 0.21,
+                                      verticalPadding: height * 0.01,
+                                      horizontalPadding: 0,
+                                      buttonColor: kTransparent,
+                                      borderRadius: null,
+                                      border: singleBottomBorder(
+                                          signUpMethod == 1
+                                              ? kLightPurple
+                                              : kWhite.withOpacity(0.2)),
+                                      child: Center(
+                                        child: Text(
+                                          'رقم الهاتف',
+                                          style: textStyle(
+                                              3,
+                                              width,
+                                              height,
+                                              signUpMethod == 1
+                                                  ? kLightPurple
+                                                  : kWhite.withOpacity(0.2)),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              SizedBox(
-                                width: width * 0.02,
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(vertical: height / 64),
+                                child: Row(
+                                  children: [
+                                    CustomTextField(
+                                      controller: userInfoProvider.firstName,
+                                      width: width * 0.2,
+                                      fontOption: 3,
+                                      fontColor: kWhite,
+                                      textAlign: null,
+                                      obscure: false,
+                                      readOnly: false,
+                                      focusNode: focusNodes[0],
+                                      maxLines: 1,
+                                      maxLength: null,
+                                      keyboardType: null,
+                                      onChanged: (String text) {},
+                                      onSubmitted: (value) {
+                                        if (userInfoProvider
+                                            .firstName.text.isEmpty) {
+                                          setState(() {
+                                            validator[0] = 1;
+                                            if (width > 750 && height > 400) {
+                                              focusNodes[0].requestFocus();
+                                            }
+                                          });
+                                        } else {
+                                          setState(() {
+                                            validator[0] = 0;
+                                            if (width > 750 && height > 400) {
+                                              FocusScope.of(context)
+                                                  .requestFocus(focusNodes[1]);
+                                            }
+                                          });
+                                        }
+                                      },
+                                      backgroundColor: kDarkGray,
+                                      verticalPadding: width * 0.01,
+                                      horizontalPadding: width * 0.02,
+                                      isDense: true,
+                                      errorText: validator[0] == 0
+                                          ? null
+                                          : 'لا يجب أن يكون فارغاً',
+                                      hintText: 'الاسم الاول',
+                                      hintTextColor: kWhite.withOpacity(0.5),
+                                      suffixIcon: null,
+                                      prefixIcon: null,
+                                      border: outlineInputBorder(
+                                          width * 0.005, kTransparent),
+                                      focusedBorder: outlineInputBorder(
+                                          width * 0.005, kLightPurple),
+                                    ),
+                                    SizedBox(
+                                      width: width * 0.02,
+                                    ),
+                                    CustomTextField(
+                                      controller: userInfoProvider.lastName,
+                                      width: width * 0.2,
+                                      fontOption: 3,
+                                      fontColor: kWhite,
+                                      textAlign: null,
+                                      obscure: false,
+                                      readOnly: false,
+                                      focusNode: focusNodes[1],
+                                      maxLines: 1,
+                                      maxLength: null,
+                                      keyboardType: null,
+                                      onChanged: (String text) {},
+                                      onSubmitted: (value) {
+                                        if (userInfoProvider
+                                            .lastName.text.isEmpty) {
+                                          setState(() {
+                                            validator[1] = 1;
+                                            if (width > 750 && height > 400) {
+                                              focusNodes[1].requestFocus();
+                                            }
+                                          });
+                                        } else {
+                                          setState(() {
+                                            validator[1] = 0;
+                                            if (width > 750 && height > 400) {
+                                              FocusScope.of(context)
+                                                  .requestFocus(focusNodes[2]);
+                                            }
+                                          });
+                                        }
+                                      },
+                                      backgroundColor: kDarkGray,
+                                      verticalPadding: width * 0.01,
+                                      horizontalPadding: width * 0.02,
+                                      isDense: true,
+                                      errorText: validator[1] == 0
+                                          ? null
+                                          : 'لا يجب أن يكون فارغاً',
+                                      hintText: 'اسم العائلة',
+                                      hintTextColor: kWhite.withOpacity(0.5),
+                                      suffixIcon: null,
+                                      prefixIcon: null,
+                                      border: outlineInputBorder(
+                                          width * 0.005, kTransparent),
+                                      focusedBorder: outlineInputBorder(
+                                          width * 0.005, kLightPurple),
+                                    )
+                                  ],
+                                ),
                               ),
-                              CustomTextField(
-                                controller: userInfoProvider.lastName,
-                                width: width * 0.2,
-                                fontOption: 3,
-                                fontColor: kWhite,
-                                textAlign: null,
-                                obscure: false,
-                                readOnly: false,
-                                focusNode: focusNodes[1],
-                                maxLines: 1,
-                                maxLength: null,
-                                keyboardType: null,
-                                onChanged: (String text) {},
-                                onSubmitted: (value) {
-                                  if (userInfoProvider.lastName.text.isEmpty) {
-                                    setState(() {
-                                      validator[1] = 1;
-                                      focusNodes[1].requestFocus();
-                                    });
-                                  } else {
-                                    setState(() {
-                                      validator[1] = 0;
-                                      FocusScope.of(context)
-                                          .requestFocus(focusNodes[2]);
-                                    });
-                                  }
-                                },
-                                backgroundColor: kDarkGray,
-                                verticalPadding: width * 0.01,
-                                horizontalPadding: width * 0.02,
-                                isDense: null,
-                                errorText: validator[1] == 0
-                                    ? null
-                                    : 'لا يجب أن يكون فارغاً',
-                                hintText: 'اسم العائلة',
-                                hintTextColor: kWhite.withOpacity(0.5),
-                                suffixIcon: null,
-                                prefixIcon: null,
-                                border: outlineInputBorder(
-                                    width * 0.005, kTransparent),
-                                focusedBorder: outlineInputBorder(
-                                    width * 0.005, kLightPurple),
-                              )
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: height / 64),
-                          child: CustomTextField(
-                            controller: signUpMethod == 0
-                                ? userInfoProvider.userEmail
-                                : userInfoProvider.userPhone,
-                            width: width * 0.42,
-                            fontOption: 3,
-                            fontColor: kWhite,
-                            textAlign: null,
-                            obscure: false,
-                            readOnly: false,
-                            focusNode: focusNodes[2],
-                            maxLines: 1,
-                            maxLength: null,
-                            keyboardType: signUpMethod == 0
-                                ? TextInputType.emailAddress
-                                : TextInputType.phone,
-                            onChanged: (String text) {},
-                            onSubmitted: signUpMethod == 0
-                                ? (value) {
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(vertical: height / 64),
+                                child: CustomTextField(
+                                  controller: signUpMethod == 0
+                                      ? userInfoProvider.userEmail
+                                      : userInfoProvider.userPhone,
+                                  width: width * 0.42,
+                                  fontOption: 3,
+                                  fontColor: kWhite,
+                                  textAlign: null,
+                                  obscure: false,
+                                  readOnly: false,
+                                  focusNode: focusNodes[2],
+                                  maxLines: 1,
+                                  maxLength: null,
+                                  keyboardType: signUpMethod == 0
+                                      ? TextInputType.emailAddress
+                                      : TextInputType.phone,
+                                  onChanged: (String text) {},
+                                  onSubmitted: signUpMethod == 0
+                                      ? (value) {
+                                          if (userInfoProvider
+                                              .userEmail.text.isEmpty) {
+                                            setState(() {
+                                              validator[2] = 1;
+                                              if (width > 750 && height > 400) {
+                                                focusNodes[2].requestFocus();
+                                              }
+                                            });
+                                          } else if (!RegExp(
+                                                  r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
+                                              .hasMatch(userInfoProvider
+                                                  .userEmail.text)) {
+                                            setState(() {
+                                              validator[2] = 2;
+                                              if (width > 750 && height > 400) {
+                                                focusNodes[2].requestFocus();
+                                              }
+                                            });
+                                          } else {
+                                            setState(() {
+                                              validator[2] = 0;
+                                              if (width > 750 && height > 400) {
+                                                FocusScope.of(context)
+                                                    .requestFocus(
+                                                        focusNodes[3]);
+                                              }
+                                            });
+                                          }
+                                        }
+                                      : (value) {
+                                          if (userInfoProvider
+                                              .userPhone.text.isEmpty) {
+                                            setState(() {
+                                              validator[3] = 1;
+                                              if (width > 750 && height > 400) {
+                                                focusNodes[2].requestFocus();
+                                              }
+                                            });
+                                          } else if (!RegExp(
+                                                  r'^([+]962|0)7(7|8|9)[0-9]{7,}')
+                                              .hasMatch(userInfoProvider
+                                                  .userPhone.text)) {
+                                            setState(() {
+                                              validator[3] = 2;
+                                              if (width > 750 && height > 400) {
+                                                focusNodes[2].requestFocus();
+                                              }
+                                            });
+                                          } else {
+                                            setState(() {
+                                              validator[3] = 0;
+                                              if (width > 750 && height > 400) {
+                                                FocusScope.of(context)
+                                                    .requestFocus(
+                                                        focusNodes[3]);
+                                              }
+                                            });
+                                          }
+                                        },
+                                  backgroundColor: kDarkGray,
+                                  verticalPadding: width * 0.01,
+                                  horizontalPadding: width * 0.02,
+                                  isDense: true,
+                                  errorText: signUpMethod == 0
+                                      ? validator[2] == 0
+                                          ? null
+                                          : validator[2] == 1
+                                              ? 'لا يجب أن يكون فارغاً'
+                                              : validator[2] == 2
+                                                  ? 'البريد الإلكتروني المدخل غير صحيح'
+                                                  : 'هذا البريد الإلكتروني مستخدم بالفعل قم بتسجيل الدخول او جرب بريداً اخر'
+                                      : validator[3] == 0
+                                          ? null
+                                          : validator[3] == 1
+                                              ? 'لا يجب أن يكون فارغاً'
+                                              : validator[3] == 2
+                                                  ? 'رقم الهاتف المدخل غير صحيح'
+                                                  : 'رقم الهاتف مستخدم بالفعل قم بتسجيل الدخول او جرب رقماً اخر',
+                                  hintText: signUpMethod == 0
+                                      ? 'البريد الإلكتروني'
+                                      : 'رقم الهاتف',
+                                  hintTextColor: kWhite.withOpacity(0.5),
+                                  suffixIcon: null,
+                                  prefixIcon: null,
+                                  border: outlineInputBorder(
+                                      width * 0.005, kTransparent),
+                                  focusedBorder: outlineInputBorder(
+                                      width * 0.005, kLightPurple),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(vertical: height / 64),
+                                child: Row(
+                                  children: [
+                                    CustomTextField(
+                                      controller: userInfoProvider.userPassword,
+                                      width: width * 0.2,
+                                      fontOption: 3,
+                                      fontColor: kWhite,
+                                      textAlign: null,
+                                      obscure: obscurePassword,
+                                      readOnly: false,
+                                      focusNode: focusNodes[3],
+                                      maxLines: 1,
+                                      maxLength: null,
+                                      keyboardType: null,
+                                      onChanged: (String text) {},
+                                      onSubmitted: (value) {
+                                        if (userInfoProvider
+                                                .userPassword.text.length <
+                                            8) {
+                                          setState(() {
+                                            validator[4] = 1;
+                                            if (width > 750 && height > 400) {
+                                              focusNodes[3].requestFocus();
+                                            }
+                                          });
+                                        } else if (!RegExp(
+                                                r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')
+                                            .hasMatch(userInfoProvider
+                                                .userPassword.text)) {
+                                          setState(() {
+                                            validator[4] = 2;
+                                            if (width > 750 && height > 400) {
+                                              focusNodes[3].requestFocus();
+                                            }
+                                          });
+                                        } else {
+                                          setState(() {
+                                            validator[4] = 0;
+                                            if (width > 750 && height > 400) {
+                                              FocusScope.of(context)
+                                                  .requestFocus(focusNodes[4]);
+                                            }
+                                          });
+                                        }
+                                      },
+                                      backgroundColor: kDarkGray,
+                                      verticalPadding: width * 0.01,
+                                      horizontalPadding: width * 0.02,
+                                      isDense: true,
+                                      errorText: validator[4] == 0
+                                          ? null
+                                          : validator[4] == 1
+                                              ? 'يجب أن تتكون كلمة السر من 8 رموز أو أكثر'
+                                              : 'يجب أن تحتوي كلمة السر على حروف وأرقام',
+                                      hintText: 'كلمة السر',
+                                      hintTextColor: kWhite.withOpacity(0.5),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          obscurePassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          size: width / 65,
+                                          color: kWhite.withOpacity(0.5),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            obscurePassword = !obscurePassword;
+                                          });
+                                        },
+                                      ),
+                                      prefixIcon: null,
+                                      border: outlineInputBorder(
+                                          width * 0.005, kTransparent),
+                                      focusedBorder: outlineInputBorder(
+                                          width * 0.005, kLightPurple),
+                                    ),
+                                    SizedBox(
+                                      width: width * 0.02,
+                                    ),
+                                    CustomTextField(
+                                      controller:
+                                          userInfoProvider.userConfirmPassword,
+                                      width: width * 0.2,
+                                      fontOption: 3,
+                                      fontColor: kWhite,
+                                      textAlign: null,
+                                      obscure: obscureConfirmPassword,
+                                      readOnly: false,
+                                      focusNode: focusNodes[4],
+                                      maxLines: 1,
+                                      maxLength: null,
+                                      keyboardType: null,
+                                      onChanged: (String text) {},
+                                      onSubmitted: (value) {
+                                        if (userInfoProvider
+                                                .userConfirmPassword.text !=
+                                            userInfoProvider
+                                                .userPassword.text) {
+                                          setState(() {
+                                            validator[5] = 1;
+                                            if (width > 750 && height > 400) {
+                                              focusNodes[4].requestFocus();
+                                            }
+                                          });
+                                        } else {
+                                          setState(() {
+                                            validator[5] = 0;
+                                            if (width > 750 && height > 400) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                            if (signUpMethod == 0) {
+                                              checkInfoForEmailOrPhone(
+                                                      userInfoProvider)
+                                                  .then((value) async {
+                                                if (value) {
+                                                  await signUpWithEmail(
+                                                          userInfoProvider)
+                                                      .then((value) {
+                                                    if (value) {
+                                                      completeSignUpWithEmailOrPhone(
+                                                          userInfoProvider,
+                                                          websiteProvider);
+                                                    }
+                                                  });
+                                                }
+                                              });
+                                            } else if (signUpMethod == 1) {
+                                              checkInfoForEmailOrPhone(
+                                                      userInfoProvider)
+                                                  .then((value) async {
+                                                if (value) {
+                                                  await signUpWithPhone(
+                                                          userInfoProvider)
+                                                      .then((value) {
+                                                    if (value) {
+                                                      completeSignUpWithEmailOrPhone(
+                                                          userInfoProvider,
+                                                          websiteProvider);
+                                                    }
+                                                  });
+                                                }
+                                              });
+                                            }
+                                          });
+                                        }
+                                      },
+                                      backgroundColor: kDarkGray,
+                                      verticalPadding: width * 0.01,
+                                      horizontalPadding: width * 0.02,
+                                      isDense: true,
+                                      errorText: validator[5] == 0
+                                          ? null
+                                          : 'غير مطابق لكلمة السر',
+                                      hintText: 'تأكيد كلمة السر',
+                                      hintTextColor: kWhite.withOpacity(0.5),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          obscureConfirmPassword
+                                              ? Icons.visibility_off_outlined
+                                              : Icons.visibility_outlined,
+                                          size: width / 65,
+                                          color: kWhite.withOpacity(0.5),
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            obscureConfirmPassword =
+                                                !obscureConfirmPassword;
+                                          });
+                                        },
+                                      ),
+                                      prefixIcon: null,
+                                      border: outlineInputBorder(
+                                          width * 0.005, kTransparent),
+                                      focusedBorder: outlineInputBorder(
+                                          width * 0.005, kLightPurple),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Padding(
+                              //   padding:
+                              //   EdgeInsets.symmetric(vertical: height / 64),
+                              //   child: Row(
+                              //     children: [
+                              //       CustomDropDownMenu(
+                              //         errorText: validator[6] == 0
+                              //             ? null
+                              //             : 'قم بإختيار جيلك',
+                              //         hintText: 'الجيل',
+                              //         fontSize: width / 85,
+                              //         width: width *0.2,
+                              //         controller: grade,
+                              //         options: grades.values.toList(),
+                              //         onChanged: (text) {
+                              //           setState(() {
+                              //             validator[6] = 0;
+                              //             grade = text;
+                              //           });
+                              //         },
+                              //         icon: Icon(
+                              //           Icons.expand_more,
+                              //           size: width / 65,
+                              //           color: kOffWhite,
+                              //         ),
+                              //         fillColor: kLightGray,
+                              //         hintTextColor: kOffWhite,
+                              //       ),
+                              //       SizedBox(width: width / 64),
+                              //       grade == 'الأول ثانوي' ||
+                              //           grade == 'الثاني ثانوي'
+                              //           ? CustomDropDownMenu(
+                              //         errorText: validator[7] == 0
+                              //             ? null
+                              //             : 'قم بإختيار فرعك',
+                              //         hintText: 'الفرع',
+                              //         fontSize: width / 85,
+                              //         width: width / 5,
+                              //         controller: section,
+                              //         options: sectionList,
+                              //         onChanged: (text) {
+                              //           setState(() {
+                              //             validator[7] = 0;
+                              //             section = text;
+                              //           });
+                              //         },
+                              //         icon: Icon(
+                              //           Icons.expand_more,
+                              //           size: width / 65,
+                              //           color: kOffWhite,
+                              //         ),
+                              //         hintTextColor: kOffWhite,
+                              //         fillColor: kLightGray,
+                              //       )
+                              //           : Container(),
+                              //     ],
+                              //   ),
+                              // ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    top: height / 32, bottom: height / 64),
+                                child: CustomContainer(
+                                  onTap: () async {
                                     if (userInfoProvider
-                                        .userEmail.text.isEmpty) {
+                                        .firstName.text.isEmpty) {
+                                      setState(() {
+                                        validator[0] = 1;
+                                      });
+                                    } else if (userInfoProvider
+                                        .lastName.text.isEmpty) {
+                                      setState(() {
+                                        validator[1] = 1;
+                                      });
+                                    } else if (userInfoProvider
+                                            .userEmail.text.isEmpty &&
+                                        signUpMethod == 0) {
                                       setState(() {
                                         validator[2] = 1;
-                                        focusNodes[2].requestFocus();
                                       });
-                                    } else if (!RegExp(
-                                            r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
-                                        .hasMatch(
-                                            userInfoProvider.userEmail.text)) {
+                                    } else if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(
+                                            userInfoProvider.userEmail.text) &&
+                                        signUpMethod == 0) {
                                       setState(() {
                                         validator[2] = 2;
-                                        focusNodes[2].requestFocus();
                                       });
-                                    } else {
-                                      setState(() {
-                                        validator[2] = 0;
-                                        FocusScope.of(context)
-                                            .requestFocus(focusNodes[3]);
-                                      });
-                                    }
-                                  }
-                                : (value) {
-                                    if (userInfoProvider
-                                        .userPhone.text.isEmpty) {
+                                    } else if (userInfoProvider
+                                            .userPhone.text.isEmpty &&
+                                        signUpMethod == 1) {
                                       setState(() {
                                         validator[3] = 1;
-                                        focusNodes[2].requestFocus();
                                       });
-                                    } else if (!RegExp(
-                                            r'^([+]962|0)7(7|8|9)[0-9]{7,}')
-                                        .hasMatch(
-                                            userInfoProvider.userPhone.text)) {
+                                    } else if (!RegExp(r'^([+]962|0)7(7|8|9)[0-9]{7}')
+                                            .hasMatch(userInfoProvider
+                                                .userPhone.text) &&
+                                        signUpMethod == 1) {
                                       setState(() {
                                         validator[3] = 2;
-                                        focusNodes[2].requestFocus();
                                       });
-                                    } else {
+                                    } else if (userInfoProvider
+                                        .userPassword.text.isEmpty) {
                                       setState(() {
-                                        validator[3] = 0;
-                                        FocusScope.of(context)
-                                            .requestFocus(focusNodes[3]);
+                                        validator[4] = 1;
+                                      });
+                                    } else if (!RegExp(
+                                            r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')
+                                        .hasMatch(userInfoProvider
+                                            .userPassword.text)) {
+                                      setState(() {
+                                        validator[4] = 2;
+                                      });
+                                    } else if (userInfoProvider
+                                            .userConfirmPassword.text !=
+                                        userInfoProvider
+                                            .userConfirmPassword.text) {
+                                      setState(() {
+                                        validator[5] = 1;
                                       });
                                     }
+                                    // else if (section == null &&
+                                    //     intGrades[grade]! > 10) {
+                                    //   setState(() {
+                                    //     validator[7] = 1;
+                                    //   });
+                                    // }
+                                    else {
+                                      if (signUpMethod == 0) {
+                                        checkInfoForEmailOrPhone(
+                                                userInfoProvider)
+                                            .then((value) async {
+                                          if (value) {
+                                            await signUpWithEmail(
+                                                    userInfoProvider)
+                                                .then((value) {
+                                              if (value) {
+                                                completeSignUpWithEmailOrPhone(
+                                                    userInfoProvider,
+                                                    websiteProvider);
+                                              }
+                                            });
+                                          }
+                                        });
+                                      } else if (signUpMethod == 1) {
+                                        checkInfoForEmailOrPhone(
+                                                userInfoProvider)
+                                            .then((value) async {
+                                          if (value) {
+                                            await signUpWithPhone(
+                                                    userInfoProvider)
+                                                .then((value) {
+                                              if (value) {
+                                                completeSignUpWithEmailOrPhone(
+                                                    userInfoProvider,
+                                                    websiteProvider);
+                                              }
+                                            });
+                                          }
+                                        });
+                                      }
+                                    }
                                   },
-                            backgroundColor: kDarkGray,
-                            verticalPadding: width * 0.01,
-                            horizontalPadding: width * 0.02,
-                            isDense: null,
-                            errorText: signUpMethod == 0
-                                ? validator[2] == 0
-                                    ? null
-                                    : validator[2] == 1
-                                        ? 'لا يجب أن يكون فارغاً'
-                                        : validator[2] == 2
-                                            ? 'البريد الإلكتروني المدخل غير صحيح'
-                                            : 'هذا البريد الإلكتروني مستخدم بالفعل قم بتسجيل الدخول او جرب بريداً اخر'
-                                : validator[3] == 0
-                                    ? null
-                                    : validator[3] == 1
-                                        ? 'لا يجب أن يكون فارغاً'
-                                        : validator[3] == 2
-                                            ? 'رقم الهاتف المدخل غير صحيح'
-                                            : 'رقم الهاتف مستخدم بالفعل قم بتسجيل الدخول او جرب رقماً اخر',
-                            hintText: signUpMethod == 0
-                                ? 'البريد الإلكتروني'
-                                : 'رقم الهاتف',
-                            hintTextColor: kWhite.withOpacity(0.5),
-                            suffixIcon: null,
-                            prefixIcon: null,
-                            border:
-                                outlineInputBorder(width * 0.005, kTransparent),
-                            focusedBorder:
-                                outlineInputBorder(width * 0.005, kLightPurple),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: height / 64),
-                          child: Row(
-                            children: [
-                              CustomTextField(
-                                controller: userInfoProvider.userPassword,
-                                width: width * 0.2,
-                                fontOption: 3,
-                                fontColor: kWhite,
-                                textAlign: null,
-                                obscure: obscurePassword,
-                                readOnly: false,
-                                focusNode: focusNodes[3],
-                                maxLines: 1,
-                                maxLength: null,
-                                keyboardType: null,
-                                onChanged: (String text) {},
-                                onSubmitted: (value) {
-                                  if (userInfoProvider
-                                          .userPassword.text.length <
-                                      8) {
-                                    setState(() {
-                                      validator[4] = 1;
-                                      focusNodes[3].requestFocus();
-                                    });
-                                  } else if (!RegExp(
-                                          r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')
-                                      .hasMatch(
-                                          userInfoProvider.userPassword.text)) {
-                                    setState(() {
-                                      validator[4] = 2;
-                                      focusNodes[3].requestFocus();
-                                    });
-                                  } else {
-                                    setState(() {
-                                      validator[4] = 0;
-                                      FocusScope.of(context)
-                                          .requestFocus(focusNodes[4]);
-                                    });
-                                  }
-                                },
-                                backgroundColor: kDarkGray,
-                                verticalPadding: width * 0.01,
-                                horizontalPadding: width * 0.02,
-                                isDense: null,
-                                errorText: validator[4] == 0
-                                    ? null
-                                    : validator[4] == 1
-                                        ? 'يجب أن تتكون كلمة السر من 8 رموز أو أكثر'
-                                        : 'يجب أن تحتوي كلمة السر على حروف وأرقام',
-                                hintText: 'كلمة السر',
-                                hintTextColor: kWhite.withOpacity(0.5),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscurePassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: width / 65,
-                                    color: kWhite.withOpacity(0.5),
+                                  width: width * 0.42,
+                                  height: width * 0.04,
+                                  // verticalPadding: width * 0.01,
+                                  horizontalPadding: 0,
+                                  borderRadius: width * 0.005,
+                                  border: null,
+                                  buttonColor: kLightPurple,
+                                  child: Center(
+                                    child: Text(
+                                      'أنشئ',
+                                      style: textStyle(
+                                          3, width, height, kDarkBlack),
+                                    ),
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      obscurePassword = !obscurePassword;
-                                    });
-                                  },
                                 ),
-                                prefixIcon: null,
-                                border: outlineInputBorder(
-                                    width * 0.005, kTransparent),
-                                focusedBorder: outlineInputBorder(
-                                    width * 0.005, kLightPurple),
                               ),
-                              SizedBox(
-                                width: width * 0.02,
-                              ),
-                              CustomTextField(
-                                controller:
-                                    userInfoProvider.userConfirmPassword,
-                                width: width * 0.2,
-                                fontOption: 3,
-                                fontColor: kWhite,
-                                textAlign: null,
-                                obscure: obscureConfirmPassword,
-                                readOnly: false,
-                                focusNode: focusNodes[4],
-                                maxLines: 1,
-                                maxLength: null,
-                                keyboardType: null,
-                                onChanged: (String text) {},
-                                onSubmitted: (value) {
-                                  if (userInfoProvider
-                                          .userConfirmPassword.text !=
-                                      userInfoProvider.userPassword.text) {
-                                    setState(() {
-                                      validator[5] = 1;
-                                      focusNodes[4].requestFocus();
-                                    });
-                                  } else {
-                                    setState(() {
-                                      validator[5] = 0;
-                                      FocusScope.of(context).unfocus();
-                                    });
-                                  }
+                              InkWell(
+                                onTap: () {
+                                  context.pushReplacement('/LogIn');
                                 },
-                                backgroundColor: kDarkGray,
-                                verticalPadding: width * 0.01,
-                                horizontalPadding: width * 0.02,
-                                isDense: null,
-                                errorText: validator[5] == 0
-                                    ? null
-                                    : 'غير مطابق لكلمة السر',
-                                hintText: 'تأكيد كلمة السر',
-                                hintTextColor: kWhite.withOpacity(0.5),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    obscureConfirmPassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: width / 65,
-                                    color: kWhite.withOpacity(0.5),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      obscureConfirmPassword =
-                                          !obscureConfirmPassword;
-                                    });
-                                  },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12.0),
+                                  child: RichText(
+                                      text: TextSpan(
+                                    text: 'عندك حساب؟ ',
+                                    style: textStyle(4, width, height, kWhite),
+                                    children: [
+                                      TextSpan(
+                                        text: ' سجل دخولك!',
+                                        style: textStyle(
+                                            4, width, height, kLightPurple),
+                                      ),
+                                    ],
+                                  )),
                                 ),
-                                prefixIcon: null,
-                                border: outlineInputBorder(
-                                    width * 0.005, kTransparent),
-                                focusedBorder: outlineInputBorder(
-                                    width * 0.005, kLightPurple),
                               ),
                             ],
                           ),
-                        ),
-                        // Padding(
-                        //   padding:
-                        //   EdgeInsets.symmetric(vertical: height / 64),
-                        //   child: Row(
-                        //     children: [
-                        //       CustomDropDownMenu(
-                        //         errorText: validator[6] == 0
-                        //             ? null
-                        //             : 'قم بإختيار جيلك',
-                        //         hintText: 'الجيل',
-                        //         fontSize: width / 85,
-                        //         width: width *0.2,
-                        //         controller: grade,
-                        //         options: grades.values.toList(),
-                        //         onChanged: (text) {
-                        //           setState(() {
-                        //             validator[6] = 0;
-                        //             grade = text;
-                        //           });
-                        //         },
-                        //         icon: Icon(
-                        //           Icons.expand_more,
-                        //           size: width / 65,
-                        //           color: kOffWhite,
-                        //         ),
-                        //         fillColor: kLightGray,
-                        //         hintTextColor: kOffWhite,
-                        //       ),
-                        //       SizedBox(width: width / 64),
-                        //       grade == 'الأول ثانوي' ||
-                        //           grade == 'الثاني ثانوي'
-                        //           ? CustomDropDownMenu(
-                        //         errorText: validator[7] == 0
-                        //             ? null
-                        //             : 'قم بإختيار فرعك',
-                        //         hintText: 'الفرع',
-                        //         fontSize: width / 85,
-                        //         width: width / 5,
-                        //         controller: section,
-                        //         options: sectionList,
-                        //         onChanged: (text) {
-                        //           setState(() {
-                        //             validator[7] = 0;
-                        //             section = text;
-                        //           });
-                        //         },
-                        //         icon: Icon(
-                        //           Icons.expand_more,
-                        //           size: width / 65,
-                        //           color: kOffWhite,
-                        //         ),
-                        //         hintTextColor: kOffWhite,
-                        //         fillColor: kLightGray,
-                        //       )
-                        //           : Container(),
-                        //     ],
-                        //   ),
-                        // ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                              top: height / 32, bottom: height / 64),
-                          child: CustomContainer(
-                            onTap: () async {
-                              if (userInfoProvider.firstName.text.isEmpty) {
-                                setState(() {
-                                  validator[0] = 1;
-                                });
-                              } else if (userInfoProvider
-                                  .lastName.text.isEmpty) {
-                                setState(() {
-                                  validator[1] = 1;
-                                });
-                              } else if (userInfoProvider
-                                      .userEmail.text.isEmpty &&
-                                  signUpMethod == 0) {
-                                setState(() {
-                                  validator[2] = 1;
-                                });
-                              } else if (!RegExp(
-                                          r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
-                                      .hasMatch(
-                                          userInfoProvider.userEmail.text) &&
-                                  signUpMethod == 0) {
-                                setState(() {
-                                  validator[2] = 2;
-                                });
-                              } else if (userInfoProvider
-                                      .userPhone.text.isEmpty &&
-                                  signUpMethod == 1) {
-                                setState(() {
-                                  validator[3] = 1;
-                                });
-                              } else if (!RegExp(r'^([+]962|0)7(7|8|9)[0-9]{7}')
-                                      .hasMatch(
-                                          userInfoProvider.userPhone.text) &&
-                                  signUpMethod == 1) {
-                                setState(() {
-                                  validator[3] = 2;
-                                });
-                              } else if (userInfoProvider
-                                  .userPassword.text.isEmpty) {
-                                setState(() {
-                                  validator[4] = 1;
-                                });
-                              } else if (!RegExp(
-                                      r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$')
-                                  .hasMatch(
-                                      userInfoProvider.userPassword.text)) {
-                                setState(() {
-                                  validator[4] = 2;
-                                });
-                              } else if (userInfoProvider
-                                      .userConfirmPassword.text !=
-                                  userInfoProvider.userConfirmPassword.text) {
-                                setState(() {
-                                  validator[5] = 1;
-                                });
-                              }
-                              // else if (section == null &&
-                              //     intGrades[grade]! > 10) {
-                              //   setState(() {
-                              //     validator[7] = 1;
-                              //   });
-                              // }
-                              else {
-                                if (signUpMethod == 0) {
-                                  checkInfo(userInfoProvider)
-                                      .then((value) async {
-                                    if (value) {
-                                      await signUpWithEmail(userInfoProvider)
-                                          .then((value) {
-                                        if (value) {
-                                          completeSignUpWithEmailOrPhone(
-                                              userInfoProvider);
-                                        }
-                                      });
-                                    }
-                                  });
-                                } else if (signUpMethod == 1) {
-                                  checkInfo(userInfoProvider)
-                                      .then((value) async {
-                                    if (value) {
-                                      await signUpWithPhone(userInfoProvider)
-                                          .then((value) {
-                                        if (value) {
-                                          completeSignUpWithEmailOrPhone(
-                                              userInfoProvider);
-                                        }
-                                      });
-                                    }
-                                  });
-                                }
-                              }
-                            },
-                            width: width * 0.42,
-                            verticalPadding: height * 0.02,
-                            horizontalPadding: 0,
-                            borderRadius: width * 0.005,
-                            border: null,
-                            buttonColor: kLightPurple,
-                            child: Center(
-                              child: Text(
-                                'أنشئ',
-                                style: textStyle(3, width, height, kDarkBlack),
-                              ),
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            context.go('/LogIn');
-                          },
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: RichText(
-                                text: TextSpan(
-                              text: 'عندك حساب؟ ',
-                              style: textStyle(4, width, height, kWhite),
-                              children: [
-                                TextSpan(
-                                  text: ' سجل دخولك!',
-                                  style:
-                                      textStyle(4, width, height, kLightPurple),
-                                ),
-                              ],
-                            )),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     SizedBox(width: width * 0.02),
                     Column(
@@ -912,25 +1100,18 @@ class _SignUpState extends State<SignUp> {
                             await signUpWithFacebook(userInfoProvider)
                                 .then((value) {
                               if (value) {
-                                checkInfo(userInfoProvider).then((value) {
+                                checkInfoForFacebook(userInfoProvider)
+                                    .then((value) {
                                   if (value) {
                                     completeSignUpWithFacebook(
-                                        userInfoProvider);
-                                  } else {
-                                    if (userInfoProvider.userEmail.text != '') {
-                                      userInfoProvider.setUserEmail();
-                                    }
-                                    if (userInfoProvider.userPhone.text != '') {
-                                      userInfoProvider.setUserPhone();
-                                    }
-                                    userInfoProvider.setUserPassword();
-                                    context.go('/Dashboard');
+                                        userInfoProvider, websiteProvider);
                                   }
                                 });
                               }
                             });
                           },
                           width: width * 0.035,
+                          height: width * 0.035,
                           verticalPadding: 0,
                           horizontalPadding: 0,
                           borderRadius: 8,
@@ -950,19 +1131,18 @@ class _SignUpState extends State<SignUp> {
                             await signUpWithGoogle(userInfoProvider)
                                 .then((value) {
                               if (value) {
-                                checkInfo(userInfoProvider).then((value) {
+                                checkInfoForGoogle(userInfoProvider)
+                                    .then((value) {
                                   if (value) {
-                                    completeSignUpWithGoogle(userInfoProvider);
-                                  } else {
-                                    userInfoProvider.setUserEmail();
-                                    userInfoProvider.setUserPassword();
-                                    context.go('/Dashboard');
+                                    completeSignUpWithGoogle(
+                                        userInfoProvider, websiteProvider);
                                   }
                                 });
                               }
                             });
                           },
                           width: width * 0.035,
+                          height: width * 0.035,
                           verticalPadding: 0,
                           horizontalPadding: 0,
                           borderRadius: 8,

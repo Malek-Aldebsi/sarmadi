@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Sarmadi</string>
+    <string name="app_name">لحق حالك</string>
     <string name="facebook_app_id">919316019445873</string>
     <string name="fb_login_protocol_scheme">fb919316019445873</string>
     <string name="facebook_client_token">d078399f8aaaf24dbeb0f386b5dc52be</string>

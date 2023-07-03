@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sarmadi/providers/user_info_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'dart:html' as html;
 import '../const/borders.dart';
 import '../const/colors.dart';
 import '../const/fonts.dart';
@@ -137,8 +137,9 @@ class _RightBarState extends State<RightBar> {
               padding: EdgeInsets.symmetric(vertical: height * 0.02),
               child: CustomContainer(
                 onTap: () {
-                  launchUrl(Uri.parse(
-                      'https://www.facebook.com/profile.php?id=100093615428668'));
+                  html.window.open(
+                      'https://www.facebook.com/profile.php?id=100093615428668',
+                      "_blank");
                 },
                 buttonColor: kDarkBlack,
                 border: null,
@@ -156,7 +157,7 @@ class _RightBarState extends State<RightBar> {
               padding: EdgeInsets.symmetric(vertical: height * 0.02),
               child: CustomContainer(
                 onTap: () {
-                  launchUrl(Uri.parse('https://wa.me/+962799378997'));
+                  html.window.open('https://wa.me/+962799378997', "_blank");
                 },
                 buttonColor: kDarkBlack,
                 border: null,

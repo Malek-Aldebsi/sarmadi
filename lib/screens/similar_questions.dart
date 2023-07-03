@@ -1155,7 +1155,8 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
         ? const RotateYourPhone()
         :
         Provider.of<WebsiteProvider>(context, listen: true).loaded
-        ? Provider.of<SimilarQuestionsProvider>(context, listen: true).questions.isEmpty?Scaffold(
+        ? Provider.of<SimilarQuestionsProvider>(context, listen: true).questions.isEmpty?
+        Scaffold(
           backgroundColor: kDarkGray,
           body: Center(
               child: CustomContainer(
@@ -1225,7 +1226,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const SizedBox(),
-                              CustomContainer(
+                              InkWell(
                                 onTap: () {
                                   popUp(
                                       context,
@@ -1256,7 +1257,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                   ],
                                 ),
                               ),
-                              CustomContainer(
+                              InkWell(
                                 onTap: () {
                                   saveQuestion(questionProvider,
                                       questionProvider.questions[questionProvider.questionIndex - 1]['id']);
@@ -1318,47 +1319,30 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                   ),
                                 ],
                               ),
-                              Stack(
+                              Column(
                                 children: [
-                                  Column(
-                                    children: [
-                                      Text('شارك السؤال',
-                                          textAlign: TextAlign.center,
-                                          style: textStyle(
-                                              3, width, height, kDarkBlack)),
-                                      CustomContainer(
-                                        onTap: () async {
-                                          Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(true);
-                                          await Clipboard.setData(
-                                              ClipboardData(
-                                                  text: 'https://kawka-b.com/#/SharedQuestion/${Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[
-                                                  Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]
-                                                  ['id']}'));
-                                          Timer(const Duration(seconds: 2), () {
-                                            Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(false);
-                                          });
-                                        },
-                                        child: Text(
-                                            Provider.of<SimilarQuestionsProvider>(context, listen: true).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['id']
-                                                .substring(0, 8),
-                                            style: textStyle(3, width, height,
-                                                kDarkBlack)),
-                                      ),
-                                    ],
-                                  ),
-                                  Visibility(
-                                    visible: Provider.of<SimilarQuestionsProvider>(context, listen: true).copied,
-                                    child: CustomContainer(
-                                      borderRadius: width * 0.05,
-                                      buttonColor: kDarkBlack,
-                                      border: fullBorder(kLightPurple),
-                                      horizontalPadding: width * 0.005,
-                                      verticalPadding: height * 0.005,
-                                      child: Text('تم النسخ',
-                                          textAlign: TextAlign.center,
-                                          style: textStyle(5, width, height,
-                                              kLightPurple)),
-                                    ),
+                                  Text('شارك السؤال',
+                                      textAlign: TextAlign.center,
+                                      style: textStyle(
+                                          3, width, height, kDarkBlack)),
+                                  InkWell(
+                                    onTap: () async {
+                                      Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(true);
+                                      await Clipboard.setData(
+                                          ClipboardData(
+                                              text: 'https://kawka-b.com/#/SharedQuestion/${Provider.of<SimilarQuestionsProvider>(context, listen: false).questions[
+                                              Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]
+                                              ['id']}'));
+                                      Timer(const Duration(seconds: 2), () {
+                                        Provider.of<SimilarQuestionsProvider>(context, listen: false).setCopied(false);
+                                      });
+                                    },
+                                    child: Text(
+                                        Provider.of<SimilarQuestionsProvider>(context, listen: true).copied?'تم النسخ':
+                                        Provider.of<SimilarQuestionsProvider>(context, listen: true).questions[Provider.of<SimilarQuestionsProvider>(context, listen: false).questionIndex - 1]['id']
+                                            .substring(0, 8),
+                                        style: textStyle(3, width, height,
+                                            kDarkBlack)),
                                   ),
                                 ],
                               ),
@@ -1371,10 +1355,9 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                               ),
                               Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  CustomContainer(
-                                    width: width * 0.03,
+                                  InkWell(
                                     onTap: () {
                                       popUp(
                                           context,
@@ -1418,7 +1401,6 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                                 focusedBorder:
                                                 outlineInputBorder(width * 0.005, kLightPurple),
                                               ),
-
                                               CustomContainer(
                                                 onTap: () {
                                                   report(
@@ -1467,8 +1449,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                       ],
                                     ),
                                   ),
-                                  CustomContainer(
-                                    width: width * 0.03,
+                                  InkWell(
                                     onTap: () {
                                       popUp(
                                           context,
@@ -1508,7 +1489,7 @@ class _SimilarQuestionsState extends State<SimilarQuestions> {
                                   ),
                                 ],
                               ),
-                              CustomContainer(
+                              InkWell(
                                 onTap: () {
                                   popUp(
                                       context,

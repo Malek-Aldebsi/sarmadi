@@ -355,6 +355,8 @@ class _QuizHistoryState extends State<QuizHistory>
                                                                               0.28,
                                                                       child:
                                                                           Wrap(
+                                                                        clipBehavior:
+                                                                            Clip.hardEdge,
                                                                         spacing:
                                                                             width *
                                                                                 0.004,

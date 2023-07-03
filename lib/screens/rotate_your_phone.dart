@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../const/colors.dart';
+import '../const/fonts.dart';
 
 class RotateYourPhone extends StatefulWidget {
   const RotateYourPhone({Key? key}) : super(key: key);
@@ -47,24 +48,35 @@ class _RotateYourPhoneState extends State<RotateYourPhone>
 
     return Scaffold(
         backgroundColor: kDarkGray,
-        body: SizedBox(
-          height: height,
-          width: width,
-          child: Center(
-              child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return Transform.rotate(
-                      angle: (_controller.value) *
-                          3.14159, // Rotate 180 degrees (pi radians)
-                      child: child,
-                    );
-                  },
-                  child: Icon(
-                    Icons.phone_iphone,
-                    size: width * 0.5,
-                    color: kLightPurple,
-                  ))),
+        body: Directionality(
+          textDirection: TextDirection.rtl,
+          child: SizedBox(
+            height: height,
+            width: width,
+            child: Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: (_controller.value) *
+                            3.14159, // Rotate 180 degrees (pi radians)
+                        child: child,
+                      );
+                    },
+                    child: Icon(
+                      Icons.phone_iphone,
+                      size: width * 0.4,
+                      color: kLightPurple,
+                    )),
+                SizedBox(height: height * 0.05),
+                Text('قم بتدوير الهاتف 🔄',
+                    style: textStyle(0, width, height, kLightPurple))
+              ],
+            )),
+          ),
         ));
   }
 }

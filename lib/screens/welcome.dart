@@ -7,6 +7,7 @@ import 'package:sarmadi/const/sarmadi_icons_icons.dart';
 import 'package:sarmadi/providers/user_info_provider.dart';
 import 'package:sarmadi/screens/rotate_your_phone.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
 
 import '../components/custom_container.dart';
 import '../const/borders.dart';
@@ -934,8 +935,9 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
                         ),
                         CustomContainer(
                           onTap: () {
-                            launchUrl(Uri.parse(
-                                'https://www.facebook.com/profile.php?id=100093615428668'));
+                            html.window.open(
+                                'https://www.facebook.com/profile.php?id=100093615428668',
+                                "_blank");
                           },
                           child: Row(
                             children: [
@@ -952,7 +954,7 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
                               ),
                               SizedBox(width: width * 0.01),
                               Text(
-                                'Sarmadi_AI',
+                                'مش ضايل وقت',
                                 textDirection: TextDirection.ltr,
                                 style: textStyle(3, width, height, kWhite),
                               ),
@@ -961,7 +963,8 @@ class _WelcomeState extends State<Welcome> with SingleTickerProviderStateMixin {
                         ),
                         CustomContainer(
                           onTap: () {
-                            launchUrl(Uri.parse('https://wa.me/+962799378997'));
+                            html.window
+                                .open('https://wa.me/+962799378997', "_blank");
                           },
                           child: Row(
                             children: [

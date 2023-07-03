@@ -2196,6 +2196,7 @@ file:///D:/malek/sarmadi/lib/auth/firebase_options.dart
 file:///D:/malek/sarmadi/lib/components/custom_circular_chart.dart
 file:///D:/malek/sarmadi/lib/components/custom_container.dart
 file:///D:/malek/sarmadi/lib/components/custom_divider.dart
+file:///D:/malek/sarmadi/lib/components/custom_dropdown_menu.dart
 file:///D:/malek/sarmadi/lib/components/custom_pop_up.dart
 file:///D:/malek/sarmadi/lib/components/custom_slider.dart
 file:///D:/malek/sarmadi/lib/components/custom_text_field.dart
@@ -2216,6 +2217,7 @@ file:///D:/malek/sarmadi/lib/providers/quiz_setting_provider.dart
 file:///D:/malek/sarmadi/lib/providers/review_provider.dart
 file:///D:/malek/sarmadi/lib/providers/shared_question_provider.dart
 file:///D:/malek/sarmadi/lib/providers/similar_questions_provider.dart
+file:///D:/malek/sarmadi/lib/providers/suggested_quizzes_provider.dart
 file:///D:/malek/sarmadi/lib/providers/tasks_provider.dart
 file:///D:/malek/sarmadi/lib/providers/user_info_provider.dart
 file:///D:/malek/sarmadi/lib/providers/website_provider.dart
@@ -2224,6 +2226,7 @@ file:///D:/malek/sarmadi/lib/question_admin/final_answer_question.dart
 file:///D:/malek/sarmadi/lib/question_admin/multi_section_question.dart
 file:///D:/malek/sarmadi/lib/question_admin/multiple_choice_question.dart
 file:///D:/malek/sarmadi/lib/question_admin/question_admin.dart
+file:///D:/malek/sarmadi/lib/question_admin/suggested_quiz.dart
 file:///D:/malek/sarmadi/lib/screens/advance_quiz_setting.dart
 file:///D:/malek/sarmadi/lib/screens/log_in.dart
 file:///D:/malek/sarmadi/lib/screens/quiz.dart
@@ -2234,7 +2237,9 @@ file:///D:/malek/sarmadi/lib/screens/rotate_your_phone.dart
 file:///D:/malek/sarmadi/lib/screens/shared_question.dart
 file:///D:/malek/sarmadi/lib/screens/sign_up.dart
 file:///D:/malek/sarmadi/lib/screens/similar_questions.dart
+file:///D:/malek/sarmadi/lib/screens/suggested_quizzes.dart
 file:///D:/malek/sarmadi/lib/screens/welcome.dart
+file:///D:/malek/sarmadi/lib/screens/writing_quiz.dart
 file:///D:/malek/sarmadi/lib/utils/authentication.dart
 file:///D:/malek/sarmadi/lib/utils/encrypt.dart
 file:///D:/malek/sarmadi/lib/utils/http_requests.dart

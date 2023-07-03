@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 import 'package:provider/provider.dart';
@@ -463,9 +464,11 @@ class _FinalAnswerQuestionState extends State<FinalAnswerQuestion> {
                                   'source': adminProvider
                                       .questionSourceController.text,
                                   'level': adminProvider.questionLevel,
-                                }).then((value) {
+                                }).then((value) async {
                                   dynamic result = decode(value);
-                                  if (result == 1) {
+                                  if (result['check'] == 1) {
+                                    await Clipboard.setData(
+                                        ClipboardData(text: result['id']));
                                     adminProvider.reset();
                                   }
                                 });

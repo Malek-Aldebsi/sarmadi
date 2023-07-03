@@ -27,6 +27,7 @@ class QuizProvider with ChangeNotifier {
 
   bool _showResult = false;
   bool _wait = false;
+  bool _notification = true;
 
   String _quizID = '';
 
@@ -49,6 +50,7 @@ class QuizProvider with ChangeNotifier {
   int get questionIndex => _questionIndex;
   bool get showResult => _showResult;
   bool get wait => _wait;
+  bool get notification => _notification;
   bool get copied => _copied;
   String get quizResult => _quizResult;
   String get quizDuration => _quizDuration;
@@ -87,6 +89,7 @@ class QuizProvider with ChangeNotifier {
 
     _showResult = false;
     _wait = false;
+    _notification = true;
 
     _quizID = '';
 
@@ -94,6 +97,7 @@ class QuizProvider with ChangeNotifier {
     _quizDuration = '00:00:00';
     _idealDuration = '00:00:00';
     _skills = {};
+    notifyListeners();
   }
 
   void setLessonNum(int lessonNum) {
@@ -206,6 +210,7 @@ class QuizProvider with ChangeNotifier {
     _copied = false;
     _showResult = false;
     _wait = false;
+    _notification = true;
     _quizID = '';
     _quizResult = '0/0';
     _quizDuration = '00:00:00';
@@ -263,6 +268,11 @@ class QuizProvider with ChangeNotifier {
 
   void setWait(bool wait) {
     _wait = wait;
+    notifyListeners();
+  }
+
+  void setNotification(bool notification) {
+    _notification = notification;
     notifyListeners();
   }
 

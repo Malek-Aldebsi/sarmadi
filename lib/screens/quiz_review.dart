@@ -1060,6 +1060,73 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
     );
   }
 
+  Widget writingQuestionWithImage(
+      width, height, reviewProvider, questionIndex) {
+    return CustomContainer(
+      width: width * 0.66,
+
+      buttonColor: kDarkGray,
+      borderRadius: width * 0.005,
+      verticalPadding: height * 0.03,
+      horizontalPadding: width * 0.02,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: height * 0.02),
+            child: SizedBox(
+              width: width * 0.62,
+              child: stringWithLatex(
+                  reviewProvider.questions[questionIndex - 1]['question']
+                  ['body'],
+                  3,
+                  width,
+                  height,
+                  kWhite),
+            ),
+          ),
+          SizedBox(height: height*0.01),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: (){
+                  popUp(
+                      context,
+                      width * 0.8,
+                      height * 0.8,
+                      Center(
+                        child: Image(
+                          image: NetworkImage(reviewProvider.questions[questionIndex - 1]
+                          ['answer']),
+                          height: height * 0.8,
+                          width: width * 0.8,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      kLightBlack,
+                      kDarkBlack,
+                      width * 0.01);
+                },
+                child: Image(
+                  image: NetworkImage(reviewProvider.questions[questionIndex - 1]
+                  ['answer']),
+                  height: height * 0.4,
+                  width: width * 0.62,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -1119,7 +1186,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                               Text(reviewProvider.quizSubjectName,
                                                   style: textStyle(
                                                       1, width, height, kWhite)),
-                                              CustomContainer(
+                                              if (reviewProvider.quizSubjectID!='7376be1e-e252-4d22-874b-9ec129326807' && reviewProvider.quizSubjectID!='2d3ce0b6-c7b5-4b47-a344-ec1f36a077ab')CustomContainer(
                                                 onTap: () async{
                                                   reviewProvider
                                                       .setCopied(true);
@@ -1146,7 +1213,6 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                 //   color: kLightPurple,
                                                 // ),
                                               ),
-
                                             ],
                                           ),
                                         ),
@@ -1492,200 +1558,161 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                               ),
                             ),
                             SizedBox(height: height * 0.05),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Stack(
-                                  children: [
-                                    CustomContainer(
-                                        width: width * 0.9,
-                                        height: height * 0.4),
-                                    CustomContainer(
-                                        width: width * 0.7,
-                                        height: height * 0.42,
-                                        onTap: null,
-                                      verticalPadding:
-                                      height *
-                                          0.02,
-                                      horizontalPadding:
-                                      width *
-                                          0.02,
-                                        borderRadius: width * 0.005,
-                                        border: null,
-                                        buttonColor: kDarkGray,
-                                        child: Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,crossAxisAlignment:CrossAxisAlignment.start,children:[
-                                          const SizedBox(),
-                                                Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('تحليل اداءك:',
-                                                  style: textStyle(
-                                                      2,
-                                                      width,
-                                                      height,
-                                                      kWhite),), SizedBox(height:height*0.01),for (String statement in reviewProvider.statements) Padding(
-                                                  padding: EdgeInsets.only(right:width *
-                                                      0.01),
-                                                  child: Text('• $statement',
-                                                    style: textStyle(
-                                                        4,
-                                                        width,
-                                                        height,
-                                                        kWhite),),
-                                                )]),
-                                          Row(children:[
-                                            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                                          Text('لتزيد سرعتك في الحل مرن نفسك أكثر من خلال حل اسئلة أو امتحانات شبيهة',
-                                            style: textStyle(
-                                                3,
-                                                width,
-                                                height,
-                                                kWhite),),
-                                          Text('يمكنك دراسة ما اخطأت من مهارات من أدرس',
-                                            style: textStyle(
-                                                3,
-                                                width,
-                                                height,
-                                                kWhite),),
-                                          Text('ابق على اطلاع دائم بالتحليلات المتعلقة بالمادة لترصد نتائجك دائما',
-                                            style: textStyle(
-                                                3,
-                                                width,
-                                                height,
-                                                kWhite),)
-                                        ]),
-                                            Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                                          Row(children:[
-                                            SizedBox(width:width*0.01),
-                                            CustomContainer(
-                                          onTap: () {
-                                            retakeQuiz(quizProvider, reviewProvider);
-                                          },
-                                            width:width*0.085,
-                                              height:height*0.06,
-                                          verticalPadding:0,
-                                          horizontalPadding:
-                                          width *
-                                              0.01,
-                                          borderRadius:
-                                          width *
-                                              0.005,
-                                          border:
-                                          null,
-                                          buttonColor:
-                                          kLightPurple,
-                                          child:
-                                          Center(
-                                            child: Text(
-                                                'اعادة الامتحان',
-                                                style: textStyle(
-                                                    3,
-                                                    width,
-                                                    height,
-                                                    kDarkBlack)),
-                                          ),
-                                        ),
-                                            SizedBox(width:width*0.01),
-                                            CustomContainer(
-                                            onTap: () {
-                                              similarQuiz(quizProvider, reviewProvider);
-                                            },
-                                              width:width*0.085,
-                                              height:height*0.06,
-                                            verticalPadding:0,
+                            Directionality(
+                              textDirection: reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807'?TextDirection.ltr:TextDirection.rtl,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+
+                                  Stack(
+                                    children: [
+                                      CustomContainer(
+                                          width: width * 0.9,
+                                          height: height * 0.4),
+                                      Row(
+                                        children: [
+                                          if (reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807')
+                                            SizedBox(width:width*0.03),
+                                          CustomContainer(
+                                              width: width * 0.7,
+                                              height: height * 0.42,
+                                              onTap: null,
+                                            verticalPadding:
+                                            height *
+                                                0.02,
                                             horizontalPadding:
                                             width *
-                                                0.01,
-                                            borderRadius:
-                                            width *
-                                                0.005,
-                                            border:
-                                            null,
-                                            buttonColor:
-                                            kLightPurple,
-                                            child:
-                                            Center(
-                                              child: Text(
-                                                  'امتحان شبيه',
+                                                0.02,
+                                              borderRadius: width * 0.005,
+                                              border: null,
+                                              buttonColor: kDarkGray,
+                                              child: Column(mainAxisAlignment:MainAxisAlignment.spaceBetween,crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                                if (reviewProvider.quizSubjectID!='7376be1e-e252-4d22-874b-9ec129326807' && reviewProvider.quizSubjectID!='2d3ce0b6-c7b5-4b47-a344-ec1f36a077ab')
+                                                const SizedBox(),
+                                                      SizedBox(
+                                                        width: width * 0.7,
+                                                        child: Column(
+
+                                                            crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                                          Text(reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807'?'Some Advices':'تحليل اداءك:',
+                                                          style: textStyle(
+                                                              2,
+                                                              width,
+                                                              height,
+                                                              kWhite),),
+                                                          SizedBox(height:height*0.01),
+                                                          for (String statement in reviewProvider.statements) Padding(
+                                                          padding: EdgeInsets.only(right:width *
+                                                              0.01),
+                                                          child: Text('• $statement',
+                                                            style: textStyle(
+                                                                reviewProvider.quizSubjectID!='7376be1e-e252-4d22-874b-9ec129326807' && reviewProvider.quizSubjectID!='2d3ce0b6-c7b5-4b47-a344-ec1f36a077ab'?4:3,
+                                                                width,
+                                                                height,
+                                                                kWhite),),
+                                                        )]),
+                                                      ),
+                                                if (reviewProvider.quizSubjectID!='7376be1e-e252-4d22-874b-9ec129326807' && reviewProvider.quizSubjectID!='2d3ce0b6-c7b5-4b47-a344-ec1f36a077ab')
+                                                  Row(children:[
+                                                  Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                                Text('لتزيد سرعتك في الحل مرن نفسك أكثر من خلال حل اسئلة أو امتحانات شبيهة',
                                                   style: textStyle(
                                                       3,
                                                       width,
                                                       height,
-                                                      kDarkBlack)),
-                                            ),
-                                          ),]),
-                                          SizedBox(height:height*0.02),
-                                          Row(children:[
-                                            SizedBox(width:width*0.01),
-                                            CustomContainer(
-                                              onTap: () {
-
-                                              },
-                                              width:width*0.085,
-                                              height:height*0.06,
-                                              verticalPadding:0,
-                                              horizontalPadding:
-                                              width *
-                                                  0.01,
-                                              borderRadius:
-                                              width *
-                                                  0.005,
-                                              border:
-                                              null,
-                                              buttonColor:
-                                              kLightPurple,
-                                              child:
-                                              Center(
-                                                child: Text(
-                                                    'أدرس',
-                                                    style: textStyle(
-                                                        3,
-                                                        width,
-                                                        height,
-                                                        kDarkBlack)),
-                                              ),
-                                            ),
-                                            SizedBox(width:width*0.01),
-                                            CustomContainer(
-                                              onTap: () {
-
-                                              },
-                                              width:width*0.085,
-                                              height:height*0.06,
-                                              verticalPadding:0,
-                                              horizontalPadding:
-                                              width *
-                                                  0.01,
-                                              borderRadius:
-                                              width *
-                                                  0.005,
-                                              border:
-                                              null,
-                                              buttonColor:
-                                              kLightPurple,
-                                              child:
-                                              Center(
-                                                child: Text(
-                                                    'تقرير المادة',
-                                                    style: textStyle(
-                                                        3,
-                                                        width,
-                                                        height,
-                                                        kDarkBlack)),
-                                              ),
-                                            ),]),]),]),const SizedBox(),]),),
-                                    Positioned(
-                                      left: 0,
-                                      bottom: 0,
-                                      child: Image(
-                                        image: const AssetImage(
-                                            'images/advises.png'),
-                                        width: width * 0.35,
-                                        height: height * 0.38,
-                                        fit: BoxFit.contain,
-                                        alignment: Alignment.bottomLeft,
+                                                      kWhite),),
+                                                Text('يمكنك إعادة الإمتحان لتتأكد من اتقانك ما أخطأت به',
+                                                  style: textStyle(
+                                                      3,
+                                                      width,
+                                                      height,
+                                                      kWhite),),
+                                                Text('قريباً ستتمكن من الاطلاع على التحليلات المتعلقة بالمادة لترصد نتائج أداءك',
+                                                  style: textStyle(
+                                                      3,
+                                                      width,
+                                                      height,
+                                                      kWhite),)
+                                              ]),
+                                                  SizedBox(width:width*0.05),
+                                                    Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                                                    CustomContainer(
+                                                      onTap: () {
+                                                        retakeQuiz(quizProvider, reviewProvider);
+                                                      },
+                                                      width:width*0.085,
+                                                      height:height*0.06,
+                                                      verticalPadding:0,
+                                                      horizontalPadding:
+                                                      width *
+                                                          0.01,
+                                                      borderRadius:
+                                                      width *
+                                                          0.005,
+                                                      border:
+                                                      null,
+                                                      buttonColor:
+                                                      kLightPurple,
+                                                      child:
+                                                      Center(
+                                                        child: Text(
+                                                            'اعادة الامتحان',
+                                                            style: textStyle(
+                                                                3,
+                                                                width,
+                                                                height,
+                                                                kDarkBlack)),
+                                                      ),
+                                                    ),
+                                                SizedBox(height:height*0.02),
+                                                    CustomContainer(
+                                                      onTap: () {
+                                                        similarQuiz(quizProvider, reviewProvider);
+                                                      },
+                                                      width:width*0.085,
+                                                      height:height*0.06,
+                                                      verticalPadding:0,
+                                                      horizontalPadding:
+                                                      width *
+                                                          0.01,
+                                                      borderRadius:
+                                                      width *
+                                                          0.005,
+                                                      border:
+                                                      null,
+                                                      buttonColor:
+                                                      kLightPurple,
+                                                      child:
+                                                      Center(
+                                                        child: Text(
+                                                            'امتحان شبيه',
+                                                            style: textStyle(
+                                                                3,
+                                                                width,
+                                                                height,
+                                                                kDarkBlack)),
+                                                      ),
+                                                    ),]),]),
+                                                const SizedBox(),]),),
+                                        ],
                                       ),
-                                    )
-                                  ],
-                                )
-                              ],
+                                      Positioned(
+                                        left: reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807'?null:0,
+                                        right: reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807'?0:null,
+                                        bottom: 0,
+                                        child: Image(
+                                          image: const AssetImage(
+                                              'images/advises.png'),
+                                          width: width * 0.35,
+                                          height: height * 0.38,
+                                          fit: BoxFit.contain,
+                                          alignment: reviewProvider.quizSubjectID=='7376be1e-e252-4d22-874b-9ec129326807'?Alignment.bottomRight:Alignment.bottomLeft,
+                                        ),
+                                      )
+                                    ],
+                                  )
+                                ],
+                              ),
                             ),
                             SizedBox(height: height * 0.05),
                             SizedBox(
@@ -2032,7 +2059,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                       width,
                                                                       height,
                                                                       kWhite)),
-                                                              Row(
+                                                              if (reviewProvider.questions[questionIndex -1]['question']['type'] !='writingQuestion')
+                                                                Row(
                                                                 children: [
                                                                   CustomContainer(
                                                                     onTap: () {
@@ -2104,14 +2132,13 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                     ),
                                                                   ),
                                                                 ],
-                                                              ),
+                                                              )
                                                             ],
                                                           ),
                                                           SizedBox(
                                                               height:
                                                                   height *
                                                                       0.01),
-
                                                                                                                   if (reviewProvider.questions[questionIndex - 1]
                                                                                                                                     [
                                                                                                                                     'question']
@@ -2201,7 +2228,9 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                                                                                         'type'] ==
                                                                                                                             'multiSectionQuestion')
                                                                                                                           multiSectionQuestionWithImage(
-                                                                                                                              width, height, reviewProvider, questionIndex),
+                                                                                                                              width, height, reviewProvider, questionIndex)
+                                                                                                                        else if(reviewProvider.questions[questionIndex -1]['question']['type'] =='writingQuestion')
+                                                                                                                          writingQuestionWithImage(width, height, reviewProvider, questionIndex),
                                                           SizedBox(
                                                               height:
                                                                   height *
@@ -2430,7 +2459,8 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                               height:
                                                                   height *
                                                                       0.03),
-                                                          SizedBox(
+                                                          if(reviewProvider.questions[questionIndex -1]['question']['type'] !='writingQuestion')
+                                                          ...[SizedBox(
                                                             width: width *
                                                                 0.66,
                                                             child:
@@ -2546,7 +2576,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                                                           SizedBox(
                                                               height:
                                                                   height *
-                                                                      0.03),
+                                                                      0.03),]
                                                         ],
                                                       ),
                                                     ),
@@ -2564,6 +2594,7 @@ class _QuizReviewState extends State<QuizReview> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
+
                     ],
                   ),
                 )))

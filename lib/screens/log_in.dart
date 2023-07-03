@@ -213,9 +213,11 @@ class _LogInState extends State<LogIn> {
 
     WebsiteProvider websiteProvider =
         Provider.of<WebsiteProvider>(context, listen: false);
-    return width < height
+    return
+      width < height
         ? const RotateYourPhone()
-        : Scaffold(
+        :
+    Scaffold(
         body: Directionality(
       textDirection: TextDirection.rtl,
       child: Container(

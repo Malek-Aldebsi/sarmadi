@@ -1085,7 +1085,7 @@ class _SharedQuestionState extends State<SharedQuestion> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const SizedBox(),
-                            CustomContainer(
+                            InkWell(
                               onTap: () {
                                 popUp(
                                     context,
@@ -1116,7 +1116,7 @@ class _SharedQuestionState extends State<SharedQuestion> {
                                 ],
                               ),
                             ),
-                            CustomContainer(
+                            InkWell(
                               onTap: null,
                               child: Column(
                                 children: [
@@ -1171,45 +1171,28 @@ class _SharedQuestionState extends State<SharedQuestion> {
                                 ),
                               ],
                             ),
-                            Stack(
+                            Column(
                               children: [
-                                Column(
-                                  children: [
-                                    Text('شارك السؤال',
-                                        textAlign: TextAlign.center,
-                                        style: textStyle(
-                                            3, width, height, kDarkBlack)),
-                                    CustomContainer(
-                                      onTap: () async {
-                                        questionProvider.setCopied(true);
-                                        await Clipboard.setData(
-                                            ClipboardData(
-                                                text: 'https://kawka-b.com/#/SharedQuestion/${questionProvider.question['id']}'));
-                                        Timer(const Duration(seconds: 2), () {
-                                          questionProvider.setCopied(false);
-                                        });
-                                      },
-                                      child: Text(
-                                          questionProvider.question['id']
-                                              .substring(0, 8),
-                                          style: textStyle(3, width, height,
-                                              kDarkBlack)),
-                                    ),
-                                  ],
-                                ),
-                                Visibility(
-                                  visible: Provider.of<SharedQuestionProvider>(context, listen: true).copied,
-                                  child: CustomContainer(
-                                    borderRadius: width * 0.05,
-                                    buttonColor: kDarkBlack,
-                                    border: fullBorder(kLightPurple),
-                                    horizontalPadding: width * 0.005,
-                                    verticalPadding: height * 0.005,
-                                    child: Text('تم النسخ',
-                                        textAlign: TextAlign.center,
-                                        style: textStyle(5, width, height,
-                                            kLightPurple)),
-                                  ),
+                                Text('شارك السؤال',
+                                    textAlign: TextAlign.center,
+                                    style: textStyle(
+                                        3, width, height, kDarkBlack)),
+                                InkWell(
+                                  onTap: () async {
+                                    questionProvider.setCopied(true);
+                                    await Clipboard.setData(
+                                        ClipboardData(
+                                            text: 'https://kawka-b.com/#/SharedQuestion/${questionProvider.question['id']}'));
+                                    Timer(const Duration(seconds: 2), () {
+                                      questionProvider.setCopied(false);
+                                    });
+                                  },
+                                  child: Text(
+                                      Provider.of<SharedQuestionProvider>(context, listen: true).copied?'تم النسخ':
+                                      questionProvider.question['id']
+                                          .substring(0, 8),
+                                      style: textStyle(3, width, height,
+                                          kDarkBlack)),
                                 ),
                               ],
                             ),
@@ -1222,10 +1205,9 @@ class _SharedQuestionState extends State<SharedQuestion> {
                             ),
                             Row(
                               mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                              MainAxisAlignment.spaceEvenly,
                               children: [
-                                CustomContainer(
-                                  width: width * 0.03,
+                                InkWell(
                                   onTap: () {
                                     popUp(
                                         context,
@@ -1311,8 +1293,7 @@ class _SharedQuestionState extends State<SharedQuestion> {
                                     ],
                                   ),
                                 ),
-                                CustomContainer(
-                                  width: width * 0.03,
+                                InkWell(
                                   onTap: () {
                                     popUp(
                                         context,
@@ -1349,7 +1330,7 @@ class _SharedQuestionState extends State<SharedQuestion> {
                                 ),
                               ],
                             ),
-                          CustomContainer(
+                            InkWell(
                             onTap: () {
                               logIn(questionProvider, websiteProvider);
                             },

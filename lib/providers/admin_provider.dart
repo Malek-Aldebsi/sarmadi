@@ -3,6 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class AdminProvider with ChangeNotifier {
+  TextEditingController _suggestedQuizName = TextEditingController();
+  String? _suggestedQuizSubject = null;
+  TextEditingController _suggestedQuizDuration = TextEditingController();
+
   TextEditingController _questionID = TextEditingController();
 
   TextEditingController _questionController = TextEditingController();
@@ -17,6 +21,8 @@ class AdminProvider with ChangeNotifier {
 
   List _subQuestionsControllers = [];
 
+  List _suggestedQuizQuestionsIDs = [TextEditingController()];
+
   List _headlineController = [TextEditingController()];
   List _headlineLevel = [1];
 
@@ -28,10 +34,14 @@ class AdminProvider with ChangeNotifier {
   Uint8List? _fromPicker;
 
   TextEditingController get questionController => _questionController;
+  TextEditingController get suggestedQuizName => _suggestedQuizName;
+  String? get suggestedQuizSubject => _suggestedQuizSubject;
+  TextEditingController get suggestedQuizDuration => _suggestedQuizDuration;
   TextEditingController get questionID => _questionID;
   TextEditingController get finalAnswerController => _finalAnswerController;
   List get choicesNotesControllers => _choicesNotesControllers;
   List get choicesControllers => _choicesControllers;
+  List get suggestedQuizQuestionsIDs => _suggestedQuizQuestionsIDs;
   List get subQuestionsControllers => _subQuestionsControllers;
   TextEditingController get questionSourceController =>
       _questionSourceController;
@@ -96,6 +106,11 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setSuggestedQuizSubject(String suggestedQuizSubject) {
+    _suggestedQuizSubject = suggestedQuizSubject;
+    notifyListeners();
+  }
+
   void setFromPicker(fromPicker) {
     _fromPicker = fromPicker;
     notifyListeners();
@@ -126,9 +141,19 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void addQuestionID() {
+    _suggestedQuizQuestionsIDs.add(TextEditingController());
+    notifyListeners();
+  }
+
   void removeLastHeadline() {
     _headlineController.removeLast();
     _headlineLevel.removeLast();
+    notifyListeners();
+  }
+
+  void removeLastQuestionID() {
+    _suggestedQuizQuestionsIDs.removeLast();
     notifyListeners();
   }
 
@@ -160,11 +185,16 @@ class AdminProvider with ChangeNotifier {
   }
 
   void reset() {
+    _suggestedQuizName = TextEditingController();
+    _suggestedQuizSubject = null;
+    _suggestedQuizDuration = TextEditingController();
+
     _questionID = TextEditingController();
 
     _questionController = TextEditingController();
     _finalAnswerController = TextEditingController();
     _subQuestionsControllers = [];
+    _suggestedQuizQuestionsIDs = [TextEditingController()];
 
     _choicesControllers = [TextEditingController(), TextEditingController()];
     _choicesNotesControllers = [

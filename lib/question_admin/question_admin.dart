@@ -38,6 +38,24 @@ class _QuestionAdminState extends State<QuestionAdmin> {
             CustomContainer(
               onTap: () {
                 adminProvider.reset();
+                context.pushReplacement('/SuggestedQuiz');
+              },
+              width: width * 0.3,
+              height: height * 0.1,
+              verticalPadding: height * 0.02,
+              horizontalPadding: width * 0.02,
+              buttonColor: kDarkGray,
+              border: fullBorder(kLightPurple),
+              borderRadius: width * 0.05,
+              child: Text(
+                'امتحان مقترح',
+                style: textStyle(2, width, height, kLightPurple),
+              ),
+            ),
+            SizedBox(height: height * 0.02),
+            CustomContainer(
+              onTap: () {
+                adminProvider.reset();
                 context.pushReplacement('/MultipleChoiceQuestion');
               },
               width: width * 0.3,

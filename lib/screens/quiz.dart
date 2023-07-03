@@ -1137,9 +1137,11 @@ class _QuizState extends State<Quiz> {
     // TasksProvider tasksProvider = Provider.of<TasksProvider>(context);
     ReviewProvider reviewProvider = Provider.of<ReviewProvider>(context);
 
-    return width < height
+    return
+      width < height
         ? const RotateYourPhone()
-        : Provider.of<WebsiteProvider>(context, listen: true).loaded
+        :
+      Provider.of<WebsiteProvider>(context, listen: true).loaded
         ? quizProvider.questions.isEmpty
             ? Scaffold(
                 backgroundColor: kDarkGray,
@@ -1214,7 +1216,7 @@ class _QuizState extends State<Quiz> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     const SizedBox(),
-                                    CustomContainer(
+                                    InkWell(
                                       onTap: () {
                                         popUp(
                                             context,
@@ -1245,7 +1247,7 @@ class _QuizState extends State<Quiz> {
                                         ],
                                       ),
                                     ),
-                                    CustomContainer(
+                                    InkWell(
                                       onTap: () {
                                         saveQuestion(
                                             quizProvider, websiteProvider);
@@ -1307,51 +1309,34 @@ class _QuizState extends State<Quiz> {
                                         ),
                                       ],
                                     ),
-                                    Stack(
+                                    Column(
                                       children: [
-                                        Column(
-                                          children: [
-                                            Text('شارك السؤال',
-                                                textAlign: TextAlign.center,
-                                                style: textStyle(3, width,
-                                                    height, kDarkBlack)),
-                                            CustomContainer(
-                                              onTap: () async {
-                                                quizProvider.setCopied(true);
-                                                await Clipboard.setData(
-                                                    ClipboardData(
-                                                        text: 'https://kawka-b.com/#/SharedQuestion/${quizProvider.questions[quizProvider.questionIndex -1]['id']}'));
-                                                Timer(
-                                                    const Duration(seconds: 2),
-                                                    () {
-                                                  quizProvider.setCopied(false);
-                                                });
-                                              },
-                                              child: Text(
-                                                  quizProvider
-                                                      .questions[quizProvider
-                                                              .questionIndex -
-                                                          1]['id']
-                                                      .substring(0, 8),
-                                                  style: textStyle(3, width,
-                                                      height, kDarkBlack)),
-                                            ),
-                                          ],
-                                        ),
-                                        Visibility(
-                                          visible: quizProvider.copied &&
-                                              !quizProvider.showResult,
-                                          child: CustomContainer(
-                                            borderRadius: width * 0.05,
-                                            buttonColor: kDarkBlack,
-                                            border: fullBorder(kLightPurple),
-                                            horizontalPadding: width * 0.005,
-                                            verticalPadding: height * 0.005,
-                                            child: Text('تم النسخ',
-                                                textAlign: TextAlign.center,
-                                                style: textStyle(5, width,
-                                                    height, kLightPurple)),
-                                          ),
+                                        Text('شارك السؤال',
+                                            textAlign: TextAlign.center,
+                                            style: textStyle(3, width,
+                                                height, kDarkBlack)),
+                                        InkWell(
+                                          onTap: () async {
+                                            quizProvider.setCopied(true);
+                                            await Clipboard.setData(
+                                                ClipboardData(
+                                                    text: 'https://kawka-b.com/#/SharedQuestion/${quizProvider.questions[quizProvider.questionIndex -1]['id']}'));
+                                            Timer(
+                                                const Duration(seconds: 2),
+                                                () {
+                                              quizProvider.setCopied(false);
+                                            });
+                                          },
+                                          child: Text(
+                                              quizProvider.copied &&
+                                                  !quizProvider.showResult?'تم النسخ':
+                                              quizProvider
+                                                  .questions[quizProvider
+                                                          .questionIndex -
+                                                      1]['id']
+                                                  .substring(0, 8),
+                                              style: textStyle(3, width,
+                                                  height, kDarkBlack)),
                                         ),
                                       ],
                                     ),
@@ -1364,10 +1349,9 @@ class _QuizState extends State<Quiz> {
                                     ),
                                     Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        CustomContainer(
-                                          width: width * 0.03,
+                                        InkWell(
                                           onTap: () {
                                             popUp(
                                                 context,
@@ -1476,8 +1460,7 @@ class _QuizState extends State<Quiz> {
                                             ],
                                           ),
                                         ),
-                                        CustomContainer(
-                                          width: width * 0.03,
+                                        InkWell(
                                           onTap: () {
                                             popUp(
                                                 context,
@@ -1524,7 +1507,7 @@ class _QuizState extends State<Quiz> {
                                         ),
                                       ],
                                     ),
-                                    CustomContainer(
+                                    InkWell(
                                       onTap: () {
                                         popUp(
                                             context,

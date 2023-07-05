@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import '../const/fonts.dart';
 
-Widget stringWithLatex(str, fontOption, width, height, fontColor) {
+Widget stringWithLatex(str, fontOption, width, height, fontColor,
+    [copy = false]) {
   str = str ?? '';
 
   double getBaseline(str) {
@@ -24,8 +26,15 @@ Widget stringWithLatex(str, fontOption, width, height, fontColor) {
 
     if (secondSing != -1) {
       for (String word in line.substring(0, firstSign).split(' ')) {
-        lineWidgets.add(Text('$word ',
-            style: textStyle(fontOption, width, height, fontColor)));
+        lineWidgets.add(InkWell(
+          onTap: copy
+              ? () async {
+                  await Clipboard.setData(ClipboardData(text: word));
+                }
+              : null,
+          child: Text('$word ',
+              style: textStyle(fontOption, width, height, fontColor)),
+        ));
       }
       lineWidgets.add(Directionality(
         textDirection: TextDirection.ltr,
@@ -40,8 +49,15 @@ Widget stringWithLatex(str, fontOption, width, height, fontColor) {
       lineWidgets += latexLineProcess(line.substring(secondSing + 1));
     } else {
       for (String word in line.split(' ')) {
-        lineWidgets.add(Text('$word ',
-            style: textStyle(fontOption, width, height, fontColor)));
+        lineWidgets.add(InkWell(
+          onTap: copy
+              ? () async {
+                  await Clipboard.setData(ClipboardData(text: word));
+                }
+              : null,
+          child: Text('$word ',
+              style: textStyle(fontOption, width, height, fontColor)),
+        ));
       }
     }
     return lineWidgets;

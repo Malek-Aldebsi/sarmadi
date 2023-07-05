@@ -518,47 +518,50 @@ class _AdvanceQuizSettingState extends State<AdvanceQuizSetting>
                                                         for (Map headline
                                                             in quizSettingProvider
                                                                 .headlineSet)
-                                                          CustomContainer(
-                                                              onTap: () {
-                                                                quizProvider
+                                                          if (headline['id'] !=
+                                                                  'aa5d8720-a404-4c00-99cd-9495781a88f7' &&
+                                                              headline['id'] !=
+                                                                  '483dbca5-de2e-4bcc-9793-e32c13f14aa0')
+                                                            CustomContainer(
+                                                                onTap: () {
+                                                                  quizProvider
+                                                                          .selectedHeadlines
+                                                                          .contains(headline[
+                                                                              'id'])
+                                                                      ? quizProvider
+                                                                          .removeHeadlines([
+                                                                          headline[
+                                                                              'id']
+                                                                        ], context)
+                                                                      : quizProvider
+                                                                          .addHeadlines([
+                                                                          headline[
+                                                                              'id']
+                                                                        ], context);
+                                                                },
+                                                                verticalPadding:
+                                                                    0,
+                                                                horizontalPadding: width *
+                                                                    0.01,
+                                                                height: height *
+                                                                    0.05,
+                                                                borderRadius: width *
+                                                                    0.005,
+                                                                border: null,
+                                                                buttonColor: quizProvider
                                                                         .selectedHeadlines
                                                                         .contains(headline[
                                                                             'id'])
-                                                                    ? quizProvider
-                                                                        .removeHeadlines([
-                                                                        headline[
-                                                                            'id']
-                                                                      ], context)
-                                                                    : quizProvider
-                                                                        .addHeadlines([
-                                                                        headline[
-                                                                            'id']
-                                                                      ], context);
-                                                              },
-                                                              verticalPadding:
-                                                                  0,
-                                                              horizontalPadding:
-                                                                  width * 0.01,
-                                                              height:
-                                                                  height * 0.05,
-                                                              borderRadius:
-                                                                  width * 0.005,
-                                                              border: null,
-                                                              buttonColor: quizProvider
-                                                                      .selectedHeadlines
-                                                                      .contains(
-                                                                          headline[
-                                                                              'id'])
-                                                                  ? kPurple
-                                                                  : kGray,
-                                                              child: Text(
-                                                                  headline[
-                                                                      'name'],
-                                                                  style: textStyle(
-                                                                      4,
-                                                                      width,
-                                                                      height,
-                                                                      kWhite)))
+                                                                    ? kPurple
+                                                                    : kGray,
+                                                                child: Text(
+                                                                    headline[
+                                                                        'name'],
+                                                                    style: textStyle(
+                                                                        4,
+                                                                        width,
+                                                                        height,
+                                                                        kWhite)))
                                                       ],
                                                     ),
                                                   ),

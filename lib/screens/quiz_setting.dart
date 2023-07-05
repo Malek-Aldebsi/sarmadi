@@ -150,13 +150,9 @@ class _QuizSettingState extends State<QuizSetting>
                                                               .subjects.length;
                                                       i++) ...[
                                                     if (websiteProvider
-                                                                    .subjects[i]
-                                                                ['id'] !=
-                                                            '2d3ce0b6-c7b5-4b47-a344-ec1f36a077ab' &&
-                                                        websiteProvider
-                                                                    .subjects[i]
-                                                                ['id'] !=
-                                                            '7376be1e-e252-4d22-874b-9ec129326807')
+                                                                .subjects[i]
+                                                            ['id'] !=
+                                                        '7376be1e-e252-4d22-874b-9ec129326807')
                                                       CustomContainer(
                                                         onTap: () {
                                                           quizProvider.setSubject(
@@ -226,6 +222,53 @@ class _QuizSettingState extends State<QuizSetting>
                                                         ),
                                                       ),
                                                   ],
+                                                  CustomContainer(
+                                                    onTap: () {
+                                                      websiteProvider
+                                                          .setLoaded(false);
+                                                      context.pushReplacement(
+                                                          '/SuggestedQuizzes');
+                                                    },
+                                                    width: width * 0.21,
+                                                    height: height * 0.16,
+                                                    verticalPadding: 0,
+                                                    horizontalPadding: 0,
+                                                    borderRadius: width * 0.005,
+                                                    border: null,
+                                                    buttonColor: kDarkGray,
+                                                    child: Stack(
+                                                      alignment:
+                                                          Alignment.bottomLeft,
+                                                      children: [
+                                                        Image(
+                                                          image: const AssetImage(
+                                                              'images/planet.png'),
+                                                          width: width * 0.1,
+                                                          fit: BoxFit.contain,
+                                                          alignment: Alignment
+                                                              .bottomLeft,
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: width *
+                                                                      0.025),
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Text(
+                                                              'أسئلة وزارة سابقة\nوالامتحانات المقترحة',
+                                                              style: textStyle(
+                                                                  2,
+                                                                  width,
+                                                                  height,
+                                                                  kWhite),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
                                                   CustomContainer(
                                                     onTap: () {
                                                       quizProvider.setSubject(
@@ -338,53 +381,6 @@ class _QuizSettingState extends State<QuizSetting>
                                                                           '7376be1e-e252-4d22-874b-9ec129326807'
                                                                       ? kDarkBlack
                                                                       : kWhite),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  CustomContainer(
-                                                    onTap: () {
-                                                      websiteProvider
-                                                          .setLoaded(false);
-                                                      context.pushReplacement(
-                                                          '/SuggestedQuizzes');
-                                                    },
-                                                    width: width * 0.21,
-                                                    height: height * 0.16,
-                                                    verticalPadding: 0,
-                                                    horizontalPadding: 0,
-                                                    borderRadius: width * 0.005,
-                                                    border: null,
-                                                    buttonColor: kDarkGray,
-                                                    child: Stack(
-                                                      alignment:
-                                                          Alignment.bottomLeft,
-                                                      children: [
-                                                        Image(
-                                                          image: const AssetImage(
-                                                              'images/planet.png'),
-                                                          width: width * 0.1,
-                                                          fit: BoxFit.contain,
-                                                          alignment: Alignment
-                                                              .bottomLeft,
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  right: width *
-                                                                      0.025),
-                                                          child: Align(
-                                                            alignment: Alignment
-                                                                .centerRight,
-                                                            child: Text(
-                                                              'أسئلة وزارة سابقة\nوالامتحانات المقترحة',
-                                                              style: textStyle(
-                                                                  2,
-                                                                  width,
-                                                                  height,
-                                                                  kWhite),
                                                             ),
                                                           ),
                                                         ),
